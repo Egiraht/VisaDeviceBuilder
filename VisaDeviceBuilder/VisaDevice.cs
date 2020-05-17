@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
 
@@ -58,6 +59,21 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public virtual HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedInterfaces;
+
+    /// <inheritdoc />
+    public IRemoteProperty[] RemoteProperties { get; }
+
+    /// <summary>
+    ///   Creates a new instance of VISA device.
+    /// </summary>
+    protected VisaDevice()
+    {
+      RemoteProperties = GetType()
+        .GetProperties()
+        .Where(property => typeof(IRemoteProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
+        .Select(property => (IRemoteProperty) property.GetValue(this))
+        .ToArray();
+    }
 
     /// <inheritdoc />
     public abstract Task OpenSessionAsync();

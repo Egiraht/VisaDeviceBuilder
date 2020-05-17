@@ -38,7 +38,12 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the array of VISA hardware interfaces supported by the device.
     /// </summary>
-    public HardwareInterfaceType[] SupportedInterfaces { get; }
+    HardwareInterfaceType[] SupportedInterfaces { get; }
+
+    /// <summary>
+    ///   Gets the array of remote properties available for the current device.
+    /// </summary>
+    IRemoteProperty[] RemoteProperties { get; }
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
