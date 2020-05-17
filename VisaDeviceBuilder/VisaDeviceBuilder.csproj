@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Common project properties. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Title>Visa device builder library</Title>
+    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
+    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>Visa, device control</PackageTags>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <NoWarn>1701;1702;NU1701</NoWarn>
+  </PropertyGroup>
+  
+  <!-- Project properties for "Release" configuration. -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+  
+  <!-- Project dependencies. -->
+  <ItemGroup>
+    <PackageReference Include="Kelary.Ivi.Visa" Version="5.11.3422" />
+  </ItemGroup>
+</Project>
