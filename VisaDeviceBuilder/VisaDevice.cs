@@ -61,6 +61,9 @@ namespace VisaDeviceBuilder
     public virtual HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedInterfaces;
 
     /// <inheritdoc />
+    public bool IsInitialized { get; protected set; } = false;
+
+    /// <inheritdoc />
     public IRemoteProperty[] RemoteProperties { get; }
 
     /// <summary>
@@ -79,7 +82,11 @@ namespace VisaDeviceBuilder
     public abstract Task OpenSessionAsync();
 
     /// <inheritdoc />
-    public abstract Task InitializeAsync();
+    public virtual Task InitializeAsync()
+    {
+      IsInitialized = true;
+      return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public abstract Task<string> GetIdentifierAsync();
@@ -88,7 +95,11 @@ namespace VisaDeviceBuilder
     public abstract Task ResetAsync();
 
     /// <inheritdoc />
-    public abstract Task DeInitializeAsync();
+    public virtual Task DeInitializeAsync()
+    {
+      IsInitialized = false;
+      return Task.CompletedTask;
+    }
 
     /// <inheritdoc />
     public abstract Task CloseSessionAsync();

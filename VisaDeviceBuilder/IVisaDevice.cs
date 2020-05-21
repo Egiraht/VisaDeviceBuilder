@@ -41,6 +41,11 @@ namespace VisaDeviceBuilder
     HardwareInterfaceType[] SupportedInterfaces { get; }
 
     /// <summary>
+    ///   Checks if the device has been initialized.
+    /// </summary>
+    bool IsInitialized { get; }
+
+    /// <summary>
     ///   Gets the array of remote properties available for the current device.
     /// </summary>
     IRemoteProperty[] RemoteProperties { get; }
