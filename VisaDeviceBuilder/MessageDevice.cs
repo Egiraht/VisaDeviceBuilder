@@ -5,9 +5,9 @@ using VisaDeviceBuilder.Exceptions;
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The abstract base class for connectable VISA devices that uses message-based communication.
+  ///   The class for connectable VISA devices that use message-based communication.
   /// </summary>
-  public abstract class MessageDevice : VisaDevice, IMessageRequestProvider
+  public class MessageDevice : VisaDevice, IMessageRequestProvider
   {
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
@@ -37,7 +37,21 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected object RequestLock { get; } = new object();
 
-    /// <inheritdoc />
+    /// <summary>
+    ///   Creates a new instance of a custom message-based VISA device.
+    /// </summary>
+    /// <param name="resourceName">
+    ///   The VISA resource name of the device.
+    /// </param>
+    /// <param name="connectionTimeout">
+    ///   The connection timeout in milliseconds.
+    ///   Defaults to the <see cref="VisaDevice.DefaultConnectionTimeout" /> value.
+    /// </param>
+    public MessageDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout) :
+      base(resourceName, connectionTimeout)
+    {
+    }
+
     public virtual async Task<string> SendRequestAsync(string request)
     {
       if (Session == null)

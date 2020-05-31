@@ -1,19 +1,26 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using VisaDeviceBuilder.Exceptions;
 
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The abstract base class for connectable VISA devices.
+  ///   The class for connectable VISA devices.
   /// </summary>
-  public abstract class VisaDevice : IVisaDevice
+  public class VisaDevice : IVisaDevice
   {
     /// <summary>
-    ///   The backing field for <see cref="ResourceName" /> property.
+    ///   Defines the default connection timeout in milliseconds.
     /// </summary>
-    private string _resourceName = "";
+    public const int DefaultConnectionTimeout = 3000;
+
+    /// <summary>
+    ///   The backing field for the <see cref="AliasName" /> property.
+    /// </summary>
+    private string _aliasName = "";
 
     /// <summary>
     ///   The flag indicating if the object has been already disposed.
@@ -27,82 +34,109 @@ namespace VisaDeviceBuilder
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <inheritdoc />
-    public DeviceConnectionState DeviceConnectionState { get; } = DeviceConnectionState.Disconnected;
+    public string ResourceName { get; }
 
     /// <inheritdoc />
-    public IVisaSession? Session { get; protected set; }
+    public int ConnectionTimeout { get; }
 
     /// <inheritdoc />
-    public string ResourceName
+    public string AliasName
     {
-      get => _resourceName;
-      protected set
-      {
-        if (DeviceConnectionState != DeviceConnectionState.Disconnected &&
-          DeviceConnectionState != DeviceConnectionState.DisconnectedWithError)
-          return;
-
-        if (!GlobalResourceManager.TryParse(value, out var result))
-          return;
-
-        _resourceName = result.ExpandedUnaliasedName;
-        AliasName = result.AliasIfExists;
-        Interface = result.InterfaceType;
-      }
+      get => !string.IsNullOrEmpty(_aliasName) ? _aliasName : ResourceName;
+      protected set => _aliasName = value;
     }
 
     /// <inheritdoc />
-    public string AliasName { get; private set; } = "";
-
-    /// <inheritdoc />
-    public HardwareInterfaceType Interface { get; private set; } = HardwareInterfaceType.Custom;
+    public HardwareInterfaceType Interface { get; }
 
     /// <inheritdoc />
     public virtual HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedInterfaces;
 
     /// <inheritdoc />
-    public bool IsInitialized { get; protected set; } = false;
+    public DeviceConnectionState DeviceConnectionState { get; protected set; } = DeviceConnectionState.Disconnected;
 
     /// <inheritdoc />
-    public IRemoteProperty[] RemoteProperties { get; }
+    public IVisaSession? Session { get; protected set; }
+
+    /// <inheritdoc />
+    public virtual bool IsSessionOpened => Session != null;
+
+    /// <inheritdoc />
+    public ICollection<IRemoteProperty> RemoteProperties { get; }
 
     /// <summary>
-    ///   Creates a new instance of VISA device.
+    ///   Creates a new instance of a custom VISA device.
     /// </summary>
-    protected VisaDevice()
+    /// <param name="resourceName">
+    ///   The VISA resource name of the device.
+    /// </param>
+    /// <param name="connectionTimeout">
+    ///   The connection timeout in milliseconds.
+    ///   Defaults to the <see cref="DefaultConnectionTimeout" /> value.
+    /// </param>
+    public VisaDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout)
     {
-      RemoteProperties = GetType()
+      var parsedResourceName = GlobalResourceManager.Parse(resourceName);
+      ResourceName = parsedResourceName.ExpandedUnaliasedName;
+      AliasName = parsedResourceName.AliasIfExists;
+      Interface = parsedResourceName.InterfaceType;
+      ConnectionTimeout = connectionTimeout;
+      AsyncProperties = GetType()
         .GetProperties()
         .Where(property => typeof(IRemoteProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
         .Select(property => (IRemoteProperty) property.GetValue(this))
-        .ToArray();
+        .ToList();
     }
 
     /// <inheritdoc />
-    public abstract Task OpenSessionAsync();
-
-    /// <inheritdoc />
-    public virtual Task InitializeAsync()
+    public virtual async Task OpenSessionAsync()
     {
-      IsInitialized = true;
-      return Task.CompletedTask;
+      if (!SupportedInterfaces.Contains(Interface))
+        throw new VisaDeviceException(this,
+          new NotSupportedException($"The interface {Interface} is not supported by the device \"{GetType().Name}\"."));
+
+      try
+      {
+        Session = GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
+        DeviceConnectionState = DeviceConnectionState.Initializing;
+        await InitializeAsync();
+        DeviceConnectionState = DeviceConnectionState.Connected;
+      }
+      catch (Exception e)
+      {
+        DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
+        Session?.Dispose();
+        throw new VisaDeviceException(this, e);
+      }
     }
 
     /// <inheritdoc />
-    public abstract Task<string> GetIdentifierAsync();
+    public virtual Task InitializeAsync() => Task.CompletedTask;
 
     /// <inheritdoc />
-    public abstract Task ResetAsync();
+    public virtual Task<string> GetIdentifierAsync() => Task.FromResult(AliasName);
 
     /// <inheritdoc />
-    public virtual Task DeInitializeAsync()
+    public virtual Task ResetAsync() => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual Task DeInitializeAsync() => Task.CompletedTask;
+
+    /// <inheritdoc />
+    public virtual async Task CloseSessionAsync()
     {
-      IsInitialized = false;
-      return Task.CompletedTask;
+      try
+      {
+        DeviceConnectionState = DeviceConnectionState.DeInitializing;
+        await DeInitializeAsync();
+        Session?.Dispose();
+      }
+      finally
+      {
+        Session = null;
+        DeviceConnectionState = DeviceConnectionState.Disconnected;
+      }
     }
-
-    /// <inheritdoc />
-    public abstract Task CloseSessionAsync();
 
     /// <inheritdoc />
     public void Dispose()

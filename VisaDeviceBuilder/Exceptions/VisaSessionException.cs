@@ -36,21 +36,23 @@ namespace VisaDeviceBuilder.Exceptions
     /// <param name="device">
     ///   The VISA device instance that has thrown this exception.
     /// </param>
-    /// <param name="message">
-    ///   The message describing the exception.
-    /// </param>
     /// <param name="innerException">
     ///   The inner exception instance.
     /// </param>
-    public VisaSessionException(IVisaDevice device, string message, Exception innerException) :
-      base(device, message, innerException)
+    /// <param name="message">
+    ///   The optional message describing the exception.
+    /// </param>
+    public VisaSessionException(IVisaDevice device, Exception innerException, string message = "") :
+      base(device, innerException, message)
     {
     }
 
     /// <inheritdoc />
     public override string Message => !string.IsNullOrEmpty(base.Message)
       ? base.Message
-      : "Failed to access an opened VISA session for the VISA device " +
-      $"\"{(!string.IsNullOrEmpty(Device.AliasName) ? Device.AliasName : Device.ResourceName)}\".";
+      : "An exception " +
+      (InnerException != null ? $"of type {InnerException.GetType().Name} " : "") +
+      $"was thrown while accessing a session for the VISA device \"{Device.AliasName}\"" +
+      (InnerException != null ? $": {InnerException.Message} " : ".");
   }
 }

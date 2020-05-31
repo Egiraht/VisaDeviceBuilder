@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The abstract class representing a remote property that can be synchronized with the remote device.
+  ///   The class representing a remote property that can be synchronized with the remote device.
   /// </summary>
   public class RemoteProperty : IRemoteProperty
   {

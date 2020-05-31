@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ivi.Visa;
 
@@ -10,23 +11,17 @@ namespace VisaDeviceBuilder
   public interface IVisaDevice : IDisposable, IAsyncDisposable
   {
     /// <summary>
-    ///   Gets the current device connection state.
-    /// </summary>
-    DeviceConnectionState DeviceConnectionState { get; }
-
-    /// <summary>
-    ///   Gets the current VISA session object if the connection has been successfully established,
-    ///   or <c>null</c> otherwise.
-    /// </summary>
-    IVisaSession? Session { get; }
-
-    /// <summary>
-    ///   Gets the VISA resource name of the device.
+    ///   Gets the unaliased VISA resource name of the device.
     /// </summary>
     string ResourceName { get; }
 
     /// <summary>
-    ///   Gets the VISA alias name of the device if it is available.
+    ///   Gets the connection timeout in milliseconds.
+    /// </summary>
+    int ConnectionTimeout { get; }
+
+    /// <summary>
+    ///   Gets the VISA alias name of the device if it is available, otherwise gets its unaliased resource name.
     /// </summary>
     string AliasName { get; }
 
@@ -41,17 +36,29 @@ namespace VisaDeviceBuilder
     HardwareInterfaceType[] SupportedInterfaces { get; }
 
     /// <summary>
-    ///   Checks if the device has been initialized.
+    ///   Gets the current device connection state.
     /// </summary>
-    bool IsInitialized { get; }
+    DeviceConnectionState DeviceConnectionState { get; }
 
     /// <summary>
-    ///   Gets the array of remote properties available for the current device.
+    ///   Gets the current VISA session object if the connection has been successfully established,
+    ///   or <c>null</c> otherwise.
     /// </summary>
-    IRemoteProperty[] RemoteProperties { get; }
+    IVisaSession? Session { get; }
+
+    /// <summary>
+    ///   Checks if a VISA session has been opened for the device.
+    /// </summary>
+    bool IsSessionOpened { get; }
+
+    /// <summary>
+    ///   Gets the collection of remote properties available for the current device.
+    /// </summary>
+    ICollection<IRemoteProperty> RemoteProperties { get; }
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
+    ///   After opening a new session the <see cref="InitializeAsync" /> method is called.
     /// </summary>
     Task OpenSessionAsync();
 
@@ -80,8 +87,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Asynchronously closes the connection session with the device.
+    ///   Before closing the opened session the <see cref="DeInitializeAsync" /> method is called.
     /// </summary>
-    /// <returns></returns>
     Task CloseSessionAsync();
   }
 }

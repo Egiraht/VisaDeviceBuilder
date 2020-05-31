@@ -41,13 +41,13 @@ namespace VisaDeviceBuilder.Exceptions
     /// <param name="device">
     ///   The VISA device instance that has thrown this exception.
     /// </param>
-    /// <param name="message">
-    ///   The message describing the exception.
-    /// </param>
     /// <param name="innerException">
     ///   The inner exception instance.
     /// </param>
-    public VisaDeviceException(IVisaDevice device, string message, Exception innerException) :
+    /// <param name="message">
+    ///   The optional message describing the exception.
+    /// </param>
+    public VisaDeviceException(IVisaDevice device, Exception innerException, string message = "") :
       base(message, innerException)
     {
       Device = device;
@@ -58,7 +58,7 @@ namespace VisaDeviceBuilder.Exceptions
       ? base.Message
       : "An exception " +
       (InnerException != null ? $"of type {InnerException.GetType().Name} " : "") +
-      "was thrown by the VISA device " +
-      $"\"{(!string.IsNullOrEmpty(Device.AliasName) ? Device.AliasName : Device.ResourceName)}\".";
+      $"was thrown by the VISA device \"{Device.AliasName}\"" +
+      (InnerException != null ? $": {InnerException.Message} " : ".");
   }
 }
