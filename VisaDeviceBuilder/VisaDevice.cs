@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
-using VisaDeviceBuilder.Exceptions;
 
 namespace VisaDeviceBuilder
 {
@@ -62,7 +61,7 @@ namespace VisaDeviceBuilder
     public virtual bool IsSessionOpened => Session != null;
 
     /// <inheritdoc />
-    public ICollection<IRemoteProperty> RemoteProperties { get; }
+    public ICollection<IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
     ///   Creates a new instance of a custom VISA device.
@@ -83,8 +82,8 @@ namespace VisaDeviceBuilder
       ConnectionTimeout = connectionTimeout;
       AsyncProperties = GetType()
         .GetProperties()
-        .Where(property => typeof(IRemoteProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
-        .Select(property => (IRemoteProperty) property.GetValue(this))
+        .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
+        .Select(property => (IAsyncProperty) property.GetValue(this))
         .ToList();
     }
 

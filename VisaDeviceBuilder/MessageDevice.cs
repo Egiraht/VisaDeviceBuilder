@@ -1,13 +1,13 @@
+using System;
 using System.Threading.Tasks;
 using Ivi.Visa;
-using VisaDeviceBuilder.Exceptions;
 
 namespace VisaDeviceBuilder
 {
   /// <summary>
   ///   The class for connectable VISA devices that use message-based communication.
   /// </summary>
-  public class MessageDevice : VisaDevice, IMessageRequestProvider
+  public class MessageDevice : VisaDevice, IMessageDevice
   {
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
@@ -52,10 +52,12 @@ namespace VisaDeviceBuilder
     {
     }
 
-    public virtual async Task<string> SendRequestAsync(string request)
+    /// <inheritdoc />
+    public virtual async Task<string?> SendMessageAsync(string request)
     {
       if (Session == null)
-        throw new VisaSessionException(this);
+        throw new VisaDeviceException(this,
+          new NullReferenceException("Cannot send a message as there is no opened VISA session."));
 
       return await Task.Run(() =>
       {

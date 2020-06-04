@@ -52,9 +52,9 @@ namespace VisaDeviceBuilder
     bool IsSessionOpened { get; }
 
     /// <summary>
-    ///   Gets the collection of remote properties available for the current device.
+    ///   Gets the collection of async properties available for the current device.
     /// </summary>
-    ICollection<IRemoteProperty> RemoteProperties { get; }
+    ICollection<IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
