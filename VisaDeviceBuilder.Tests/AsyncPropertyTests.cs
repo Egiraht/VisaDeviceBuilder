@@ -4,6 +4,9 @@ using Xunit;
 
 namespace VisaDeviceBuilder.Tests
 {
+  /// <summary>
+  ///   The unit tests class covering the <see cref="AsyncProperty" /> class.
+  /// </summary>
   public partial class AsyncPropertyTests
   {
     /// <summary>

@@ -5,6 +5,7 @@ using Xunit;
 
 namespace VisaDeviceBuilder.Tests
 {
+  // The extension with additional unit tests covering the typed AsyncProperty class variant.
   public partial class AsyncPropertyTests
   {
     /// <summary>
