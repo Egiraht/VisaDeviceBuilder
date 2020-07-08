@@ -11,6 +11,12 @@ namespace VisaDeviceBuilder
   public interface IVisaDevice : IDisposable, IAsyncDisposable
   {
     /// <summary>
+    ///   Gets the custom VISA resource manager instance used for VISA session management.
+    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
+    /// </summary>
+    IResourceManager? ResourceManager { get; }
+
+    /// <summary>
     ///   Gets the unaliased VISA resource name of the device.
     /// </summary>
     string ResourceName { get; }

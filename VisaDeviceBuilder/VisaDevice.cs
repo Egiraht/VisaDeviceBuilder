@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
@@ -31,6 +32,9 @@ namespace VisaDeviceBuilder
     /// </summary>
     private static readonly HardwareInterfaceType[] DefaultSupportedInterfaces =
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
+
+    /// <inheritdoc />
+    public IResourceManager? ResourceManager { get; }
 
     /// <inheritdoc />
     public string ResourceName { get; }
@@ -73,9 +77,18 @@ namespace VisaDeviceBuilder
     ///   The connection timeout in milliseconds.
     ///   Defaults to the <see cref="DefaultConnectionTimeout" /> value.
     /// </param>
-    public VisaDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout)
+    /// <param name="resourceManager">
+    ///   The custom VISA resource manager instance used for VISA session management.
+    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
+    /// </param>
+    public VisaDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout,
+      IResourceManager? resourceManager = null)
     {
-      var parsedResourceName = GlobalResourceManager.Parse(resourceName);
+      ResourceManager = resourceManager;
+      var parsedResourceName = ResourceManager != null
+        ? ResourceManager.Parse(resourceName)
+        : GlobalResourceManager.Parse(resourceName);
+
       ResourceName = parsedResourceName.ExpandedUnaliasedName;
       AliasName = parsedResourceName.AliasIfExists;
       Interface = parsedResourceName.InterfaceType;
@@ -90,21 +103,29 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual async Task OpenSessionAsync()
     {
+      if (_isDisposed)
+        throw new ObjectDisposedException(AliasName);
+
+      if (IsSessionOpened)
+        return;
+
       if (!SupportedInterfaces.Contains(Interface))
         throw new VisaDeviceException(this,
           new NotSupportedException($"The interface {Interface} is not supported by the device \"{GetType().Name}\"."));
 
       try
       {
-        Session = GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
+        Session = ResourceManager != null
+          ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
+          : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
         DeviceConnectionState = DeviceConnectionState.Initializing;
         await InitializeAsync();
         DeviceConnectionState = DeviceConnectionState.Connected;
       }
       catch (Exception e)
       {
+        await CloseSessionAsync();
         DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
-        Session?.Dispose();
         throw new VisaDeviceException(this, e);
       }
     }
@@ -124,6 +145,12 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual async Task CloseSessionAsync()
     {
+      if (_isDisposed)
+        throw new ObjectDisposedException(AliasName);
+
+      if (!IsSessionOpened)
+        return;
+
       try
       {
         DeviceConnectionState = DeviceConnectionState.DeInitializing;
@@ -182,6 +209,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Disposes the object on finalization.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     ~VisaDevice()
     {
       Dispose();

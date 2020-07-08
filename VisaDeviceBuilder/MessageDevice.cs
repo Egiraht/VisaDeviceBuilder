@@ -47,8 +47,12 @@ namespace VisaDeviceBuilder
     ///   The connection timeout in milliseconds.
     ///   Defaults to the <see cref="VisaDevice.DefaultConnectionTimeout" /> value.
     /// </param>
-    public MessageDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout) :
-      base(resourceName, connectionTimeout)
+    /// <param name="resourceManager">
+    ///   The custom VISA resource manager instance used for VISA session management.
+    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
+    /// </param>
+    public MessageDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout,
+      IResourceManager? resourceManager = null) : base(resourceName, connectionTimeout, resourceManager)
     {
     }
 
