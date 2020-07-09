@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Common project properties. -->
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <LangVersion>default</LangVersion>
     <Nullable>enable</Nullable>
+    <Title>Visa device builder library unit tests</Title>
+    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
+    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
-  
+
+  <!-- Project dependencies. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
     <PackageReference Include="Moq" Version="4.14.4" />
@@ -13,8 +18,16 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2" />
     <PackageReference Include="coverlet.collector" Version="1.3.0" />
   </ItemGroup>
-  
+
+  <!-- Project local dependencies. -->
   <ItemGroup>
     <ProjectReference Include="..\VisaDeviceBuilder\VisaDeviceBuilder.csproj" />
+  </ItemGroup>
+  
+  <!-- File dependencies. -->
+  <ItemGroup>
+    <Compile Update="AsyncPropertyTests.Typed.cs">
+      <DependentUpon>AsyncPropertyTests.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>
