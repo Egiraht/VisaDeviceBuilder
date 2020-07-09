@@ -111,7 +111,7 @@ namespace VisaDeviceBuilder
 
       if (!SupportedInterfaces.Contains(Interface))
         throw new VisaDeviceException(this,
-          new NotSupportedException($"The interface {Interface} is not supported by the device \"{GetType().Name}\"."));
+          new NotSupportedException($"The interface \"{Interface}\" is not supported by devices of type \"{GetType().Name}\"."));
 
       try
       {
@@ -165,28 +165,10 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-      if (_isDisposed)
-        return;
-
-      try
-      {
-        CloseSessionAsync().Wait();
-      }
-      catch
-      {
-        // Suppress all exceptions.
-      }
-      finally
-      {
-        GC.SuppressFinalize(this);
-        _isDisposed = true;
-      }
-    }
+    public virtual void Dispose() => Task.Run(DisposeAsync).Wait();
 
     /// <inheritdoc />
-    public async ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
       if (_isDisposed)
         return;

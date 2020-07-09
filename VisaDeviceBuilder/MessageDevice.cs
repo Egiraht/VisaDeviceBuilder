@@ -23,11 +23,7 @@ namespace VisaDeviceBuilder
     };
 
     /// <inheritdoc cref="Session" />
-    public new IMessageBasedSession? Session
-    {
-      get => base.Session as IMessageBasedSession;
-      protected set => base.Session = value;
-    }
+    public new IMessageBasedSession? Session => base.Session as IMessageBasedSession;
 
     /// <inheritdoc />
     public override HardwareInterfaceType[] SupportedInterfaces => SupportedMessageBasedInterfaces;
@@ -54,6 +50,24 @@ namespace VisaDeviceBuilder
     public MessageDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout,
       IResourceManager? resourceManager = null) : base(resourceName, connectionTimeout, resourceManager)
     {
+    }
+
+    /// <inheritdoc />
+    public override async Task OpenSessionAsync()
+    {
+      await base.OpenSessionAsync();
+
+      try
+      {
+        if (Session == null)
+          throw new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions.");
+      }
+      catch (Exception e)
+      {
+        await CloseSessionAsync();
+        DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
+        throw new VisaDeviceException(this, e);
+      }
     }
 
     /// <inheritdoc />

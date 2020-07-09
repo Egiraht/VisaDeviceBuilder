@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Tests.Components;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests
@@ -20,14 +21,14 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaSessionTest()
     {
-      var device = new VisaDevice(TestResourceManager.TestDeviceResourceName,
+      var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
         TestResourceManager.DefaultConnectionTimeout, ResourceManager);
       Assert.Equal(ResourceManager, device.ResourceManager);
-      Assert.Equal(TestResourceManager.TestDeviceInterfaceType, device.Interface);
+      Assert.Equal(TestResourceManager.CustomTestDeviceInterfaceType, device.Interface);
       Assert.Equal(TestResourceManager.DefaultConnectionTimeout, device.ConnectionTimeout);
-      Assert.Equal(TestResourceManager.TestDeviceResourceName, device.ResourceName);
-      Assert.Equal(TestResourceManager.TestDeviceAliasName, device.AliasName);
-      Assert.Equal(TestResourceManager.TestDeviceAliasName, await device.GetIdentifierAsync());
+      Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
+      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
+      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
       Assert.Empty(device.AsyncProperties);
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);
       Assert.False(device.IsSessionOpened);
@@ -49,7 +50,7 @@ namespace VisaDeviceBuilder.Tests
     public async Task DeviceDisposalTest()
     {
       IVisaDevice? devicePointer;
-      using (var device = new VisaDevice(TestResourceManager.TestDeviceResourceName,
+      using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
         TestResourceManager.DefaultConnectionTimeout, ResourceManager))
       {
         devicePointer = device;
@@ -59,7 +60,7 @@ namespace VisaDeviceBuilder.Tests
       await Assert.ThrowsAsync<ObjectDisposedException>(devicePointer.OpenSessionAsync);
       devicePointer.Dispose();
 
-      await using (var device = new VisaDevice(TestResourceManager.TestDeviceResourceName,
+      await using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
         TestResourceManager.DefaultConnectionTimeout, ResourceManager))
       {
         devicePointer = device;
