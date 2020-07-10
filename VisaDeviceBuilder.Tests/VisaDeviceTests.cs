@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
@@ -29,7 +30,11 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
+
       Assert.Empty(device.AsyncProperties);
+      Assert.Equal(device.ResetAsync, device.AsyncActions[nameof(device.ResetAsync)]);
+      Assert.Throws<KeyNotFoundException>(() => device.AsyncActions[nameof(device.OpenSessionAsync)]);
+
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);
       Assert.False(device.IsSessionOpened);
 

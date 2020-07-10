@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Ivi.Visa;
 
@@ -20,7 +21,8 @@ namespace VisaDeviceBuilder.Tests.Components
     private IAsyncProperty<int>? _testAsyncProperty;
 
     /// <summary>
-    ///   Gets the test asynchronous property of integer type.
+    ///   Gets the test asynchronous property of integer type that must be enlisted into the
+    ///   <see cref="IVisaDevice.AsyncProperties" /> dictionary.
     /// </summary>
     public IAsyncProperty<int> TestAsyncProperty =>
       _testAsyncProperty ??= new AsyncProperty<int>(() => _value, newValue => _value = newValue);
@@ -50,5 +52,20 @@ namespace VisaDeviceBuilder.Tests.Components
     public override Task DeInitializeAsync() => ThrowOnDeInitialization
       ? throw new Exception("Test exception")
       : Task.CompletedTask;
+
+    /// <summary>
+    ///   Defines the device's valid asynchronous action that must be enlisted into the
+    ///   <see cref="IVisaDevice.AsyncActions" /> dictionary.
+    /// </summary>
+    [AsyncAction, ExcludeFromCodeCoverage]
+    public Task TestAsyncAction() => Task.CompletedTask;
+
+    /// <summary>
+    ///   Defines the device's invalid asynchronous action that must not be enlisted into the
+    ///   <see cref="IVisaDevice.AsyncActions" /> dictionary because it does not match the <see cref="AsyncAction" />
+    ///   delegate signature.
+    /// </summary>
+    [AsyncAction, ExcludeFromCodeCoverage]
+    public Task<string> InvalidAsyncAction() => Task.FromResult(string.Empty);
   }
 }

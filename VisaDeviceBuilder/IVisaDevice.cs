@@ -64,6 +64,12 @@ namespace VisaDeviceBuilder
     IDictionary<string, IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
+    ///   Gets the dictionary of asynchronous actions available for the current device.
+    ///   Keys of the dictionary contain the names of corresponding asynchronous actions stored as values.
+    /// </summary>
+    IDictionary<string, AsyncAction> AsyncActions { get; }
+
+    /// <summary>
     ///   Asynchronously opens a connection session with the device.
     ///   After opening a new session the <see cref="InitializeAsync" /> method is called.
     /// </summary>
