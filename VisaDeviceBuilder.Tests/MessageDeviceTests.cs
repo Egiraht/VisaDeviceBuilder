@@ -60,7 +60,7 @@ namespace VisaDeviceBuilder.Tests
     {
       await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName,
         TestResourceManager.DefaultConnectionTimeout, ResourceManager);
-      Assert.Contains(device.TestAsyncProperty, device.AsyncProperties);
+      Assert.Equal(device.TestAsyncProperty, device.AsyncProperties[nameof(device.TestAsyncProperty)]);
 
       device.ThrowOnInitialization = true;
       await Assert.ThrowsAnyAsync<Exception>(device.OpenSessionAsync);

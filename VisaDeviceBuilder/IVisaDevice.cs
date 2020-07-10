@@ -58,9 +58,10 @@ namespace VisaDeviceBuilder
     bool IsSessionOpened { get; }
 
     /// <summary>
-    ///   Gets the collection of async properties available for the current device.
+    ///   Gets the dictionary of asynchronous properties available for the current device.
+    ///   Keys of the dictionary contain the names of corresponding asynchronous properties stored as values.
     /// </summary>
-    ICollection<IAsyncProperty> AsyncProperties { get; }
+    IDictionary<string, IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.

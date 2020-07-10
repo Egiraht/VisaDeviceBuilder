@@ -65,7 +65,7 @@ namespace VisaDeviceBuilder
     public virtual bool IsSessionOpened => Session != null;
 
     /// <inheritdoc />
-    public ICollection<IAsyncProperty> AsyncProperties { get; }
+    public IDictionary<string, IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
     ///   Creates a new instance of a custom VISA device.
@@ -96,8 +96,7 @@ namespace VisaDeviceBuilder
       AsyncProperties = GetType()
         .GetProperties()
         .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
-        .Select(property => (IAsyncProperty) property.GetValue(this))
-        .ToList();
+        .ToDictionary(property => property.Name, property => (IAsyncProperty) property.GetValue(this));
     }
 
     /// <inheritdoc />
@@ -111,7 +110,8 @@ namespace VisaDeviceBuilder
 
       if (!SupportedInterfaces.Contains(Interface))
         throw new VisaDeviceException(this,
-          new NotSupportedException($"The interface \"{Interface}\" is not supported by devices of type \"{GetType().Name}\"."));
+          new NotSupportedException(
+            $"The interface \"{Interface}\" is not supported by devices of type \"{GetType().Name}\"."));
 
       try
       {
