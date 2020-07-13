@@ -3,13 +3,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
-    <Title>Visa device builder library</Title>
+    <Title>VISA device builder library</Title>
     <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
     <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
     <RepositoryType>Git</RepositoryType>
-    <PackageTags>Visa, device control</PackageTags>
+    <PackageTags>VISA, device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <NeutralLanguage>en</NeutralLanguage>
+    <NoWarn>1701;1702;NU1701</NoWarn>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>This library targets convenient creation of VISA device abstractions that can be controlled via GUI control panels.</Description>
   </PropertyGroup>
 
   <!-- Project properties for "Release" configuration. -->

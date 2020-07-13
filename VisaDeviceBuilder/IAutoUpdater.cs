@@ -1,0 +1,54 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+
+namespace VisaDeviceBuilder
+{
+  public interface IAutoUpdater : IDisposable
+  {
+    /// <summary>
+    ///   Gets the collection of asynchronous properties that are updated by this auto-updater instance.
+    /// </summary>
+    IEnumerable<IAsyncProperty> AsyncProperties { get; }
+
+    /// <summary>
+    ///   Gets or sets the delay value awaited before updating the next available asynchronous property.
+    /// </summary>
+    TimeSpan Delay { get; set; }
+
+    /// <summary>
+    ///   Checks if the auto-updater is running.
+    /// </summary>
+    bool IsRunning { get; }
+
+    /// <summary>
+    ///   The event fired when every single loop cycle elapses.
+    /// </summary>
+    event EventHandler? AutoUpdateCycle;
+
+    /// <summary>
+    ///   The event fired when an exception is thrown from within the auto-update loop.
+    /// </summary>
+    /// <remarks>
+    ///   The thrown exception does not stop the loop, so the action will continue get periodically called until it
+    ///   will be explicitly stopped using the <see cref="AutoUpdater.Stop" /> method or the object will be disposed.
+    /// </remarks>
+    event ThreadExceptionEventHandler? AutoUpdateException;
+
+    /// <summary>
+    ///   Starts the auto-updater.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///   The object was disposed.
+    /// </exception>
+    void Start();
+
+    /// <summary>
+    ///   Stops the auto-updater.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///   The object was disposed.
+    /// </exception>
+    void Stop();
+  }
+}

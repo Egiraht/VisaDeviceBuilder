@@ -39,10 +39,12 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(device.IsSessionOpened);
 
       await device.OpenSessionAsync();
+      await device.OpenSessionAsync();
       await device.ResetAsync();
       Assert.Equal(DeviceConnectionState.Connected, device.DeviceConnectionState);
       Assert.True(device.IsSessionOpened);
 
+      await device.CloseSessionAsync();
       await device.CloseSessionAsync();
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);
       Assert.False(device.IsSessionOpened);
@@ -54,26 +56,17 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceDisposalTest()
     {
-      IVisaDevice? devicePointer;
-      using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager))
-      {
-        devicePointer = device;
-        await device.OpenSessionAsync();
-        await device.OpenSessionAsync();
-      }
-      await Assert.ThrowsAsync<ObjectDisposedException>(devicePointer.OpenSessionAsync);
-      devicePointer.Dispose();
-
+      IVisaDevice? deviceReference;
       await using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
         TestResourceManager.DefaultConnectionTimeout, ResourceManager))
       {
-        devicePointer = device;
-        await device.CloseSessionAsync();
-        await device.CloseSessionAsync();
+        deviceReference = device;
+        await device.OpenSessionAsync();
       }
-      await Assert.ThrowsAsync<ObjectDisposedException>(devicePointer.CloseSessionAsync);
-      await devicePointer.DisposeAsync();
+      Assert.False(deviceReference.IsSessionOpened);
+      await Assert.ThrowsAsync<ObjectDisposedException>(deviceReference.OpenSessionAsync);
+      await Assert.ThrowsAsync<ObjectDisposedException>(deviceReference.CloseSessionAsync);
+      deviceReference.Dispose();
     }
 
     /// <inheritdoc />

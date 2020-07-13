@@ -11,6 +11,16 @@ namespace VisaDeviceBuilder.Tests.Components
   public class TestMessageDevice : MessageDevice
   {
     /// <summary>
+    ///   Defines the communication delay in milliseconds imitated by this test device.
+    /// </summary>
+    public const int CommunicationDelay = 1;
+
+    /// <summary>
+    ///   The synchronization locking object.
+    /// </summary>
+    private readonly object _synchronizationLock = new object();
+
+    /// <summary>
     ///   The actual value accessed by the <see cref="TestAsyncProperty" /> property.
     /// </summary>
     private int _value;
@@ -24,8 +34,21 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets the test asynchronous property of integer type that must be enlisted into the
     ///   <see cref="IVisaDevice.AsyncProperties" /> dictionary.
     /// </summary>
-    public IAsyncProperty<int> TestAsyncProperty =>
-      _testAsyncProperty ??= new AsyncProperty<int>(() => _value, newValue => _value = newValue);
+    public IAsyncProperty<int> TestAsyncProperty => _testAsyncProperty ??= new AsyncProperty<int>(() =>
+    {
+      lock (_synchronizationLock)
+      {
+        Task.Delay(CommunicationDelay).Wait();
+        return _value;
+      }
+    }, newValue =>
+    {
+      lock (_synchronizationLock)
+      {
+        Task.Delay(CommunicationDelay).Wait();
+        _value = newValue;
+      }
+    });
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown on the device initialization.

@@ -9,11 +9,5 @@ namespace VisaDeviceBuilder
   [AttributeUsage(AttributeTargets.Method)]
   public class AsyncActionAttribute : Attribute
   {
-    /// <summary>
-    ///   Creates a new instance of the attribute.
-    /// </summary>
-    public AsyncActionAttribute()
-    {
-    }
   }
 }
