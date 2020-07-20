@@ -1,0 +1,51 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <!-- Common project properties. -->
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <OutputType>WinExe</OutputType>
+    <Nullable>enable</Nullable>
+    <Title>WPF test GUI application</Title>
+    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
+    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>VISA, device control</PackageTags>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <Description>The test WPF application for controlling a message-based VISA device.</Description>
+  </PropertyGroup>
+
+  <!-- Project properties for "Release" configuration. -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
+
+    <!-- Remove related *.xml and *.pdb files from references. -->
+    <AllowedReferenceRelatedFileExtensions>-</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <!-- The reference for external Keysight.Visa assembly. -->
+  <!-- Keysight IO Libraries Suite package must be installed before compilation. -->
+  <ItemGroup>
+    <Reference Include="Keysight.Visa">
+      <HintPath>C:\Program Files\Keysight\IO Libraries Suite\Keysight.Visa.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Local project references. -->
+  <ItemGroup>
+    <ProjectReference Include="../VisaDeviceBuilder.WPF/VisaDeviceBuilder.WPF.csproj" />
+    <ProjectReference Include="../VisaDeviceBuilder/VisaDeviceBuilder.csproj" />
+  </ItemGroup>
+
+  <!-- Use public static helper class generator for ResX files. -->
+  <ItemGroup>
+    <EmbeddedResource Update="*/**.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <!-- Rename application's executable file to "App.exe". -->
+  <Target Name="RenameExe" AfterTargets="AfterBuild">
+    <Move SourceFiles="$(OutDir)/$(TargetName).exe" DestinationFiles="$(OutDir)/App.exe" />
+  </Target>
+</Project>

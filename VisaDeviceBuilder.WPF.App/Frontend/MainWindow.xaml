@@ -1,0 +1,18 @@
+﻿<Window x:Class="VisaDeviceBuilder.WPF.App.Frontend.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:wpf="clr-namespace:VisaDeviceBuilder.WPF;assembly=VisaDeviceBuilder.WPF"
+        xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.App.Resources"
+        xmlns:comp="clr-namespace:VisaDeviceBuilder.WPF.App.Components"
+        mc:Ignorable="d"
+        SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
+        Title="{x:Static res:Localization.Title}">
+  <StackPanel Orientation="Horizontal">
+    <wpf:DeviceControlPanel DeviceType="comp:TestMessageDevice"
+                            DeviceLabel="Test message device"
+                            IsCommandInputEnabled="True"
+                            Exception="OnException" />
+  </StackPanel>
+</Window>

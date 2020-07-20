@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true" />
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>
+      System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+      PublicKeyToken=b77a5c561934e089
+    </value>
+  </resheader>
+  <resheader name="writer">
+    <value>
+      System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+      PublicKeyToken=b77a5c561934e089
+    </value>
+  </resheader>
+
+  <data name="Update" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Сброс</value>
+  </data>
+  <data name="VisaResourceName" xml:space="preserve">
+    <value>Имя ресурса VISA</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Подключить устройство</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Отключить устройство</value>
+  </data>
+  <data name="Initializing" xml:space="preserve">
+    <value>Инициализация</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Подключено</value>
+  </data>
+  <data name="DeInitializing" xml:space="preserve">
+    <value>Деинициализация</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Отключено</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="SearchingForResources" xml:space="preserve">
+    <value>Идёт поиск ресурсов...</value>
+  </data>
+  <data name="DeviceIsInitializing" xml:space="preserve">
+    <value>Инициализация устройства...</value>
+  </data>
+  <data name="DeviceWasInitialized" xml:space="preserve">
+    <value>Устройство было успешно инициализировано.</value>
+  </data>
+  <data name="DeviceIsDeInitializing" xml:space="preserve">
+    <value>Деинициализация устройства...</value>
+  </data>
+  <data name="DeviceWasDisconnected" xml:space="preserve">
+    <value>Устройство было отключено.</value>
+  </data>
+  <data name="DeviceWasDisconnectedWithError" xml:space="preserve">
+    <value>Устройство было отключено из-за наличия ошибок.</value>
+  </data>
+  <data name="DeviceIdentifier" xml:space="preserve">
+    <value>Идентификатор устройства</value>
+  </data>
+  <data name="AutoUpdateMs" xml:space="preserve">
+    <value>Автообновление (мс)</value>
+  </data>
+  <data name="SendCommand" xml:space="preserve">
+    <value>Отправить команду</value>
+  </data>
+  <data name="CommandResponse" xml:space="preserve">
+    <value>Ответ на команду</value>
+  </data>
+  <data name="PropertyName" xml:space="preserve">
+    <value>Имя свойства</value>
+  </data>
+  <data name="PropertyActualValue" xml:space="preserve">
+    <value>Текущее значение</value>
+  </data>
+  <data name="PropertyNewValue" xml:space="preserve">
+    <value>Новое значение</value>
+  </data>
+  <data name="InvalidVisaDeviceType" xml:space="preserve">
+    <value>Указанный тип устройства VISA "{0}" не реализует интерфейс "{1}".</value>
+  </data>
+  <data name="InvalidResourceManagerType" xml:space="preserve">
+    <value>Указанный тип менеджера ресурсов VISA "{0}" не реализует интерфейс "{1}".</value>
+  </data>
+</root>

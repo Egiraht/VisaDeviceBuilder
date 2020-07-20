@@ -1,0 +1,154 @@
+<UserControl x:Class="VisaDeviceBuilder.WPF.DeviceControlPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources"
+             mc:Ignorable="d"
+             Width="500"
+             DataContext="{Binding RelativeSource={RelativeSource Self}}"
+             HorizontalAlignment="Left" VerticalAlignment="Top"
+             Initialized="OnControlInitialized">
+  <UserControl.Resources>
+    <ResourceDictionary Source="Styles.xaml" />
+  </UserControl.Resources>
+
+  <Border BorderThickness="1" BorderBrush="Gray" Margin="5">
+    <Grid Margin="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition MinWidth="200" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />    <!-- Row 0 -->
+        <RowDefinition Height="Auto" />    <!-- Row 1 -->
+        <RowDefinition Height="Auto" />    <!-- Row 2 -->
+        <RowDefinition Height="Auto" />    <!-- Row 3 -->
+        <RowDefinition Height="Auto" />    <!-- Row 4 -->
+        <RowDefinition Height="Auto" />    <!-- Row 5 -->
+        <RowDefinition Height="Auto" />    <!-- Row 6 -->
+        <RowDefinition Height="Auto" />    <!-- Row 7 -->
+        <RowDefinition Height="Auto" />    <!-- Row 8 -->
+        <RowDefinition Height="Auto" />    <!-- Row 9 -->
+        <RowDefinition Height="Auto" />    <!-- Row 10 -->
+        <RowDefinition Height="Auto" />    <!-- Row 11 -->
+        <RowDefinition Height="*" />       <!-- Row 12 (filler) -->
+      </Grid.RowDefinitions>
+
+      <!-- Row 0 -->
+      <Label Grid.Row="0" Grid.Column="0"
+             Content="{Binding DeviceLabel}"
+             FontWeight="Bold" />
+      <Label Grid.Row="0" Grid.Column="1"
+             Style="{StaticResource DeviceStateDisplayStyle}" />
+
+      <!-- Row 1 -->
+      <Separator Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" />
+
+      <!-- Row 2 -->
+      <Label Grid.Row="2" Grid.Column="0"
+             Content="{x:Static res:Localization.VisaResourceName}" ContentStringFormat="{}{0}:" />
+      <ComboBox Grid.Row="2" Grid.Column="1"
+                x:Name="ResourceNamesComboBox"
+                Style="{StaticResource EnableOnDeviceIsDisconnectedStyle}"
+                ItemsSource="{Binding AvailableVisaResources}"
+                SelectedItem="{Binding ResourceName, Mode=TwoWay}"
+                Padding="4 2"
+                DropDownOpened="OnResourceNamesComboBoxDropDownOpened" />
+
+      <!-- Row 3 -->
+      <Button x:Name="ConnectButton" Grid.Row="3" Grid.Column="0"
+              Style="{StaticResource EnableOnCanConnectStyle}"
+              Content="{x:Static res:Localization.Connect}"
+              Click="OnConnectButtonClick" />
+      <Button x:Name="DisconnectButton" Grid.Row="3" Grid.Column="1"
+              Style="{StaticResource EnableOnCanDisconnectStyle}"
+              Content="{x:Static res:Localization.Disconnect}"
+              Click="OnDisconnectButtonClick" />
+
+      <!-- Row 4 -->
+      <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" />
+
+      <!-- Row 5 -->
+      <Label Grid.Row="5" Grid.Column="0"
+             Content="{x:Static res:Localization.DeviceIdentifier}" ContentStringFormat="{}{0}:" />
+      <TextBox Grid.Row="5" Grid.Column="1"
+               Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+               Text="{Binding Identifier, Mode=OneWay}"
+               IsReadOnly="True" />
+
+      <!-- Row 6 -->
+      <DataGrid Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2"
+                x:Name="DataGrid"
+                Style="{StaticResource AsyncPropertiesGridStyle}"
+                CellStyle="{StaticResource AsyncPropertiesGridCellStyle}"
+                ItemsSource="{Binding AsyncProperties}"
+                MinHeight="45">
+        <DataGrid.Columns>
+          <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
+                              Binding="{Binding Path=Key, Mode=OneWay}"
+                              Header="{x:Static res:Localization.PropertyName}"
+                              Width="Auto" MinWidth="100"
+                              IsReadOnly="True" CanUserResize="True" />
+          <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
+                              Binding="{Binding Path=Value.Getter, Mode=OneWay}"
+                              Header="{x:Static res:Localization.PropertyActualValue}"
+                              Width="*" MinWidth="60"
+                              IsReadOnly="True" CanUserResize="True" />
+          <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
+                              Binding="{Binding Path=Value.Setter, Mode=TwoWay}"
+                              Header="{x:Static res:Localization.PropertyNewValue}"
+                              Width="*" MinWidth="60"
+                              IsReadOnly="False" CanUserResize="True" />
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <!-- Row 7 -->
+      <CheckBox Grid.Row="7" Grid.Column="0"
+                Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+                IsChecked="{Binding IsAutoUpdaterEnabled, Mode=TwoWay}"
+                Content="{x:Static res:Localization.AutoUpdateMs}" ContentStringFormat="{}{0}:" />
+      <TextBox Grid.Row="7" Grid.Column="1"
+               x:Name="AutoUpdatePeriodInput"
+               Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+               Text="{Binding AutoUpdaterDelay, Mode=TwoWay}"
+               KeyDown="OnTextBoxKeyDown" />
+
+      <!-- Row 8 -->
+      <Button Grid.Row="8" Grid.Column="0"
+              x:Name="UpdateButton"
+              Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+              Content="{x:Static res:Localization.Update}"
+              Click="OnUpdateButtonClick" />
+      <Button Grid.Row="8" Grid.Column="1"
+              x:Name="ResetButton"
+              Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+              Content="{x:Static res:Localization.Reset}"
+              Click="OnResetButtonClick" />
+
+      <!-- Row 9 -->
+      <Separator Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
+                 Style="{StaticResource ShowOnCommandInputEnabled}" />
+
+      <!-- Row 10 -->
+      <TextBox Grid.Row="10" Grid.Column="0"
+               Style="{StaticResource ShowOnCommandInputEnabled}"
+               Text="{Binding CommandMessage, Mode=TwoWay}" />
+      <Button Grid.Row="10" Grid.Column="1"
+              x:Name="SendCommandButton"
+              Style="{StaticResource ShowOnCommandInputEnabled}"
+              Content="{x:Static res:Localization.SendCommand}"
+              Click="OnSendCommandButtonClick" />
+
+      <!-- Row 11 -->
+      <Label Grid.Row="11" Grid.Column="0"
+             Style="{StaticResource ShowOnCommandInputEnabled}"
+             Content="{x:Static res:Localization.CommandResponse}" ContentStringFormat="{}{0}:" />
+      <TextBox Grid.Row="11" Grid.Column="1"
+               Style="{StaticResource ShowOnCommandInputEnabled}"
+               Text="{Binding CommandResponse, Mode=OneWay}"
+               IsReadOnly="True" />
+    </Grid>
+  </Border>
+</UserControl>

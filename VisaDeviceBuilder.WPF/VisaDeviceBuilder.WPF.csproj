@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <!-- Common project properties. -->
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <Title>WPF GUI controls library for VISA devices</Title>
+    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
+    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
+    <RepositoryType>Git</RepositoryType>
+    <PackageTags>VISA, device control</PackageTags>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <NeutralLanguage>en</NeutralLanguage>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>The library providing simple WPF GUI controls for VISA devices.</Description>
+  </PropertyGroup>
+
+  <!-- Project properties for "Release" configuration. -->
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <!-- Local project dependencies. -->
+  <ItemGroup>
+    <ProjectReference Include="..\VisaDeviceBuilder\VisaDeviceBuilder.csproj" />
+  </ItemGroup>
+
+  <!-- Use public static resource class generator for all ResX files. -->
+  <ItemGroup>
+    <EmbeddedResource Update="**/*.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

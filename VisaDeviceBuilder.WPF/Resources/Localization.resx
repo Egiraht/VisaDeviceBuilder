@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+              xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true" />
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>1.3</value>
+  </resheader>
+  <resheader name="reader">
+    <value>
+      System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+      PublicKeyToken=b77a5c561934e089
+    </value>
+  </resheader>
+  <resheader name="writer">
+    <value>
+      System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+      PublicKeyToken=b77a5c561934e089
+    </value>
+  </resheader>
+
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="VisaResourceName" xml:space="preserve">
+    <value>VISA resource name</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect device</value>
+  </data>
+  <data name="Disconnect" xml:space="preserve">
+    <value>Disconnect device</value>
+  </data>
+  <data name="Initializing" xml:space="preserve">
+    <value>Initializing</value>
+  </data>
+  <data name="Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="DeInitializing" xml:space="preserve">
+    <value>De-initializing</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="SearchingForResources" xml:space="preserve">
+    <value>Searching for resources...</value>
+  </data>
+  <data name="DeviceIsInitializing" xml:space="preserve">
+    <value>Initializing the device...</value>
+  </data>
+  <data name="DeviceWasInitialized" xml:space="preserve">
+    <value>The device has been successfully initialized.</value>
+  </data>
+  <data name="DeviceIsDeInitializing" xml:space="preserve">
+    <value>De-initializing the device...</value>
+  </data>
+  <data name="DeviceWasDisconnected" xml:space="preserve">
+    <value>The device has been disconnected.</value>
+  </data>
+  <data name="DeviceWasDisconnectedWithError" xml:space="preserve">
+    <value>The device has been disconnected because of an error.</value>
+  </data>
+  <data name="DeviceIdentifier" xml:space="preserve">
+    <value>Device identifier</value>
+  </data>
+  <data name="AutoUpdateMs" xml:space="preserve">
+    <value>Auto-update (мс)</value>
+  </data>
+  <data name="SendCommand" xml:space="preserve">
+    <value>Send the command</value>
+  </data>
+  <data name="CommandResponse" xml:space="preserve">
+    <value>Command response</value>
+  </data>
+  <data name="PropertyName" xml:space="preserve">
+    <value>Property name</value>
+  </data>
+  <data name="PropertyActualValue" xml:space="preserve">
+    <value>Current value</value>
+  </data>
+  <data name="PropertyNewValue" xml:space="preserve">
+    <value>New value</value>
+  </data>
+  <data name="InvalidVisaDeviceType" xml:space="preserve">
+    <value>The specified VISA device type "{0}" does not implement the "{1}" interface.</value>
+  </data>
+  <data name="InvalidResourceManagerType" xml:space="preserve">
+    <value>The specified VISA resource manager type "{0}" does not implement the "{1}" interface.</value>
+  </data>
+</root>
