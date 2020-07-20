@@ -144,10 +144,13 @@ namespace VisaDeviceBuilder
 
       try
       {
-        Session = ResourceManager != null
-          ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
-          : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
         DeviceConnectionState = DeviceConnectionState.Initializing;
+        await Task.Run(() =>
+        {
+          Session = ResourceManager != null
+            ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
+            : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
+        });
         await InitializeAsync();
         DeviceConnectionState = DeviceConnectionState.Connected;
       }
