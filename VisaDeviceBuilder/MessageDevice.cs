@@ -82,7 +82,7 @@ namespace VisaDeviceBuilder
         lock (RequestLock)
         {
           Session.FormattedIO.WriteLine(request);
-          return Session.FormattedIO.ReadLine();
+          return Session.FormattedIO.ReadLine().TrimEnd('\x0A');
         }
       });
     }
