@@ -56,6 +56,9 @@ namespace VisaDeviceBuilder
       }
     }
 
+    /// <inheritdoc />
+    public bool AutoUpdateGetterAfterSetterCompletes { get; set; } = false;
+
     /// <summary>
     ///   Gets the shared synchronization lock object.
     /// </summary>
@@ -171,6 +174,9 @@ namespace VisaDeviceBuilder
       {
         OnSetterException(e);
       }
+
+      if (AutoUpdateGetterAfterSetterCompletes)
+        await UpdateGetterAsync();
     }
 
     /// <inheritdoc />

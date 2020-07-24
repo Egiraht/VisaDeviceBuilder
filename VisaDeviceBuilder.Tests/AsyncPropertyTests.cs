@@ -128,6 +128,31 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
+    ///   Testing auto-updating of the getter after setter value processing completes.
+    /// </summary>
+    [Fact]
+    public async Task GetterAutoUpdatingTest()
+    {
+      var property = new AsyncProperty(GetterCallback, SetterCallback);
+      property.AutoUpdateGetterAfterSetterCompletes = false;
+      Assert.Empty(property.Getter);
+
+      property.Setter = TestValue;
+      await property.WaitUntilSetterCompletes();
+      Assert.Empty(property.Getter);
+
+      await property.UpdateGetterAsync();
+      Assert.Equal(TestValue, property.Getter);
+
+      property.AutoUpdateGetterAfterSetterCompletes = true;
+      property.Setter = string.Empty;
+      Assert.Equal(TestValue, property.Getter);
+
+      await property.WaitUntilSetterCompletes();
+      Assert.Empty(property.Getter);
+    }
+
+    /// <summary>
     ///   Testing the getter/setter events in the asynchronous property.
     /// </summary>
     [Fact]

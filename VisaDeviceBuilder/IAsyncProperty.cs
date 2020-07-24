@@ -31,6 +31,14 @@ namespace VisaDeviceBuilder
     string Setter { get; set; }
 
     /// <summary>
+    ///   Gets of sets the flag indicating if the <see cref="Getter" /> property value should be automatically updated
+    ///   after new <see cref="Setter" /> property value processing completes.
+    ///   Setting this value to <c>true</c> can be useful if no supplementary <see cref="IAutoUpdater" /> is used
+    ///   to periodically update the getter.
+    /// </summary>
+    bool AutoUpdateGetterAfterSetterCompletes { get; set; }
+
+    /// <summary>
     ///   The event called when the new getter value is updated.
     /// </summary>
     event EventHandler? GetterUpdated;
@@ -52,12 +60,11 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Performs the asynchronous update of the <see cref="Getter" /> property.
-    ///   After the operation is completed the <see cref="Getter" /> property value is updated automatically.
     /// </summary>
     Task UpdateGetterAsync();
 
     /// <summary>
-    ///   Waits until the <see cref="Setter" /> property value processing is completed.
+    ///   Waits until <see cref="Setter" /> property value processing completes.
     /// </summary>
     Task WaitUntilSetterCompletes();
   }
