@@ -61,8 +61,8 @@ namespace VisaDeviceBuilder.Tests.Components
     public bool ThrowOnDeInitialization { get; set; } = false;
 
     /// <inheritdoc />
-    public TestMessageDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout,
-      IResourceManager? resourceManager = null) : base(resourceName, connectionTimeout, resourceManager)
+    public TestMessageDevice(string resourceName, IResourceManager? resourceManager = null) :
+      base(resourceName, resourceManager)
     {
     }
 

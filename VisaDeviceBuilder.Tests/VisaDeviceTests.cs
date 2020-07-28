@@ -22,11 +22,9 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaSessionTest()
     {
-      var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager);
+      var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager);
       Assert.Equal(ResourceManager, device.ResourceManager);
       Assert.Equal(TestResourceManager.CustomTestDeviceInterfaceType, device.Interface);
-      Assert.Equal(TestResourceManager.DefaultConnectionTimeout, device.ConnectionTimeout);
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
@@ -57,8 +55,7 @@ namespace VisaDeviceBuilder.Tests
     public async Task DeviceDisposalTest()
     {
       IVisaDevice? deviceReference;
-      await using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager))
+      await using (var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager))
       {
         deviceReference = device;
         await device.OpenSessionAsync();

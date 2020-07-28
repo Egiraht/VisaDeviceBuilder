@@ -40,7 +40,7 @@ namespace VisaDeviceBuilder
     public string ResourceName { get; }
 
     /// <inheritdoc />
-    public int ConnectionTimeout { get; }
+    public int ConnectionTimeout { get; } = DefaultConnectionTimeout;
 
     /// <inheritdoc />
     public string AliasName
@@ -76,16 +76,18 @@ namespace VisaDeviceBuilder
     /// <param name="resourceName">
     ///   The VISA resource name of the device.
     /// </param>
-    /// <param name="connectionTimeout">
-    ///   The connection timeout in milliseconds.
-    ///   Defaults to the <see cref="DefaultConnectionTimeout" /> value.
-    /// </param>
     /// <param name="resourceManager">
     ///   The custom VISA resource manager instance used for VISA session management.
-    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
+    ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
     /// </param>
-    public VisaDevice(string resourceName, int connectionTimeout = DefaultConnectionTimeout,
-      IResourceManager? resourceManager = null)
+    /// <remarks>
+    ///   When using the <see cref="GlobalResourceManager" /> class for VISA resource management with the
+    ///   <i>.NET Core</i> runtime, the assembly <i>.dll</i> files of the installed VISA .NET implementations must be
+    ///   directly referenced in the project. This is because the <i>.NET Core</i> runtime does not automatically
+    ///   locate assemblies from the system's Global Assembly Cache (GAC) used by the <i>.NET Framework</i> runtime,
+    ///   and where the VISA standard prescribes to install the VISA .NET implementation libraries.
+    /// </remarks>
+    public VisaDevice(string resourceName, IResourceManager? resourceManager = null)
     {
       ResourceManager = resourceManager;
       var parsedResourceName = ResourceManager != null
@@ -95,7 +97,6 @@ namespace VisaDeviceBuilder
       ResourceName = parsedResourceName.ExpandedUnaliasedName;
       AliasName = parsedResourceName.AliasIfExists;
       Interface = parsedResourceName.InterfaceType;
-      ConnectionTimeout = connectionTimeout;
       AsyncProperties = CollectOwnAsyncProperties();
       AsyncActions = CollectOwnAsyncActions();
     }

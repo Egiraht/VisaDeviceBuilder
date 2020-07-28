@@ -32,8 +32,7 @@ namespace VisaDeviceBuilder.Tests
     public async Task DeviceAutoUpdateLoopTest()
     {
       using var resourceManager = new TestResourceManager();
-      await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, resourceManager);
+      await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, resourceManager);
       using var autoUpdater = new AutoUpdater(device) {Delay = AutoUpdateDelay};
       Assert.False(autoUpdater.IsRunning);
       Assert.Equal(device.AsyncProperties.Values, autoUpdater.AsyncProperties);

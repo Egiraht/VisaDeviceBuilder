@@ -23,8 +23,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task MessageBasedSessionTest()
     {
-      await using var device = new MessageDevice(TestResourceManager.SerialTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager);
+      await using var device = new MessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
       Assert.Null(device.Session);
       await Assert.ThrowsAnyAsync<VisaDeviceException>(() => device.SendMessageAsync(string.Empty));
 
@@ -43,13 +42,11 @@ namespace VisaDeviceBuilder.Tests
     public async Task UnsupportedResourcesTest()
     {
       // Testing the unsupported interface type.
-      await using (var device = new MessageDevice(TestResourceManager.CustomTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager))
+      await using (var device = new MessageDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager))
         await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
 
       // Testing the supported interface type but with the non-message-based session type.
-      await using (var device = new MessageDevice(TestResourceManager.VxiTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager))
+      await using (var device = new MessageDevice(TestResourceManager.VxiTestDeviceResourceName, ResourceManager))
         await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
     }
 
@@ -59,8 +56,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task CustomMessageDeviceTest()
     {
-      await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName,
-        TestResourceManager.DefaultConnectionTimeout, ResourceManager);
+      await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
       Assert.Equal(device.TestAsyncProperty, device.AsyncProperties[nameof(device.TestAsyncProperty)]);
       Assert.Equal(device.TestAsyncAction, device.AsyncActions[nameof(device.TestAsyncAction)]);
       Assert.Throws<KeyNotFoundException>(() => device.AsyncActions[nameof(device.InvalidAsyncAction)]);
