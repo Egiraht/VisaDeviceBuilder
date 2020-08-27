@@ -22,14 +22,14 @@ namespace VisaDeviceBuilder.WPF.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Localization {
+    public class Localization_ru {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Localization() {
+        internal Localization_ru() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.WPF.Resources.Localization", typeof(Localization).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.WPF.Resources.Localization.ru", typeof(Localization_ru).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Auto-update (мс).
+        ///   Looks up a localized string similar to Автообновление (мс).
         /// </summary>
         public static string AutoUpdateMs {
             get {
@@ -70,7 +70,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Command response.
+        ///   Looks up a localized string similar to Ответ на команду.
         /// </summary>
         public static string CommandResponse {
             get {
@@ -79,7 +79,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connect device.
+        ///   Looks up a localized string similar to Подключить устройство.
         /// </summary>
         public static string Connect {
             get {
@@ -88,7 +88,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected.
+        ///   Looks up a localized string similar to Подключено.
         /// </summary>
         public static string Connected {
             get {
@@ -97,7 +97,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to De-initializing.
+        ///   Looks up a localized string similar to Деинициализация.
         /// </summary>
         public static string DeInitializing {
             get {
@@ -106,7 +106,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Device identifier.
+        ///   Looks up a localized string similar to Идентификатор устройства.
         /// </summary>
         public static string DeviceIdentifier {
             get {
@@ -115,7 +115,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to De-initializing the device....
+        ///   Looks up a localized string similar to Деинициализация устройства....
         /// </summary>
         public static string DeviceIsDeInitializing {
             get {
@@ -124,7 +124,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Initializing the device....
+        ///   Looks up a localized string similar to Инициализация устройства....
         /// </summary>
         public static string DeviceIsInitializing {
             get {
@@ -133,7 +133,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The device has been disconnected..
+        ///   Looks up a localized string similar to Устройство было отключено..
         /// </summary>
         public static string DeviceWasDisconnected {
             get {
@@ -142,7 +142,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The device has been disconnected because of an error..
+        ///   Looks up a localized string similar to Устройство было отключено из-за наличия ошибок..
         /// </summary>
         public static string DeviceWasDisconnectedWithError {
             get {
@@ -151,7 +151,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The device has been successfully initialized..
+        ///   Looks up a localized string similar to Устройство было успешно инициализировано..
         /// </summary>
         public static string DeviceWasInitialized {
             get {
@@ -160,7 +160,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disconnect device.
+        ///   Looks up a localized string similar to Отключить устройство.
         /// </summary>
         public static string Disconnect {
             get {
@@ -169,7 +169,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Disconnected.
+        ///   Looks up a localized string similar to Отключено.
         /// </summary>
         public static string Disconnected {
             get {
@@ -178,7 +178,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error.
+        ///   Looks up a localized string similar to Ошибка.
         /// </summary>
         public static string Error {
             get {
@@ -187,7 +187,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Initializing.
+        ///   Looks up a localized string similar to Инициализация.
         /// </summary>
         public static string Initializing {
             get {
@@ -196,7 +196,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The specified VISA resource manager type &quot;{0}&quot; does not implement the &quot;{1}&quot; interface..
+        ///   Looks up a localized string similar to Указанный тип менеджера ресурсов VISA &quot;{0}&quot; не реализует интерфейс &quot;{1}&quot;..
         /// </summary>
         public static string InvalidResourceManagerType {
             get {
@@ -205,7 +205,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The specified VISA device type &quot;{0}&quot; does not implement the &quot;{1}&quot; interface..
+        ///   Looks up a localized string similar to Указанный тип устройства VISA &quot;{0}&quot; не реализует интерфейс &quot;{1}&quot;..
         /// </summary>
         public static string InvalidVisaDeviceType {
             get {
@@ -214,7 +214,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Other actions.
+        ///   Looks up a localized string similar to Прочие действия.
         /// </summary>
         public static string OtherActions {
             get {
@@ -223,7 +223,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current value.
+        ///   Looks up a localized string similar to Текущее значение.
         /// </summary>
         public static string PropertyActualValue {
             get {
@@ -232,7 +232,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Property name.
+        ///   Looks up a localized string similar to Имя свойства.
         /// </summary>
         public static string PropertyName {
             get {
@@ -241,7 +241,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to New value.
+        ///   Looks up a localized string similar to Новое значение.
         /// </summary>
         public static string PropertyNewValue {
             get {
@@ -250,7 +250,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reset.
+        ///   Looks up a localized string similar to Сброс.
         /// </summary>
         public static string Reset {
             get {
@@ -259,7 +259,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Searching for resources....
+        ///   Looks up a localized string similar to Идёт поиск ресурсов....
         /// </summary>
         public static string SearchingForResources {
             get {
@@ -268,7 +268,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Send the command.
+        ///   Looks up a localized string similar to Отправить команду.
         /// </summary>
         public static string SendCommand {
             get {
@@ -277,7 +277,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update.
+        ///   Looks up a localized string similar to Обновить.
         /// </summary>
         public static string Update {
             get {
@@ -286,7 +286,7 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to VISA resource name.
+        ///   Looks up a localized string similar to Имя ресурса VISA.
         /// </summary>
         public static string VisaResourceName {
             get {

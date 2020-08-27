@@ -29,6 +29,9 @@
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
+  <data name="OtherActions" xml:space="preserve">
+    <value>Other actions</value>
+  </data>
   <data name="VisaResourceName" xml:space="preserve">
     <value>VISA resource name</value>
   </data>

@@ -78,71 +78,75 @@ namespace VisaDeviceBuilder.WPF.App.Components
     /// <summary>
     ///   Gets the test asynchronous property of a string type.
     /// </summary>
-    public IAsyncProperty StringAsyncProperty => _stringAsyncProperty ??= new AsyncProperty<string>(() =>
-    {
-      lock (_synchronizationLock)
+    public IAsyncProperty<string> StringAsyncProperty => _stringAsyncProperty ??=
+      new AsyncProperty<string>(() =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        return _stringAsyncPropertyValue;
-      }
-    }, newValue =>
-    {
-      lock (_synchronizationLock)
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          return _stringAsyncPropertyValue;
+        }
+      }, newValue =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        _stringAsyncPropertyValue = newValue;
-      }
-    });
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          _stringAsyncPropertyValue = newValue;
+        }
+      });
 
     /// <summary>
     ///   Gets the get-only test asynchronous property of an integer type.
     /// </summary>
-    public IAsyncProperty IntegerAsyncProperty => _integerAsyncProperty ??= new AsyncProperty<int>(() =>
-    {
-      lock (_synchronizationLock)
+    public IAsyncProperty<int> IntegerAsyncProperty => _integerAsyncProperty ??=
+      new AsyncProperty<int>(() =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        return _integerAsyncPropertyValue;
-      }
-    }, newValue =>
-    {
-      lock (_synchronizationLock)
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          return _integerAsyncPropertyValue;
+        }
+      }, newValue =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        _integerAsyncPropertyValue = newValue;
-      }
-    });
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          _integerAsyncPropertyValue = newValue;
+        }
+      });
 
     /// <summary>
     ///   Gets the get-only test asynchronous property of a double-precision floating point type.
     /// </summary>
-    public IAsyncProperty FloatingPointAsyncProperty => _floatingPointAsyncProperty ??= new AsyncProperty<double>(() =>
-    {
-      lock (_synchronizationLock)
+    public IAsyncProperty<double> FloatingPointAsyncProperty => _floatingPointAsyncProperty ??=
+      new AsyncProperty<double>(() =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        return _floatingPointAsyncPropertyValue;
-      }
-    }, newValue =>
-    {
-      lock (_synchronizationLock)
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          return _floatingPointAsyncPropertyValue;
+        }
+      }, newValue =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        _floatingPointAsyncPropertyValue = newValue;
-      }
-    });
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          _floatingPointAsyncPropertyValue = newValue;
+        }
+      });
 
     /// <summary>
     ///   Gets the set-only test asynchronous property of a string type.
     /// </summary>
-    public IAsyncProperty SetOnlyAsyncProperty => _setOnlyAsyncProperty ??= new AsyncProperty<string>(newValue =>
-    {
-      lock (_synchronizationLock)
+    public IAsyncProperty<string> SetOnlyAsyncProperty => _setOnlyAsyncProperty ??=
+      new AsyncProperty<string>(newValue =>
       {
-        Task.Delay(CommunicationDelay).Wait();
-        _singleAccessorAsyncPropertyValue = newValue;
-      }
-    });
+        lock (_synchronizationLock)
+        {
+          Task.Delay(CommunicationDelay).Wait();
+          _singleAccessorAsyncPropertyValue = newValue;
+        }
+      });
 
     /// <summary>
     ///   Gets the set-only test asynchronous property of a string type.
@@ -174,10 +178,27 @@ namespace VisaDeviceBuilder.WPF.App.Components
     {
     }
 
+    /// <inheritdoc />
+    public override async Task ResetAsync()
+    {
+      await Task.Delay(CommunicationDelay);
+      StringAsyncProperty.Setter = string.Empty;
+      IntegerAsyncProperty.Setter = default;
+      FloatingPointAsyncProperty.Setter = default;
+      SetOnlyAsyncProperty.Setter = string.Empty;
+    }
+
     /// <summary>
     ///   Defines the device's test asynchronous action.
     /// </summary>
     [AsyncAction]
-    public Task TestAsyncAction() => Task.Delay(CommunicationDelay);
+    public async Task TestAsyncAction()
+    {
+      await Task.Delay(CommunicationDelay);
+      StringAsyncProperty.Setter = StringAsyncProperty.Getter + "+";
+      IntegerAsyncProperty.Setter = IntegerAsyncProperty.Getter + 1;
+      FloatingPointAsyncProperty.Setter = FloatingPointAsyncProperty.Getter + 1;
+      SetOnlyAsyncProperty.Setter += GetOnlyAsyncProperty.Getter + "+";
+    }
   }
 }

@@ -292,6 +292,13 @@ namespace VisaDeviceBuilder.WPF
       new ObservableCollection<KeyValuePair<string, IAsyncProperty>>();
 
     /// <summary>
+    ///   Gets the collection of asynchronous actions and their names available in the <see cref="Device" />
+    ///   instance.
+    /// </summary>
+    public ObservableCollection<KeyValuePair<string, AsyncAction>> AsyncActions { get; } =
+      new ObservableCollection<KeyValuePair<string, AsyncAction>>();
+
+    /// <summary>
     ///   Gets the auto-updater object that allows to automatically update getters of asynchronous properties
     ///   available in the <see cref="AsyncProperties" /> collection.
     /// </summary>
@@ -409,6 +416,12 @@ namespace VisaDeviceBuilder.WPF
         foreach (var pair in Device.AsyncProperties)
           AsyncProperties.Add(pair);
       OnPropertyChanged(nameof(AsyncProperties));
+
+      AsyncActions.Clear();
+      if (Device != null)
+        foreach (var pair in Device.AsyncActions)
+          AsyncActions.Add(pair);
+      OnPropertyChanged(nameof(AsyncActions));
 
       AutoUpdater?.Dispose();
       AutoUpdater = Device != null ? new AutoUpdater(Device) : null;
@@ -620,7 +633,7 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   The callback for the <see cref="UpdateButton" /> click event.
+    ///   The callback for the <see cref="UpdateMenuItem" /> click event.
     /// </summary>
     /// <param name="sender">
     ///   The event sender object.
@@ -628,35 +641,11 @@ namespace VisaDeviceBuilder.WPF
     /// <param name="e">
     ///   The event arguments object.
     /// </param>
-    private async void OnUpdateButtonClick(object sender, RoutedEventArgs e)
+    private async void OnUpdateMenuItemClick(object sender, RoutedEventArgs e)
     {
       try
       {
         await UpdateAsyncPropertiesAsync();
-      }
-      catch (Exception exception)
-      {
-        OnException(exception);
-      }
-    }
-
-    /// <summary>
-    ///   The callback for the <see cref="ResetButton" /> click event.
-    /// </summary>
-    /// <param name="sender">
-    ///   The event sender object.
-    /// </param>
-    /// <param name="e">
-    ///   The event arguments object.
-    /// </param>
-    private async void OnResetButtonClick(object sender, RoutedEventArgs e)
-    {
-      if (Device == null)
-        return;
-
-      try
-      {
-        await Device.ResetAsync();
       }
       catch (Exception exception)
       {

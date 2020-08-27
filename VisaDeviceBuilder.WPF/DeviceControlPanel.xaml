@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources"
+             xmlns:comp="clr-namespace:VisaDeviceBuilder.WPF.Components"
              mc:Ignorable="d"
              Width="500"
              DataContext="{Binding RelativeSource={RelativeSource Self}}"
@@ -105,27 +106,36 @@
       </DataGrid>
 
       <!-- Row 7 -->
-      <CheckBox Grid.Row="7" Grid.Column="0"
+      <Menu Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2"
+            x:Name="AsyncActionsComboBox"
+            Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+            Background="Transparent" Padding="4 2">
+        <MenuItem x:Name="UpdateMenuItem"
+                  Header="{x:Static res:Localization.Update}"
+                  Click="OnUpdateMenuItemClick" />
+
+        <MenuItem Header="{x:Static res:Localization.OtherActions}" HeaderStringFormat="{}{0}..."
+                  ItemsSource="{Binding AsyncActions}">
+          <MenuItem.ItemContainerStyle>
+            <Style TargetType="MenuItem">
+              <Setter Property="Header" Value="{Binding Key}" />
+              <Setter Property="CommandParameter" Value="{Binding Value}" />
+              <Setter Property="Command" Value="{x:Static comp:InvokeAsyncActionCommand.Instance}" />
+            </Style>
+          </MenuItem.ItemContainerStyle>
+        </MenuItem>
+      </Menu>
+
+      <!-- Row 8 -->
+      <CheckBox Grid.Row="8" Grid.Column="0"
                 Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
                 IsChecked="{Binding IsAutoUpdaterEnabled, Mode=TwoWay}"
                 Content="{x:Static res:Localization.AutoUpdateMs}" ContentStringFormat="{}{0}:" />
-      <TextBox Grid.Row="7" Grid.Column="1"
+      <TextBox Grid.Row="8" Grid.Column="1"
                x:Name="AutoUpdatePeriodInput"
                Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
                Text="{Binding AutoUpdaterDelay, Mode=TwoWay}"
                KeyDown="OnTextBoxKeyDown" />
-
-      <!-- Row 8 -->
-      <Button Grid.Row="8" Grid.Column="0"
-              x:Name="UpdateButton"
-              Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
-              Content="{x:Static res:Localization.Update}"
-              Click="OnUpdateButtonClick" />
-      <Button Grid.Row="8" Grid.Column="1"
-              x:Name="ResetButton"
-              Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
-              Content="{x:Static res:Localization.Reset}"
-              Click="OnResetButtonClick" />
 
       <!-- Row 9 -->
       <Separator Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
