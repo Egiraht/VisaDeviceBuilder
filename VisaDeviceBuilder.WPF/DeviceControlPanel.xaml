@@ -3,16 +3,19 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:VisaDeviceBuilder.WPF"
              xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources"
              xmlns:comp="clr-namespace:VisaDeviceBuilder.WPF.Components"
              mc:Ignorable="d"
              Width="500"
-             DataContext="{Binding RelativeSource={RelativeSource Self}}"
-             HorizontalAlignment="Left" VerticalAlignment="Top"
-             Initialized="OnControlInitialized">
+             HorizontalAlignment="Left" VerticalAlignment="Top">
   <UserControl.Resources>
     <ResourceDictionary Source="Styles.xaml" />
   </UserControl.Resources>
+
+  <UserControl.DataContext>
+    <local:DeviceControlPanelViewModel />
+  </UserControl.DataContext>
 
   <Border BorderThickness="1" BorderBrush="Gray" Margin="5">
     <Grid Margin="2">
@@ -60,13 +63,11 @@
 
       <!-- Row 3 -->
       <Button x:Name="ConnectButton" Grid.Row="3" Grid.Column="0"
-              Style="{StaticResource EnableOnCanConnectStyle}"
               Content="{x:Static res:Localization.Connect}"
-              Click="OnConnectButtonClick" />
+              Command="{Binding ConnectCommand}" />
       <Button x:Name="DisconnectButton" Grid.Row="3" Grid.Column="1"
-              Style="{StaticResource EnableOnCanDisconnectStyle}"
               Content="{x:Static res:Localization.Disconnect}"
-              Click="OnDisconnectButtonClick" />
+              Command="{Binding DisconnectCommand}" />
 
       <!-- Row 4 -->
       <Separator Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" />
@@ -88,17 +89,17 @@
                 MinHeight="45">
         <DataGrid.Columns>
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=Key, Mode=OneWay}"
+                              Binding="{Binding Path=Name, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyName}"
                               Width="Auto" MinWidth="100"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=Value.Getter, Mode=OneWay}"
+                              Binding="{Binding Path=AsyncProperty.Getter, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyActualValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=Value.Setter, Mode=TwoWay}"
+                              Binding="{Binding Path=AsyncProperty.Setter, Mode=TwoWay}"
                               Header="{x:Static res:Localization.PropertyNewValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="False" CanUserResize="True" />
@@ -112,14 +113,14 @@
             Background="Transparent" Padding="4 2">
         <MenuItem x:Name="UpdateMenuItem"
                   Header="{x:Static res:Localization.Update}"
-                  Click="OnUpdateMenuItemClick" />
+                  Command="{Binding UpdateCommand}" />
 
         <MenuItem Header="{x:Static res:Localization.OtherActions}" HeaderStringFormat="{}{0}..."
                   ItemsSource="{Binding AsyncActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
-              <Setter Property="Header" Value="{Binding Key}" />
-              <Setter Property="CommandParameter" Value="{Binding Value}" />
+              <Setter Property="Header" Value="{Binding Name}" />
+              <Setter Property="CommandParameter" Value="{Binding AsyncAction}" />
               <Setter Property="Command" Value="{x:Static comp:InvokeAsyncActionCommand.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>
@@ -135,7 +136,7 @@
                x:Name="AutoUpdatePeriodInput"
                Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
                Text="{Binding AutoUpdaterDelay, Mode=TwoWay}"
-               KeyDown="OnTextBoxKeyDown" />
+               KeyDown="UpdateTextBoxValueOnEnterKeyDown" />
 
       <!-- Row 9 -->
       <Separator Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
@@ -144,12 +145,12 @@
       <!-- Row 10 -->
       <TextBox Grid.Row="10" Grid.Column="0"
                Style="{StaticResource ShowOnCommandInputEnabled}"
-               Text="{Binding CommandMessage, Mode=TwoWay}" />
+               Text="{Binding RequestMessage, Mode=TwoWay}" />
       <Button Grid.Row="10" Grid.Column="1"
               x:Name="SendCommandButton"
               Style="{StaticResource ShowOnCommandInputEnabled}"
               Content="{x:Static res:Localization.SendCommand}"
-              Click="OnSendCommandButtonClick" />
+              Command="{Binding SendMessageCommand}" />
 
       <!-- Row 11 -->
       <Label Grid.Row="11" Grid.Column="0"
@@ -157,7 +158,7 @@
              Content="{x:Static res:Localization.CommandResponse}" ContentStringFormat="{}{0}:" />
       <TextBox Grid.Row="11" Grid.Column="1"
                Style="{StaticResource ShowOnCommandInputEnabled}"
-               Text="{Binding CommandResponse, Mode=OneWay}"
+               Text="{Binding ResponseMessage, Mode=OneWay}"
                IsReadOnly="True" />
     </Grid>
   </Border>
