@@ -16,16 +16,13 @@ namespace VisaDeviceBuilder
   public class AsyncProperty<TValue> : AsyncProperty, IAsyncProperty<TValue>
   {
     /// <inheritdoc />
-    public new TValue Getter => StringToTypeConverter != null
-      ? StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Getter) ? base.Getter : default!)
-      : default!;
+    public new TValue Getter =>
+      StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Getter) ? base.Getter : default!);
 
     /// <inheritdoc />
     public new TValue Setter
     {
-      get => StringToTypeConverter != null
-        ? StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Setter) ? base.Setter : default!)
-        : default!;
+      get => StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Setter) ? base.Setter : default!);
       set => base.Setter = TypeToStringConverter(value) ?? string.Empty;
     }
 
@@ -273,7 +270,7 @@ namespace VisaDeviceBuilder
       {
         var typeConverter = TypeDescriptor.GetConverter(typeof(TValue));
         return typeConverter.CanConvertFrom(typeof(string))
-          ? (TValue) typeConverter.ConvertFromInvariantString(value)
+          ? (TValue) typeConverter.ConvertFromInvariantString(value)!
           : default!;
       }
       catch

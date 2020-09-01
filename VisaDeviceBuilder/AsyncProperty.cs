@@ -57,7 +57,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public bool AutoUpdateGetterAfterSetterCompletes { get; set; } = false;
+    public bool AutoUpdateGetterAfterSetterCompletes { get; set; } = true;
 
     /// <summary>
     ///   Gets the shared synchronization lock object.

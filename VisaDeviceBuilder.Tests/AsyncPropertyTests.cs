@@ -162,6 +162,7 @@ namespace VisaDeviceBuilder.Tests
       var setterPassed = false;
       var lastChangedPropertyName = string.Empty;
       var property = new AsyncProperty(GetterCallback, SetterCallback);
+      property.AutoUpdateGetterAfterSetterCompletes = false;
       property.GetterUpdated += (_, e) => getterPassed = true;
       property.SetterCompleted += (_, e) => setterPassed = true;
       property.PropertyChanged += (_, e) => lastChangedPropertyName = e.PropertyName;
@@ -193,6 +194,7 @@ namespace VisaDeviceBuilder.Tests
       Exception? setterException = null;
       var property = new AsyncProperty(() => throw new Exception(GetterExceptionMessage),
         _ => throw new Exception(SetterExceptionMessage));
+      property.AutoUpdateGetterAfterSetterCompletes = false;
       property.GetterException += (_, e) => getterException = e.Exception;
       property.SetterException += (_, e) => setterException = e.Exception;
       Assert.Null(getterException);
