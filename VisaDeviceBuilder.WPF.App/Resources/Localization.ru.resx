@@ -24,4 +24,31 @@
   <data name="Title" xml:space="preserve">
     <value>Контрольная панель для устройств VISA</value>
   </data>
+  <data name="StringAsyncProperty" xml:space="preserve">
+    <value>Строковое значение</value>
+  </data>
+  <data name="IntegerAsyncProperty" xml:space="preserve">
+    <value>Целочисленное значение</value>
+  </data>
+  <data name="FloatingPointAsyncProperty" xml:space="preserve">
+    <value>Значение с плавающей точкой</value>
+  </data>
+  <data name="RandomAsyncProperty" xml:space="preserve">
+    <value>Случайное значение</value>
+  </data>
+  <data name="GetOnlyAsyncProperty" xml:space="preserve">
+    <value>Значение только для чтения</value>
+  </data>
+  <data name="SetOnlyAsyncProperty" xml:space="preserve">
+    <value>Значение только для записи</value>
+  </data>
+  <data name="ResetAsync" xml:space="preserve">
+    <value>Сброс</value>
+  </data>
+  <data name="TestAsyncAction" xml:space="preserve">
+    <value>Тестовое действие</value>
+  </data>
+  <data name="TestMessageDevice" xml:space="preserve">
+    <value>Тестовое текстовое устройство</value>
+  </data>
 </root>

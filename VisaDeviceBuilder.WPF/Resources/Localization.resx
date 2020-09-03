@@ -23,8 +23,8 @@
     </value>
   </resheader>
 
-  <data name="Update" xml:space="preserve">
-    <value>Update</value>
+  <data name="UpdateProperties" xml:space="preserve">
+    <value>Update properties</value>
   </data>
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>

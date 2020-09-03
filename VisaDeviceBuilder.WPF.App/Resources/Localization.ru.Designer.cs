@@ -22,14 +22,14 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class Localization {
+    public class Localization_ru {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
         private static global::System.Globalization.CultureInfo resourceCulture;
         
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal Localization() {
+        internal Localization_ru() {
         }
         
         /// <summary>
@@ -39,7 +39,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.WPF.App.Resources.Localization", typeof(Localization).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.WPF.App.Resources.Localization.ru", typeof(Localization_ru).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Floating point value.
+        ///   Looks up a localized string similar to Значение с плавающей точкой.
         /// </summary>
         public static string FloatingPointAsyncProperty {
             get {
@@ -70,7 +70,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get-only value.
+        ///   Looks up a localized string similar to Значение только для чтения.
         /// </summary>
         public static string GetOnlyAsyncProperty {
             get {
@@ -79,7 +79,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Integer value.
+        ///   Looks up a localized string similar to Целочисленное значение.
         /// </summary>
         public static string IntegerAsyncProperty {
             get {
@@ -88,7 +88,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Random value.
+        ///   Looks up a localized string similar to Случайное значение.
         /// </summary>
         public static string RandomAsyncProperty {
             get {
@@ -97,7 +97,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Reset.
+        ///   Looks up a localized string similar to Сброс.
         /// </summary>
         public static string ResetAsync {
             get {
@@ -106,7 +106,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set-only value.
+        ///   Looks up a localized string similar to Значение только для записи.
         /// </summary>
         public static string SetOnlyAsyncProperty {
             get {
@@ -115,7 +115,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String value.
+        ///   Looks up a localized string similar to Строковое значение.
         /// </summary>
         public static string StringAsyncProperty {
             get {
@@ -124,7 +124,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test action.
+        ///   Looks up a localized string similar to Тестовое действие.
         /// </summary>
         public static string TestAsyncAction {
             get {
@@ -133,7 +133,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test message device.
+        ///   Looks up a localized string similar to Тестовое текстовое устройство.
         /// </summary>
         public static string TestMessageDevice {
             get {
@@ -142,7 +142,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to VISA device control panel.
+        ///   Looks up a localized string similar to Контрольная панель для устройств VISA.
         /// </summary>
         public static string Title {
             get {

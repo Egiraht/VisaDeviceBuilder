@@ -3,13 +3,13 @@ using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Ivi.Visa;
+using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder.WPF
 {
   /// <summary>
   ///   The interaction logic class for the <i>DeviceControlPanel.xaml</i> user control.
   /// </summary>
-  // TODO: Convert the public properties into dependency properties.
   public partial class DeviceControlPanel
   {
     /// <summary>
@@ -70,12 +70,16 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Gets or sets the resource name used for VISA device connection.
+    ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available
+    ///   asynchronous properties and actions.
+    ///   The provided localization resource manager must be able to accept the original names of the asynchronous
+    ///   properties and actions and return their localized names.
+    ///   If not provided, the original names will be used without localization.
     /// </summary>
-    public string ResourceName
+    public LocalizationResourceManager? LocalizationResourceManager
     {
-      get => ViewModel.ResourceName;
-      set => ViewModel.ResourceName = value;
+      get => ViewModel.LocalizationResourceManager;
+      set => ViewModel.LocalizationResourceManager = value;
     }
 
     /// <summary>

@@ -2,7 +2,7 @@
 using System.Windows;
 using Localization = VisaDeviceBuilder.WPF.App.Resources.Localization;
 
-namespace VisaDeviceBuilder.WPF.App.Frontend
+namespace VisaDeviceBuilder.WPF.App
 {
   /// <summary>
   ///   The interaction logic class for the <i>MainWindow.xaml</i> window.

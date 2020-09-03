@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.WPF.Components;
 using Localization = VisaDeviceBuilder.WPF.Resources.Localization;
+using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder.WPF
 {
@@ -76,6 +77,11 @@ namespace VisaDeviceBuilder.WPF
     ///   The backing field for the <see cref="Device" /> property.
     /// </summary>
     private IVisaDevice? _device;
+
+    /// <summary>
+    ///   The backing field for the <see cref="LocalizationResourceManager" /> property.
+    /// </summary>
+    private LocalizationResourceManager? _localizationResourceManager;
 
     /// <summary>
     ///   The backing field for the <see cref="AutoUpdater" /> property.
@@ -295,6 +301,24 @@ namespace VisaDeviceBuilder.WPF
       new ObservableCollection<AsyncActionMetadata>();
 
     /// <summary>
+    ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available
+    ///   asynchronous properties and actions.
+    ///   The provided localization resource manager must be able to accept the original names of the asynchronous
+    ///   properties and actions and return their localized names.
+    ///   If not provided, the original names will be used without localization.
+    /// </summary>
+    public LocalizationResourceManager? LocalizationResourceManager
+    {
+      get => _localizationResourceManager;
+      set
+      {
+        _localizationResourceManager = value;
+        OnPropertyChanged();
+        LocalizeNames();
+      }
+    }
+
+    /// <summary>
     ///   Gets the auto-updater object that allows to automatically update getters of asynchronous properties
     ///   available in the <see cref="AsyncProperties" /> collection.
     /// </summary>
@@ -384,6 +408,36 @@ namespace VisaDeviceBuilder.WPF
     public event ThreadExceptionEventHandler? Exception;
 
     /// <summary>
+    ///   Rebuilds the collections of asynchronous properties and actions and localizes the names using the specified
+    ///   <see cref="LocalizationResourceManager" />.
+    ///   If <see cref="LocalizationResourceManager" /> is not provided, the original names are used.
+    /// </summary>
+    private void LocalizeNames()
+    {
+      AsyncProperties.Clear();
+      AsyncActions.Clear();
+
+      if (Device == null)
+        return;
+
+      foreach (var (name, asyncProperty) in Device.AsyncProperties)
+        AsyncProperties.Add(new AsyncPropertyMetadata
+        {
+          OriginalName = name,
+          LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
+          AsyncProperty = asyncProperty
+        });
+
+      foreach (var (name, asyncAction) in Device.AsyncActions)
+        AsyncActions.Add(new AsyncActionMetadata
+        {
+          OriginalName = name,
+          LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
+          AsyncAction = asyncAction
+        });
+    }
+
+    /// <summary>
     ///   Creates a new VISA device instance attached to this control.
     /// </summary>
     private void CreateNewDeviceInstance()
@@ -403,25 +457,7 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged(nameof(CanConnect));
         OnPropertyChanged(nameof(IsConnected));
 
-        AsyncProperties.Clear();
-        if (Device != null)
-          foreach (var (name, asyncProperty) in Device.AsyncProperties)
-            AsyncProperties.Add(new AsyncPropertyMetadata
-            {
-              Name = name,
-              AsyncProperty = asyncProperty
-            });
-        OnPropertyChanged(nameof(AsyncProperties));
-
-        AsyncActions.Clear();
-        if (Device != null)
-          foreach (var (name, asyncAction) in Device.AsyncActions)
-            AsyncActions.Add(new AsyncActionMetadata
-            {
-              Name = name,
-              AsyncAction = asyncAction
-            });
-        OnPropertyChanged(nameof(AsyncActions));
+        LocalizeNames();
 
         AutoUpdater?.Dispose();
         AutoUpdater = Device != null ? new AutoUpdater(Device) : null;

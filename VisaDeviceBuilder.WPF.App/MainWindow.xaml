@@ -1,4 +1,4 @@
-﻿<Window x:Class="VisaDeviceBuilder.WPF.App.Frontend.MainWindow"
+﻿<Window x:Class="VisaDeviceBuilder.WPF.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -10,9 +10,17 @@
         SizeToContent="WidthAndHeight" ResizeMode="CanMinimize"
         Title="{x:Static res:Localization.Title}">
   <StackPanel Orientation="Horizontal">
+    <!--
+      Creating the control panel of TestMessageDevice type.
+      It uses the GlobalResourceManager to invoke the Keysight VISA implementation library for device discovery and
+      session management.
+      The Keysight IO Libraries Suite package must be installed before compilation.
+    -->
     <wpf:DeviceControlPanel DeviceType="comp:TestMessageDevice"
-                            DeviceLabel="Test message device"
+                            ResourceManagerType="{x:Null}"
+                            DeviceLabel="{x:Static res:Localization.TestMessageDevice}"
                             IsCommandInputEnabled="True"
+                            LocalizationResourceManager="{x:Static res:Localization.ResourceManager}"
                             Exception="OnException" />
   </StackPanel>
 </Window>

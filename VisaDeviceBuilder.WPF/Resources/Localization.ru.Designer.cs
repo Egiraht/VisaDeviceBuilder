@@ -277,11 +277,11 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Обновить.
+        ///   Looks up a localized string similar to Обновить свойства.
         /// </summary>
-        public static string Update {
+        public static string UpdateProperties {
             get {
-                return ResourceManager.GetString("Update", resourceCulture);
+                return ResourceManager.GetString("UpdateProperties", resourceCulture);
             }
         }
         

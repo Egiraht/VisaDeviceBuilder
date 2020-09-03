@@ -39,7 +39,7 @@
 
   <!-- Use public static helper class generator for ResX files. -->
   <ItemGroup>
-    <EmbeddedResource Update="*/**.resx">
+    <EmbeddedResource Update="**/*.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>

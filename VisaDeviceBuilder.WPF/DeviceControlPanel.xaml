@@ -89,7 +89,7 @@
                 MinHeight="45">
         <DataGrid.Columns>
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=Name, Mode=OneWay}"
+                              Binding="{Binding Path=LocalizedName, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyName}"
                               Width="Auto" MinWidth="100"
                               IsReadOnly="True" CanUserResize="True" />
@@ -112,14 +112,14 @@
             Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
             Background="Transparent" Padding="4 2">
         <MenuItem x:Name="UpdateMenuItem"
-                  Header="{x:Static res:Localization.Update}"
+                  Header="{x:Static res:Localization.UpdateProperties}"
                   Command="{Binding UpdateCommand}" />
 
         <MenuItem Header="{x:Static res:Localization.OtherActions}" HeaderStringFormat="{}{0}..."
                   ItemsSource="{Binding AsyncActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
-              <Setter Property="Header" Value="{Binding Name}" />
+              <Setter Property="Header" Value="{Binding LocalizedName}" />
               <Setter Property="CommandParameter" Value="{Binding AsyncAction}" />
               <Setter Property="Command" Value="{x:Static comp:InvokeAsyncActionCommand.Instance}" />
             </Style>
