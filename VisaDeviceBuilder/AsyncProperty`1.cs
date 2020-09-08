@@ -79,7 +79,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string converter is used (see the <see cref="DefaultTypeToStringConverter" /> method).
+    ///   The default type to string and string to type converters are used
+    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
@@ -91,7 +92,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string converter is used (see the <see cref="DefaultTypeToStringConverter" /> method).
+    ///   The default type to string and string to type converters are used
+    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
@@ -143,7 +145,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default string to type converter is used (see the <see cref="DefaultStringToTypeConverter" /> method).
+    ///   The default type to string and string to type converters are used
+    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
     /// </summary>
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
@@ -155,7 +158,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default string to type converter is used (see the <see cref="DefaultStringToTypeConverter" /> method).
+    ///   The default type to string and string to type converters are used
+    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
     /// </summary>
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.

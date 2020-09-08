@@ -54,9 +54,9 @@ namespace VisaDeviceBuilder.WPF
     private string _deviceLabel = string.Empty;
 
     /// <summary>
-    ///   The backing field for the <see cref="IsCommandInputEnabled" /> property.
+    ///   The backing field for the <see cref="IsMessageInputPanelEnabled" /> property.
     /// </summary>
-    private bool _isCommandInputEnabled;
+    private bool _isMessageInputPanelEnabled;
 
     /// <summary>
     ///   The backing field for the <see cref="Identifier" /> property.
@@ -131,7 +131,7 @@ namespace VisaDeviceBuilder.WPF
     ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
     /// </summary>
     /// <exception cref="InvalidCastException">
-    ///   The provided type value does not implement the <see cref="IResourceManager" /> interface.
+    ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
     /// </exception>
     public Type? ResourceManagerType
     {
@@ -165,14 +165,14 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Checks or sets the value if the command input should be enabled.
+    ///   Checks or sets the value if the message input panel should be enabled.
     /// </summary>
-    public bool IsCommandInputEnabled
+    public bool IsMessageInputPanelEnabled
     {
-      get => _isCommandInputEnabled;
+      get => _isMessageInputPanelEnabled;
       set
       {
-        _isCommandInputEnabled = value;
+        _isMessageInputPanelEnabled = value;
         OnPropertyChanged();
       }
     }
@@ -520,7 +520,6 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged(nameof(IsConnected));
 
         await sessionTask;
-        await Device.ResetAsync();
         Identifier = await Device.GetIdentifierAsync();
         await UpdateAsyncPropertiesAsync();
 
@@ -604,7 +603,7 @@ namespace VisaDeviceBuilder.WPF
         if (!IsMessageDevice)
           return;
 
-        ResponseMessage = await ((IMessageDevice) Device!).SendMessageAsync(RequestMessage) ?? "";
+        ResponseMessage = await ((IMessageDevice) Device!).SendMessageAsync(RequestMessage);
       }
       catch (Exception exception)
       {

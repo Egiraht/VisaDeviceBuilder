@@ -152,6 +152,7 @@ namespace VisaDeviceBuilder.Tests.Components
         case {InterfaceType: SerialTestDeviceInterfaceType}:
         {
           var mock = new Mock<IMessageBasedSession>();
+          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
           mock.Setup(session => session.FormattedIO.WriteLine(string.Empty));
           mock.Setup(session => session.FormattedIO.ReadLine()).Returns(string.Empty);
@@ -162,6 +163,7 @@ namespace VisaDeviceBuilder.Tests.Components
         case {InterfaceType: VxiTestDeviceInterfaceType}:
         {
           var mock = new Mock<IRegisterBasedSession>();
+          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
           openStatus = ResourceOpenStatus.Success;
           return mock.Object;
@@ -170,6 +172,7 @@ namespace VisaDeviceBuilder.Tests.Components
         default:
         {
           var mock = new Mock<IVisaSession>();
+          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
           openStatus = ResourceOpenStatus.Success;
           return mock.Object;

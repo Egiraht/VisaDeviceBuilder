@@ -140,24 +140,24 @@
 
       <!-- Row 9 -->
       <Separator Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2"
-                 Style="{StaticResource ShowOnCommandInputEnabled}" />
+                 Style="{StaticResource ShowOnMessageInputPanelEnabled}" />
 
       <!-- Row 10 -->
       <TextBox Grid.Row="10" Grid.Column="0"
-               Style="{StaticResource ShowOnCommandInputEnabled}"
+               Style="{StaticResource ShowOnMessageInputPanelEnabled}"
                Text="{Binding RequestMessage, Mode=TwoWay}" />
       <Button Grid.Row="10" Grid.Column="1"
               x:Name="SendCommandButton"
-              Style="{StaticResource ShowOnCommandInputEnabled}"
-              Content="{x:Static res:Localization.SendCommand}"
+              Style="{StaticResource ShowOnMessageInputPanelEnabled}"
+              Content="{x:Static res:Localization.SendMessage}"
               Command="{Binding SendMessageCommand}" />
 
       <!-- Row 11 -->
       <Label Grid.Row="11" Grid.Column="0"
-             Style="{StaticResource ShowOnCommandInputEnabled}"
-             Content="{x:Static res:Localization.CommandResponse}" ContentStringFormat="{}{0}:" />
+             Style="{StaticResource ShowOnMessageInputPanelEnabled}"
+             Content="{x:Static res:Localization.MessageResponse}" ContentStringFormat="{}{0}:" />
       <TextBox Grid.Row="11" Grid.Column="1"
-               Style="{StaticResource ShowOnCommandInputEnabled}"
+               Style="{StaticResource ShowOnMessageInputPanelEnabled}"
                Text="{Binding ResponseMessage, Mode=OneWay}"
                IsReadOnly="True" />
     </Grid>

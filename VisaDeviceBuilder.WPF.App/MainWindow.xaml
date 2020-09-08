@@ -19,7 +19,9 @@
     <wpf:DeviceControlPanel DeviceType="comp:TestMessageDevice"
                             ResourceManagerType="{x:Null}"
                             DeviceLabel="{x:Static res:Localization.TestMessageDevice}"
-                            IsCommandInputEnabled="True"
+                            IsAutoUpdaterEnabled="True"
+                            AutoUpdaterDelay="10"
+                            IsMessageInputPanelEnabled="True"
                             LocalizationResourceManager="{x:Static res:Localization.ResourceManager}"
                             Exception="OnException" />
   </StackPanel>

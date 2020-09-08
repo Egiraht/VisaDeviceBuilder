@@ -38,7 +38,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(device.AsyncProperties.Values, autoUpdater.AsyncProperties);
       Assert.Equal(default, device.TestAsyncProperty.Getter);
 
-      // ReSharper disable AccessToDisposedClosure
       var cycleCounter = 0;
       autoUpdater.AutoUpdateCycle += (sender, args) => cycleCounter++;
       autoUpdater.Start();

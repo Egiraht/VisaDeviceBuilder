@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <!-- Common project properties. -->
   <PropertyGroup>
+    <ApplicationName>App</ApplicationName>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
     <OutputType>WinExe</OutputType>
@@ -44,8 +45,8 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <!-- Rename application's executable file to "App.exe". -->
+  <!-- Rename application's executable file to the value of the ApplicationName project property. -->
   <Target Name="RenameExe" AfterTargets="AfterBuild">
-    <Move SourceFiles="$(OutDir)/$(TargetName).exe" DestinationFiles="$(OutDir)/App.exe" />
+    <Move SourceFiles="$(OutDir)/$(TargetName).exe" DestinationFiles="$(OutDir)/$(ApplicationName).exe" />
   </Target>
 </Project>

@@ -179,6 +179,9 @@ namespace VisaDeviceBuilder.WPF.App.Components
     }
 
     /// <inheritdoc />
+    public override string SendMessage(string message) => message;
+
+    /// <inheritdoc />
     public override async Task ResetAsync()
     {
       await Task.Delay(CommunicationDelay);

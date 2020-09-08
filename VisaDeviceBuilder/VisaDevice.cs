@@ -131,7 +131,7 @@ namespace VisaDeviceBuilder
         .ToDictionary(method => method.Name, method => (AsyncAction) method.CreateDelegate(typeof(AsyncAction), this));
 
     /// <inheritdoc />
-    public virtual async Task OpenSessionAsync()
+    public async Task OpenSessionAsync()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(AliasName);
@@ -164,8 +164,10 @@ namespace VisaDeviceBuilder
       }
     }
 
-    /// <inheritdoc />
-    public virtual Task InitializeAsync() => Task.CompletedTask;
+    /// <summary>
+    ///   Asynchronously initializes the device after the successful session opening.
+    /// </summary>
+    protected virtual Task InitializeAsync() => Task.CompletedTask;
 
     /// <inheritdoc />
     public virtual Task<string> GetIdentifierAsync() => Task.FromResult(AliasName);
@@ -174,11 +176,13 @@ namespace VisaDeviceBuilder
     [AsyncAction]
     public virtual Task ResetAsync() => Task.CompletedTask;
 
-    /// <inheritdoc />
-    public virtual Task DeInitializeAsync() => Task.CompletedTask;
+    /// <summary>
+    ///   Asynchronously de-initializes the device before the session closing.
+    /// </summary>
+    protected virtual Task DeInitializeAsync() => Task.CompletedTask;
 
     /// <inheritdoc />
-    public virtual async Task CloseSessionAsync()
+    public async Task CloseSessionAsync()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(AliasName);
@@ -191,6 +195,10 @@ namespace VisaDeviceBuilder
         DeviceConnectionState = DeviceConnectionState.DeInitializing;
         await DeInitializeAsync();
         Session?.Dispose();
+      }
+      catch
+      {
+        // Suppress all exceptions.
       }
       finally
       {
@@ -208,19 +216,10 @@ namespace VisaDeviceBuilder
       if (_isDisposed)
         return;
 
-      try
-      {
-        await CloseSessionAsync();
-      }
-      catch
-      {
-        // Suppress all exceptions.
-      }
-      finally
-      {
-        GC.SuppressFinalize(this);
-        _isDisposed = true;
-      }
+      await CloseSessionAsync();
+
+      GC.SuppressFinalize(this);
+      _isDisposed = true;
     }
 
     /// <summary>

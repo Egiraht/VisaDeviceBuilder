@@ -67,12 +67,12 @@ namespace VisaDeviceBuilder.Tests.Components
     }
 
     /// <inheritdoc />
-    public override Task InitializeAsync() => ThrowOnInitialization
+    protected override Task InitializeAsync() => ThrowOnInitialization
       ? throw new Exception("Test exception")
       : Task.CompletedTask;
 
     /// <inheritdoc />
-    public override Task DeInitializeAsync() => ThrowOnDeInitialization
+    protected override Task DeInitializeAsync() => ThrowOnDeInitialization
       ? throw new Exception("Test exception")
       : Task.CompletedTask;
 

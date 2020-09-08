@@ -71,14 +71,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
-    ///   After opening a new session the <see cref="InitializeAsync" /> method is called.
     /// </summary>
     Task OpenSessionAsync();
-
-    /// <summary>
-    ///   Asynchronously initializes the device after the successful session opening.
-    /// </summary>
-    Task InitializeAsync();
 
     /// <summary>
     ///   Asynchronously reads the device identifier string.
@@ -94,13 +88,7 @@ namespace VisaDeviceBuilder
     Task ResetAsync();
 
     /// <summary>
-    ///   Asynchronously de-initializes the device before the session closing.
-    /// </summary>
-    Task DeInitializeAsync();
-
-    /// <summary>
     ///   Asynchronously closes the connection session with the device.
-    ///   Before closing the opened session the <see cref="DeInitializeAsync" /> method is called.
     /// </summary>
     Task CloseSessionAsync();
   }

@@ -7,6 +7,26 @@ namespace VisaDeviceBuilder
   /// </summary>
   public interface IMessageDevice : IVisaDevice
   {
-    Task<string?> SendMessageAsync(string request);
+    /// <summary>
+    ///   Synchronously sends the message to the connected message-based device.
+    /// </summary>
+    /// <param name="message">
+    ///   The message string to send.
+    /// </param>
+    /// <returns>
+    ///   The message response string returned by the device.
+    /// </returns>
+    string SendMessage(string message);
+
+    /// <summary>
+    ///   Asynchronously sends the message to the connected message-based device.
+    /// </summary>
+    /// <param name="message">
+    ///   The message string to send.
+    /// </param>
+    /// <returns>
+    ///   The message response string returned by the device.
+    /// </returns>
+    Task<string> SendMessageAsync(string message);
   }
 }

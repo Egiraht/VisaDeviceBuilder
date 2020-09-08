@@ -49,38 +49,29 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public override async Task OpenSessionAsync()
-    {
-      await base.OpenSessionAsync();
-
-      try
-      {
-        if (Session == null)
-          throw new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions.");
-      }
-      catch (Exception e)
-      {
-        await CloseSessionAsync();
-        DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
-        throw new VisaDeviceException(this, e);
-      }
-    }
+    protected override Task InitializeAsync() => Session != null
+      ? Task.CompletedTask
+      : throw new VisaDeviceException(this,
+        new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions."));
 
     /// <inheritdoc />
-    public virtual async Task<string?> SendMessageAsync(string request)
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session (<see cref="NullReferenceException" />).
+    /// </exception>
+    public virtual string SendMessage(string message)
     {
       if (Session == null)
         throw new VisaDeviceException(this,
           new NullReferenceException("Cannot send a message as there is no opened VISA session."));
 
-      return await Task.Run(() =>
+      lock (RequestLock)
       {
-        lock (RequestLock)
-        {
-          Session.FormattedIO.WriteLine(request);
-          return Session.FormattedIO.ReadLine().TrimEnd('\x0A');
-        }
-      });
+        Session.FormattedIO.WriteLine(message);
+        return Session.FormattedIO.ReadLine().TrimEnd('\x0A');
+      }
     }
+
+    /// <inheritdoc />
+    public virtual Task<string> SendMessageAsync(string message) => Task.Run(() => SendMessage(message));
   }
 }

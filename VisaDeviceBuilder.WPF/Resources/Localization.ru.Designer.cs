@@ -70,15 +70,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Ответ на команду.
-        /// </summary>
-        public static string CommandResponse {
-            get {
-                return ResourceManager.GetString("CommandResponse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Подключить устройство.
         /// </summary>
         public static string Connect {
@@ -214,6 +205,15 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ответ на сообщение.
+        /// </summary>
+        public static string MessageResponse {
+            get {
+                return ResourceManager.GetString("MessageResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Прочие действия.
         /// </summary>
         public static string OtherActions {
@@ -268,11 +268,11 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Отправить команду.
+        ///   Looks up a localized string similar to Отправить сообщение.
         /// </summary>
-        public static string SendCommand {
+        public static string SendMessage {
             get {
-                return ResourceManager.GetString("SendCommand", resourceCulture);
+                return ResourceManager.GetString("SendMessage", resourceCulture);
             }
         }
         

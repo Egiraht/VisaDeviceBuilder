@@ -80,11 +80,11 @@
   <data name="AutoUpdateMs" xml:space="preserve">
     <value>Автообновление (мс)</value>
   </data>
-  <data name="SendCommand" xml:space="preserve">
-    <value>Отправить команду</value>
+  <data name="SendMessage" xml:space="preserve">
+    <value>Отправить сообщение</value>
   </data>
-  <data name="CommandResponse" xml:space="preserve">
-    <value>Ответ на команду</value>
+  <data name="MessageResponse" xml:space="preserve">
+    <value>Ответ на сообщение</value>
   </data>
   <data name="PropertyName" xml:space="preserve">
     <value>Имя свойства</value>

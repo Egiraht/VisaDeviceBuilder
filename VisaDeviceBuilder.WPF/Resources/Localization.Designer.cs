@@ -70,15 +70,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Command response.
-        /// </summary>
-        public static string CommandResponse {
-            get {
-                return ResourceManager.GetString("CommandResponse", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Connect device.
         /// </summary>
         public static string Connect {
@@ -214,6 +205,15 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Message response.
+        /// </summary>
+        public static string MessageResponse {
+            get {
+                return ResourceManager.GetString("MessageResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Other actions.
         /// </summary>
         public static string OtherActions {
@@ -268,11 +268,11 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Send the command.
+        ///   Looks up a localized string similar to Send a message.
         /// </summary>
-        public static string SendCommand {
+        public static string SendMessage {
             get {
-                return ResourceManager.GetString("SendCommand", resourceCulture);
+                return ResourceManager.GetString("SendMessage", resourceCulture);
             }
         }
         

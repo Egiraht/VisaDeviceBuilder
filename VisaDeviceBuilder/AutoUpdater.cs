@@ -43,6 +43,9 @@ namespace VisaDeviceBuilder
     public bool IsRunning => AutoUpdaterTask != null;
 
     /// <inheritdoc />
+    /// <remarks>
+    ///   Do not call the <see cref="Stop" /> method inside the event handler because a deadlock will occur.
+    /// </remarks>
     public event EventHandler? AutoUpdateCycle;
 
     /// <inheritdoc />
@@ -74,10 +77,7 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual async Task AutoUpdateLoopAsync()
     {
-      if (!AsyncProperties.Any() || CancellationTokenSource == null)
-        return;
-
-      while (!CancellationTokenSource.IsCancellationRequested)
+      while (!CancellationTokenSource!.IsCancellationRequested)
       {
         foreach (var property in AsyncProperties)
         {
@@ -91,7 +91,14 @@ namespace VisaDeviceBuilder
 
         AutoUpdateCycle?.Invoke(this, EventArgs.Empty);
 
-        await Task.Delay(Delay, CancellationTokenSource.Token);
+        try
+        {
+          await Task.Delay(Delay, CancellationTokenSource.Token);
+        }
+        catch
+        {
+          // Suppress the delay task cancellation exception.
+        }
       }
     }
 
@@ -124,7 +131,7 @@ namespace VisaDeviceBuilder
       }
       catch
       {
-        // Suppress task cancellation exceptions.
+        // Suppress possible exceptions.
       }
 
       AutoUpdaterTask.Dispose();

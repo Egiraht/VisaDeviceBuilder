@@ -43,7 +43,7 @@ namespace VisaDeviceBuilder.WPF
     ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
     /// </summary>
     /// <exception cref="InvalidCastException">
-    ///   The provided type value does not implement the <see cref="IResourceManager" /> interface.
+    ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
     /// </exception>
     public Type? ResourceManagerType
     {
@@ -61,12 +61,30 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Checks or sets the value if the command input should be enabled.
+    ///   Checks or sets if the auto-updater for asynchronous properties is enabled.
     /// </summary>
-    public bool IsCommandInputEnabled
+    public bool IsAutoUpdaterEnabled
     {
-      get => ViewModel.IsCommandInputEnabled;
-      set => ViewModel.IsCommandInputEnabled = value;
+      get => ViewModel.IsAutoUpdaterEnabled;
+      set => ViewModel.IsAutoUpdaterEnabled = value;
+    }
+
+    /// <summary>
+    ///   Gets or sets the auto-updater cycle delay in milliseconds.
+    /// </summary>
+    public int AutoUpdaterDelay
+    {
+      get => ViewModel.AutoUpdaterDelay;
+      set => ViewModel.AutoUpdaterDelay = value;
+    }
+
+    /// <summary>
+    ///   Checks or sets the value if the message input panel should be enabled.
+    /// </summary>
+    public bool IsMessageInputPanelEnabled
+    {
+      get => ViewModel.IsMessageInputPanelEnabled;
+      set => ViewModel.IsMessageInputPanelEnabled = value;
     }
 
     /// <summary>

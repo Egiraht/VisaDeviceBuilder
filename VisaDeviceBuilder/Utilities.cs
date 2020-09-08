@@ -26,7 +26,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public static bool ValidateDelegate<TDelegate>(MethodInfo methodInfo) where TDelegate : Delegate
     {
-      var delegateType = typeof(TDelegate).GetMethod(nameof(Action.Invoke));
+      var delegateType = typeof(TDelegate).GetMethod(nameof(Action.Invoke))!;
       return delegateType.ReturnType == methodInfo.ReturnType &&
         delegateType.GetParameters().Select(parameter => parameter.ParameterType)
           .SequenceEqual(methodInfo.GetParameters().Select(parameter => parameter.ParameterType));
@@ -46,6 +46,6 @@ namespace VisaDeviceBuilder
     ///   otherwise <c>false</c>.
     /// </returns>
     public static bool ValidateDelegate<TDelegate>(Delegate method) where TDelegate : Delegate =>
-      ValidateDelegate<TDelegate>(method.GetType().GetMethod(nameof(Action.Invoke)));
+      ValidateDelegate<TDelegate>(method.GetType().GetMethod(nameof(Action.Invoke))!);
   }
 }

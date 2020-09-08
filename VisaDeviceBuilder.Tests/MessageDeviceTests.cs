@@ -25,6 +25,8 @@ namespace VisaDeviceBuilder.Tests
     {
       await using var device = new MessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
       Assert.Null(device.Session);
+
+      // Throw when sending a message with no opened session.
       await Assert.ThrowsAnyAsync<VisaDeviceException>(() => device.SendMessageAsync(string.Empty));
 
       await device.OpenSessionAsync();
@@ -72,8 +74,9 @@ namespace VisaDeviceBuilder.Tests
       await device.TestAsyncProperty.UpdateGetterAsync();
       Assert.Equal(int.MaxValue, device.TestAsyncProperty.Getter);
 
+      // All possible exceptions during the device de-initialization and object disposal must be suppressed.
       device.ThrowOnDeInitialization = true;
-      await device.DisposeAsync();
+      await device.CloseSessionAsync();
     }
   }
 }
