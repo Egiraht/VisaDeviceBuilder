@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -7,15 +8,19 @@ using System.Windows.Input;
 namespace VisaDeviceBuilder.WPF.Components
 {
   /// <summary>
-  ///   The command class that invokes the asynchronous action provided as a parameter and tracks its completion state.
-  ///   This command is a singleton and must be accessed via the <see cref="Instance" /> property.
+  ///   The singleton class that executes asynchronous actions and tracks their completion states.
+  ///   The main class instance can be accessed via the <see cref="Instance" /> static property.
+  ///   This instance can be used as a binding source for the <see cref="ICommandSource.Command" /> dependency property
+  ///   in any control implementing the <see cref="ICommandSource" /> interface. In this case the asynchronous
+  ///   action to be executed must be provided to the control's <see cref="ICommandSource.CommandParameter" />
+  ///   dependency property.
   /// </summary>
-  public class InvokeAsyncActionCommand : ICommand
+  public class AsyncActionExecutor : ICommand
   {
     /// <summary>
     ///   The backing field for the <see cref="Instance" /> property.
     /// </summary>
-    private static InvokeAsyncActionCommand? _instance;
+    private static AsyncActionExecutor? _instance;
 
     /// <summary>
     ///   Gets the static dictionary that tracks the states of all started asynchronous action tasks.
@@ -25,7 +30,13 @@ namespace VisaDeviceBuilder.WPF.Components
     /// <summary>
     ///   Gets the singleton instance of the class.
     /// </summary>
-    public static InvokeAsyncActionCommand Instance => _instance ??= new InvokeAsyncActionCommand();
+    public static AsyncActionExecutor Instance => _instance ??= new AsyncActionExecutor();
+
+    /// <summary>
+    ///   Checks if no asynchronous actions are running at the moment.
+    /// </summary>
+    public bool NoAsyncActionsAreRunning =>
+      !AsyncActionTaskTracker.Any() || AsyncActionTaskTracker.All(pair => pair.Value.IsCompleted);
 
     /// <inheritdoc />
     public event EventHandler? CanExecuteChanged;
@@ -38,7 +49,7 @@ namespace VisaDeviceBuilder.WPF.Components
     /// <summary>
     ///   The private singleton class constructor.
     /// </summary>
-    private InvokeAsyncActionCommand()
+    private AsyncActionExecutor()
     {
     }
 
@@ -64,7 +75,26 @@ namespace VisaDeviceBuilder.WPF.Components
       }
       finally
       {
+        AsyncActionTaskTracker.Remove(asyncAction);
         CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+      }
+    }
+
+    /// <summary>
+    ///   Waits for all running asynchronous actions to complete.
+    /// </summary>
+    public async Task WaitForAllActionsToCompleteAsync()
+    {
+      foreach (var (_, task) in AsyncActionTaskTracker)
+      {
+        try
+        {
+          await task;
+        }
+        catch
+        {
+          // Suppress exceptions.
+        }
       }
     }
   }

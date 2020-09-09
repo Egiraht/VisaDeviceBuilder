@@ -5,10 +5,17 @@ namespace VisaDeviceBuilder.WPF
 {
   public partial class DeviceControlPanelViewModel
   {
+    private ICommand? _updateResourcesListCommand;
     private ICommand? _connectCommand;
     private ICommand? _disconnectCommand;
-    private ICommand? _updateCommand;
+    private ICommand? _updateAsyncPropertiesCommand;
     private ICommand? _sendMessageCommand;
+
+    /// <summary>
+    ///   The command for updating the list of available VISA resources.
+    /// </summary>
+    public ICommand UpdateResourcesListCommand => _updateResourcesListCommand ??=
+      new RelayCommand(_ => UpdateResourcesListAsync());
 
     /// <summary>
     ///   The command for connecting to the device.
@@ -25,8 +32,9 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   The command for updating the asynchronous properties of the connected device.
     /// </summary>
-    public ICommand UpdateCommand => _updateCommand ??=
-      new RelayCommand(_ => UpdateAsyncPropertiesAsync(), _ => IsDeviceReady);
+    public ICommand UpdateAsyncPropertiesCommand => _updateAsyncPropertiesCommand ??=
+      new RelayCommand(_ => AsyncActionExecutor.Instance.Execute((AsyncAction) UpdateAsyncPropertiesAsync),
+        _ => AsyncActionExecutor.Instance.CanExecute((AsyncAction) UpdateAsyncPropertiesAsync));
 
     /// <summary>
     ///   The command for sending a message to the connected device.

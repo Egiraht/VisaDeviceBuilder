@@ -113,7 +113,7 @@
             Background="Transparent" Padding="4 2">
         <MenuItem x:Name="UpdateMenuItem"
                   Header="{x:Static res:Localization.UpdateProperties}"
-                  Command="{Binding UpdateCommand}" />
+                  Command="{Binding UpdateAsyncPropertiesCommand}" />
 
         <MenuItem Header="{x:Static res:Localization.OtherActions}" HeaderStringFormat="{}{0}..."
                   ItemsSource="{Binding AsyncActions}">
@@ -121,7 +121,7 @@
             <Style TargetType="MenuItem">
               <Setter Property="Header" Value="{Binding LocalizedName}" />
               <Setter Property="CommandParameter" Value="{Binding AsyncAction}" />
-              <Setter Property="Command" Value="{x:Static comp:InvokeAsyncActionCommand.Instance}" />
+              <Setter Property="Command" Value="{x:Static comp:AsyncActionExecutor.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>
         </MenuItem>

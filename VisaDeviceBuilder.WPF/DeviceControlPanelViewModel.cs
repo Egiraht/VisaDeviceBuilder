@@ -16,7 +16,6 @@ namespace VisaDeviceBuilder.WPF
   ///   <see cref="IVisaDevice" /> interface.
   ///   All possible device exceptions can be handled using the <see cref="Exception" /> event.
   /// </summary>
-  // TODO: Fix the normal device disconnection issues when background asynchronous actions or updates are running.
   public partial class DeviceControlPanelViewModel : INotifyPropertyChanged, IDisposable
   {
     /// <summary>
@@ -426,7 +425,7 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public DeviceControlPanelViewModel()
     {
-      InvokeAsyncActionCommand.Instance.Exception += OnException;
+      AsyncActionExecutor.Instance.Exception += OnException;
     }
 
     /// <summary>
@@ -434,7 +433,7 @@ namespace VisaDeviceBuilder.WPF
     ///   <see cref="LocalizationResourceManager" />.
     ///   If <see cref="LocalizationResourceManager" /> is not provided, the original names are used.
     /// </summary>
-    private void LocalizeNames()
+    protected virtual void LocalizeNames()
     {
       AsyncProperties.Clear();
       AsyncActions.Clear();
@@ -462,7 +461,7 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Creates a new VISA device instance attached to this control.
     /// </summary>
-    private void CreateNewDeviceInstance()
+    protected virtual void CreateNewDeviceInstance()
     {
       try
       {
@@ -499,7 +498,7 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Asynchronously updates the list of VISA resource names.
     /// </summary>
-    public async Task UpdateResourcesListAsync()
+    public virtual async Task UpdateResourcesListAsync()
     {
       try
       {
@@ -533,7 +532,7 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Asynchronously connects to the device.
     /// </summary>
-    public async Task ConnectAsync()
+    public virtual async Task ConnectAsync()
     {
       try
       {
@@ -571,7 +570,7 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Asynchronously disconnects from the device.
     /// </summary>
-    public async Task DisconnectAsync()
+    public virtual async Task DisconnectAsync()
     {
       try
       {
@@ -581,6 +580,7 @@ namespace VisaDeviceBuilder.WPF
 
         if (AutoUpdater != null)
           await AutoUpdater.StopAsync();
+        await AsyncActionExecutor.Instance.WaitForAllActionsToCompleteAsync();
 
         var sessionClosingTask = Device!.CloseSessionAsync();
         OnPropertyChanged(nameof(ConnectionState));
@@ -602,7 +602,7 @@ namespace VisaDeviceBuilder.WPF
     ///   Asynchronously updates getters of all asynchronous properties available in the attached <see cref="Device" />
     ///   instance.
     /// </summary>
-    public async Task UpdateAsyncPropertiesAsync()
+    public virtual async Task UpdateAsyncPropertiesAsync()
     {
       try
       {
@@ -621,7 +621,7 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Asynchronously sends the message to the connected device.
     /// </summary>
-    public async Task SendMessageAsync()
+    public virtual async Task SendMessageAsync()
     {
       try
       {
@@ -643,7 +643,7 @@ namespace VisaDeviceBuilder.WPF
     ///   Name of the property being changed.
     ///   If set to <c>null</c> the caller member name is used.
     /// </param>
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
@@ -652,7 +652,7 @@ namespace VisaDeviceBuilder.WPF
     /// <param name="exception">
     ///   The exception instance to be provided with the event.
     /// </param>
-    private void OnException(Exception exception) =>
+    protected virtual void OnException(Exception exception) =>
       Exception?.Invoke(this, new ThreadExceptionEventArgs(exception));
 
     /// <summary>
@@ -664,11 +664,11 @@ namespace VisaDeviceBuilder.WPF
     /// <param name="args">
     ///   The event arguments object containing the thrown exception.
     /// </param>
-    private void OnException(object sender, ThreadExceptionEventArgs args) =>
+    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) =>
       Exception?.Invoke(sender, args);
 
     /// <inheritdoc />
-    public void Dispose()
+    public virtual void Dispose()
     {
       if (_isDisposed)
         return;
@@ -678,7 +678,7 @@ namespace VisaDeviceBuilder.WPF
         AutoUpdater?.Dispose();
         Device?.Dispose();
         ResourceManager?.Dispose();
-        InvokeAsyncActionCommand.Instance.Exception -= OnException;
+        AsyncActionExecutor.Instance.Exception -= OnException;
       }
       catch
       {
