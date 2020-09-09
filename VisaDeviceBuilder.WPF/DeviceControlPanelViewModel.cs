@@ -39,6 +39,11 @@ namespace VisaDeviceBuilder.WPF
     private IResourceManager? _resourceManager;
 
     /// <summary>
+    ///   The backing field for the <see cref="IsDeviceReady" /> property.
+    /// </summary>
+    private bool _isDeviceReady = false;
+
+    /// <summary>
     ///   The backing field for the <see cref="ResourceName" /> property.
     /// </summary>
     private string _resourceName = string.Empty;
@@ -222,21 +227,29 @@ namespace VisaDeviceBuilder.WPF
             ResourceManager.Parse(ResourceName);
           else
             GlobalResourceManager.Parse(ResourceName);
-
-          return ConnectionState == DeviceConnectionState.Disconnected ||
-            ConnectionState == DeviceConnectionState.DisconnectedWithError;
         }
         catch
         {
           return false;
         }
+
+        return ConnectionState == DeviceConnectionState.Disconnected ||
+          ConnectionState == DeviceConnectionState.DisconnectedWithError;
       }
     }
 
     /// <summary>
-    ///   Checks if the device is successfully connected.
+    ///   Checks if the device is connected, initialized, and ready for communication.
     /// </summary>
-    public bool IsConnected => Device?.DeviceConnectionState == DeviceConnectionState.Connected;
+    public bool IsDeviceReady
+    {
+      get => _isDeviceReady;
+      private set
+      {
+        _isDeviceReady = value;
+        OnPropertyChanged();
+      }
+    }
 
     /// <summary>
     ///   Gets the current device connection state.
@@ -343,13 +356,13 @@ namespace VisaDeviceBuilder.WPF
         _isAutoUpdaterEnabled = value;
         OnPropertyChanged();
 
-        if (!IsConnected || AutoUpdater == null)
+        if (!IsDeviceReady || AutoUpdater == null)
           return;
 
         if (_isAutoUpdaterEnabled)
           AutoUpdater.Start();
         else
-          AutoUpdater.Stop();
+          AutoUpdater.StopAsync();
       }
     }
 
@@ -455,7 +468,6 @@ namespace VisaDeviceBuilder.WPF
           ? (IVisaDevice?) Activator.CreateInstance(DeviceType, ResourceName, ResourceManager)
           : null;
         OnPropertyChanged(nameof(CanConnect));
-        OnPropertyChanged(nameof(IsConnected));
 
         LocalizeNames();
 
@@ -514,21 +526,22 @@ namespace VisaDeviceBuilder.WPF
         if (!CanConnect)
           return;
 
-        var sessionTask = Device!.OpenSessionAsync();
+        var sessionOpeningTask = Device!.OpenSessionAsync();
         OnPropertyChanged(nameof(ConnectionState));
         OnPropertyChanged(nameof(CanConnect));
-        OnPropertyChanged(nameof(IsConnected));
+        await sessionOpeningTask;
 
-        await sessionTask;
         Identifier = await Device.GetIdentifierAsync();
         await UpdateAsyncPropertiesAsync();
 
-        if (AutoUpdater == null)
-          return;
+        if (AutoUpdater != null)
+        {
+          AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
+          if (IsAutoUpdaterEnabled)
+            AutoUpdater.Start();
+        }
 
-        AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
-        if (IsAutoUpdaterEnabled)
-          AutoUpdater.Start();
+        IsDeviceReady = true;
       }
       catch (Exception e)
       {
@@ -538,7 +551,6 @@ namespace VisaDeviceBuilder.WPF
       {
         OnPropertyChanged(nameof(ConnectionState));
         OnPropertyChanged(nameof(CanConnect));
-        OnPropertyChanged(nameof(IsConnected));
       }
     }
 
@@ -549,17 +561,17 @@ namespace VisaDeviceBuilder.WPF
     {
       try
       {
-        if (!IsConnected)
+        if (!IsDeviceReady)
           return;
+        IsDeviceReady = false;
 
-        AutoUpdater?.Stop();
+        if (AutoUpdater != null)
+          await AutoUpdater.StopAsync();
 
-        var sessionTask = Device!.CloseSessionAsync();
+        var sessionClosingTask = Device!.CloseSessionAsync();
         OnPropertyChanged(nameof(ConnectionState));
         OnPropertyChanged(nameof(CanConnect));
-        OnPropertyChanged(nameof(IsConnected));
-
-        await sessionTask;
+        await sessionClosingTask;
       }
       catch (Exception e)
       {
@@ -569,7 +581,6 @@ namespace VisaDeviceBuilder.WPF
       {
         OnPropertyChanged(nameof(ConnectionState));
         OnPropertyChanged(nameof(CanConnect));
-        OnPropertyChanged(nameof(IsConnected));
       }
     }
 

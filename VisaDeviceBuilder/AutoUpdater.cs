@@ -141,6 +141,9 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    public Task StopAsync() => Task.Run(Stop);
+
+    /// <inheritdoc />
     public void Dispose()
     {
       if (_disposed)

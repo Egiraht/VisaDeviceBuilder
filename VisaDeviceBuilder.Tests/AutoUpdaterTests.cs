@@ -46,8 +46,8 @@ namespace VisaDeviceBuilder.Tests
 
       while (cycleCounter < CyclesCount)
         await Task.Delay(AutoUpdateDelay);
-      autoUpdater.Stop();
-      autoUpdater.Stop();
+      await autoUpdater.StopAsync();
+      await autoUpdater.StopAsync();
       Assert.False(autoUpdater.IsRunning);
     }
 

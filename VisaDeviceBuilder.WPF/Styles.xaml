@@ -92,18 +92,6 @@
     </Style.Triggers>
   </Style>
 
-  <Style x:Key="EnableOnCanDisconnectStyle" TargetType="Control" BasedOn="{StaticResource {x:Type Control}}">
-    <Setter Property="IsEnabled" Value="False" />
-
-    <Style.Triggers>
-      <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.IsConnected}"
-        Value="True">
-        <Setter Property="IsEnabled" Value="True" />
-      </DataTrigger>
-    </Style.Triggers>
-  </Style>
-
   <Style x:Key="EnableOnDeviceIsDisconnectedStyle" TargetType="Control" BasedOn="{StaticResource {x:Type Control}}">
     <Setter Property="IsEnabled" Value="False" />
 
@@ -121,13 +109,13 @@
     </Style.Triggers>
   </Style>
 
-  <Style x:Key="EnableOnDeviceIsConnectedStyle" TargetType="Control" BasedOn="{StaticResource {x:Type Control}}">
+  <Style x:Key="EnableOnDeviceIsReadyStyle" TargetType="Control" BasedOn="{StaticResource {x:Type Control}}">
     <Setter Property="IsEnabled" Value="False" />
 
     <Style.Triggers>
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
-        Value="{x:Static visa:DeviceConnectionState.Connected}">
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.IsDeviceReady}"
+        Value="True">
         <Setter Property="IsEnabled" Value="True" />
       </DataTrigger>
     </Style.Triggers>
@@ -176,7 +164,7 @@
   </Style>
 
   <Style x:Key="EnableOnDeviceIsMessageDeviceStyle" TargetType="Control"
-         BasedOn="{StaticResource EnableOnDeviceIsConnectedStyle}">
+         BasedOn="{StaticResource EnableOnDeviceIsReadyStyle}">
     <Style.Triggers>
       <DataTrigger
         Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.IsMessageDevice}"

@@ -20,18 +20,18 @@ namespace VisaDeviceBuilder.WPF
     ///   The command for disconnecting from the device.
     /// </summary>
     public ICommand DisconnectCommand => _disconnectCommand ??=
-      new RelayCommand(_ => DisconnectAsync(), _ => IsConnected);
+      new RelayCommand(_ => DisconnectAsync(), _ => IsDeviceReady);
 
     /// <summary>
     ///   The command for updating the asynchronous properties of the connected device.
     /// </summary>
     public ICommand UpdateCommand => _updateCommand ??=
-      new RelayCommand(_ => UpdateAsyncPropertiesAsync(), _ => IsConnected);
+      new RelayCommand(_ => UpdateAsyncPropertiesAsync(), _ => IsDeviceReady);
 
     /// <summary>
     ///   The command for sending a message to the connected device.
     /// </summary>
     public ICommand SendMessageCommand => _sendMessageCommand ??=
-      new RelayCommand(_ => SendMessageAsync(), _ => IsMessageDevice && IsConnected);
+      new RelayCommand(_ => SendMessageAsync(), _ => IsMessageDevice && IsDeviceReady);
   }
 }

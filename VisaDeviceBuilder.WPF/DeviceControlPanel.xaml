@@ -76,7 +76,7 @@
       <Label Grid.Row="5" Grid.Column="0"
              Content="{x:Static res:Localization.DeviceIdentifier}" ContentStringFormat="{}{0}:" />
       <TextBox Grid.Row="5" Grid.Column="1"
-               Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+               Style="{StaticResource EnableOnDeviceIsReadyStyle}"
                Text="{Binding Identifier, Mode=OneWay}"
                IsReadOnly="True" />
 
@@ -109,7 +109,7 @@
       <!-- Row 7 -->
       <Menu Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2"
             x:Name="AsyncActionsComboBox"
-            Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+            Style="{StaticResource EnableOnDeviceIsReadyStyle}"
             Background="Transparent" Padding="4 2">
         <MenuItem x:Name="UpdateMenuItem"
                   Header="{x:Static res:Localization.UpdateProperties}"
@@ -129,12 +129,12 @@
 
       <!-- Row 8 -->
       <CheckBox Grid.Row="8" Grid.Column="0"
-                Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+                Style="{StaticResource EnableOnDeviceIsReadyStyle}"
                 IsChecked="{Binding IsAutoUpdaterEnabled, Mode=TwoWay}"
                 Content="{x:Static res:Localization.AutoUpdateMs}" ContentStringFormat="{}{0}:" />
       <TextBox Grid.Row="8" Grid.Column="1"
                x:Name="AutoUpdatePeriodInput"
-               Style="{StaticResource EnableOnDeviceIsConnectedStyle}"
+               Style="{StaticResource EnableOnDeviceIsReadyStyle}"
                Text="{Binding AutoUpdaterDelay, Mode=TwoWay}"
                KeyDown="UpdateTextBoxValueOnEnterKeyDown" />
 

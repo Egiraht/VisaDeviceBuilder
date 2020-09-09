@@ -56,13 +56,13 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
-    ///   There is no opened VISA session (<see cref="NullReferenceException" />).
+    ///   There is no opened VISA session (<see cref="InvalidOperationException" />).
     /// </exception>
     public virtual string SendMessage(string message)
     {
       if (Session == null)
         throw new VisaDeviceException(this,
-          new NullReferenceException("Cannot send a message as there is no opened VISA session."));
+          new InvalidOperationException("Cannot send a message as there is no opened VISA session."));
 
       lock (RequestLock)
       {

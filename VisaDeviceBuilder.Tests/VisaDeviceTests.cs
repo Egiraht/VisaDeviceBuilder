@@ -12,6 +12,11 @@ namespace VisaDeviceBuilder.Tests
   public class VisaDeviceTests : IDisposable
   {
     /// <summary>
+    ///   Defines the test device connection timeout value.
+    /// </summary>
+    private const int TestConnectionTimeout = 1234;
+
+    /// <summary>
     ///   The custom VISA resource manager used for testing purposes.
     /// </summary>
     private TestResourceManager ResourceManager { get; } = new TestResourceManager();
@@ -22,17 +27,21 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaSessionTest()
     {
-      var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager);
+      var device = new VisaDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager)
+        {ConnectionTimeout = TestConnectionTimeout};
       Assert.Equal(ResourceManager, device.ResourceManager);
       Assert.Equal(TestResourceManager.CustomTestDeviceInterfaceType, device.Interface);
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
+      Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
 
+      // Testing the dictionaries of automatically collected asynchronous properties and actions.
       Assert.Empty(device.AsyncProperties);
       Assert.Equal(device.ResetAsync, device.AsyncActions[nameof(device.ResetAsync)]);
       Assert.Throws<KeyNotFoundException>(() => device.AsyncActions[nameof(device.OpenSessionAsync)]);
 
+      // Checking the connection states.
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);
       Assert.False(device.IsSessionOpened);
 

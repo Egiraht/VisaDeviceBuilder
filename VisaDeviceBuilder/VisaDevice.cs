@@ -16,7 +16,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Defines the default connection timeout in milliseconds.
     /// </summary>
-    public const int DefaultConnectionTimeout = 3000;
+    public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
     ///   The backing field for the <see cref="AliasName" /> property.
@@ -41,7 +41,7 @@ namespace VisaDeviceBuilder
     public string ResourceName { get; }
 
     /// <inheritdoc />
-    public int ConnectionTimeout { get; } = DefaultConnectionTimeout;
+    public int ConnectionTimeout { get; set; } = DefaultConnectionTimeout;
 
     /// <inheritdoc />
     public string AliasName
@@ -160,7 +160,10 @@ namespace VisaDeviceBuilder
       {
         await CloseSessionAsync();
         DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
-        throw new VisaDeviceException(this, e);
+
+        throw e is VisaDeviceException visaDeviceException
+          ? visaDeviceException
+          : new VisaDeviceException(this, e);
       }
     }
 

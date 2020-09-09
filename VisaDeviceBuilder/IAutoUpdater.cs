@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace VisaDeviceBuilder
 {
@@ -44,11 +45,22 @@ namespace VisaDeviceBuilder
     void Start();
 
     /// <summary>
-    ///   Stops the auto-updater.
+    ///   Stops the auto-updater and waits until its auto-update loop finally stops.
     /// </summary>
     /// <exception cref="ObjectDisposedException">
     ///   The object was disposed.
     /// </exception>
     void Stop();
+
+    /// <summary>
+    ///   Asynchronously stops the auto-updater.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///   The object was disposed.
+    /// </exception>
+    /// <returns>
+    ///   The <see cref="Task" /> object that completes when the auto-update loop finally stops.
+    /// </returns>
+    Task StopAsync();
   }
 }
