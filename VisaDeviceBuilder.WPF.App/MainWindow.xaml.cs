@@ -24,7 +24,7 @@ namespace VisaDeviceBuilder.WPF.App
     /// <param name="args">
     ///   The exception event arguments.
     /// </param>
-    private void OnException(object sender, ThreadExceptionEventArgs args) => MessageBox.Show(args.Exception.Message,
-      Localization.Title, MessageBoxButton.OK, MessageBoxImage.Error);
+    private void OnException(object sender, ThreadExceptionEventArgs args) => Dispatcher.Invoke(() =>
+      MessageBox.Show(this, args.Exception.Message, Localization.Title, MessageBoxButton.OK, MessageBoxImage.Error));
   }
 }

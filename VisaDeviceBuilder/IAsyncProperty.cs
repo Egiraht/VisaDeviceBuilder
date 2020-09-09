@@ -21,12 +21,14 @@ namespace VisaDeviceBuilder
     bool CanSet { get; }
 
     /// <summary>
-    ///   Gets the current string value of the asynchronous property.
+    ///   Gets the cached string value of the asynchronous property acquired from the last getter update.
     /// </summary>
     string Getter { get; }
 
     /// <summary>
     ///   Sets the new string value of the asynchronous property.
+    ///   Exceptions thrown during the new value processing can be handled using the <see cref="SetterException" />
+    ///   event.
     /// </summary>
     string Setter { get; set; }
 
@@ -60,6 +62,8 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Performs the asynchronous update of the <see cref="Getter" /> property.
+    ///   Exceptions thrown during the update can be handled using the <see cref="GetterException" /> event while
+    ///   this method does not throw any exceptions.
     /// </summary>
     Task UpdateGetterAsync();
 

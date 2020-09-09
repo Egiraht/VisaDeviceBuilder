@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -26,6 +27,14 @@ namespace VisaDeviceBuilder.WPF.Components
     /// </summary>
     public static InvokeAsyncActionCommand Instance => _instance ??= new InvokeAsyncActionCommand();
 
+    /// <inheritdoc />
+    public event EventHandler? CanExecuteChanged;
+
+    /// <summary>
+    ///   The event called when an exception is thrown during the asynchronous action processing.
+    /// </summary>
+    public event ThreadExceptionEventHandler? Exception;
+
     /// <summary>
     ///   The private singleton class constructor.
     /// </summary>
@@ -43,13 +52,20 @@ namespace VisaDeviceBuilder.WPF.Components
       if (!(parameter is AsyncAction asyncAction))
         return;
 
-      AsyncActionTaskTracker[asyncAction] = asyncAction.Invoke();
-      CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-      await AsyncActionTaskTracker[asyncAction];
-      CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+      try
+      {
+        AsyncActionTaskTracker[asyncAction] = asyncAction.Invoke();
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        await AsyncActionTaskTracker[asyncAction];
+      }
+      catch (Exception e)
+      {
+        Exception?.Invoke(this, new ThreadExceptionEventArgs(e));
+      }
+      finally
+      {
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+      }
     }
-
-    /// <inheritdoc />
-    public event EventHandler? CanExecuteChanged;
   }
 }

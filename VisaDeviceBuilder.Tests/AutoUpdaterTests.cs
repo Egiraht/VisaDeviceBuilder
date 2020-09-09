@@ -33,7 +33,7 @@ namespace VisaDeviceBuilder.Tests
     {
       using var resourceManager = new TestResourceManager();
       await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, resourceManager);
-      using var autoUpdater = new AutoUpdater(device) {Delay = AutoUpdateDelay};
+      await using var autoUpdater = new AutoUpdater(device) {Delay = AutoUpdateDelay};
       Assert.False(autoUpdater.IsRunning);
       Assert.Equal(device.AsyncProperties.Values, autoUpdater.AsyncProperties);
       Assert.Equal(default, device.TestAsyncProperty.Getter);
@@ -68,30 +68,52 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task AutoUpdaterLoopExceptionTest()
     {
+      // Testing the exception thrown when updating the asynchronous property getter.
       var exception = (Exception?) null;
       var testGetAsyncProperty = new AsyncProperty(() => throw new Exception(TestExceptionMessage));
-      using var autoUpdater = new AutoUpdater(new[] {testGetAsyncProperty})
-        {Delay = AutoUpdateDelay};
-      autoUpdater.AutoUpdateException += (sender, args) => exception = args.Exception;
-      Assert.Contains(testGetAsyncProperty, autoUpdater.AsyncProperties);
-      Assert.Null(exception);
+      await using (var autoUpdater = new AutoUpdater(new[] {testGetAsyncProperty})
+        {Delay = AutoUpdateDelay})
+      {
+        autoUpdater.AutoUpdateException += (sender, args) => exception = args.Exception;
+        Assert.Contains(testGetAsyncProperty, autoUpdater.AsyncProperties);
+        Assert.Null(exception);
 
-      autoUpdater.Start();
-      Assert.True(autoUpdater.IsRunning);
+        autoUpdater.Start();
+        Assert.True(autoUpdater.IsRunning);
 
-      while (exception == null)
-        await Task.Delay(AutoUpdateDelay);
-      Assert.Equal(TestExceptionMessage, exception?.Message);
+        while (exception == null)
+          await Task.Delay(AutoUpdateDelay);
+        Assert.Equal(TestExceptionMessage, exception?.Message);
+      }
+
+      // Testing the exception thrown when processing the auto-update cycle event callback.
+      exception = null;
+      testGetAsyncProperty = new AsyncProperty(() => string.Empty);
+      await using (var autoUpdater = new AutoUpdater(new[] {testGetAsyncProperty})
+        {Delay = AutoUpdateDelay})
+      {
+        autoUpdater.AutoUpdateException += (sender, args) => exception = args.Exception;
+        autoUpdater.AutoUpdateCycle += (sender, args) => throw new Exception(TestExceptionMessage);
+        Assert.Contains(testGetAsyncProperty, autoUpdater.AsyncProperties);
+        Assert.Null(exception);
+
+        autoUpdater.Start();
+        Assert.True(autoUpdater.IsRunning);
+
+        while (exception == null)
+          await Task.Delay(AutoUpdateDelay);
+        Assert.Equal(TestExceptionMessage, exception?.Message);
+      }
     }
 
     /// <summary>
     ///   Testing the auto-updater disposal.
     /// </summary>
     [Fact]
-    public void AutoUpdaterDisposalTest()
+    public async Task AutoUpdaterDisposalTest()
     {
       AutoUpdater? autoUpdaterReference;
-      using (var autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) {Delay = AutoUpdateDelay})
+      await using (var autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) {Delay = AutoUpdateDelay})
       {
         autoUpdaterReference = autoUpdater;
         autoUpdater.Start();
@@ -99,8 +121,10 @@ namespace VisaDeviceBuilder.Tests
 
       Assert.False(autoUpdaterReference.IsRunning);
       Assert.Throws<ObjectDisposedException>(autoUpdaterReference.Start);
-      Assert.Throws<ObjectDisposedException>(autoUpdaterReference.Stop);
-      autoUpdaterReference.Dispose();
+      await Assert.ThrowsAsync<ObjectDisposedException>(autoUpdaterReference.StopAsync);
+
+      // Testing the repeated object disposal.
+      await autoUpdaterReference.DisposeAsync();
     }
   }
 }

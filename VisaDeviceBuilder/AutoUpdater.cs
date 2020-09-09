@@ -60,6 +60,8 @@ namespace VisaDeviceBuilder
     public AutoUpdater(IEnumerable<IAsyncProperty> asyncProperties)
     {
       AsyncProperties = asyncProperties;
+      foreach (var property in AsyncProperties)
+        property.GetterException += OnAutoUpdateException;
     }
 
     /// <summary>
@@ -73,31 +75,44 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
+    ///   Invokes the <see cref="AutoUpdateException" /> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The event sender object.
+    /// </param>
+    /// <param name="args">
+    ///   The event arguments object containing the thrown exception.
+    /// </param>
+    protected void OnAutoUpdateException(object sender, ThreadExceptionEventArgs args) =>
+      AutoUpdateException?.Invoke(sender, args);
+
+    /// <summary>
     ///   The callback action representing the asynchronous auto-update loop.
     /// </summary>
-    protected virtual async Task AutoUpdateLoopAsync()
+    /// <param name="cancellationToken">
+    ///   The cancellation token used to stop the auto-update loop.
+    /// </param>
+    protected virtual async Task AutoUpdateLoopAsync(CancellationToken cancellationToken)
     {
-      while (!CancellationTokenSource!.IsCancellationRequested)
+      while (!cancellationToken.IsCancellationRequested)
       {
-        foreach (var property in AsyncProperties)
-        {
-          if (CancellationTokenSource.IsCancellationRequested)
-            break;
-
-          property.GetterException += AutoUpdateException;
-          await property.UpdateGetterAsync();
-          property.GetterException -= AutoUpdateException;
-        }
-
-        AutoUpdateCycle?.Invoke(this, EventArgs.Empty);
-
         try
         {
-          await Task.Delay(Delay, CancellationTokenSource.Token);
+          foreach (var property in AsyncProperties)
+          {
+            await property.UpdateGetterAsync();
+            cancellationToken.ThrowIfCancellationRequested();
+          }
+          AutoUpdateCycle?.Invoke(this, EventArgs.Empty);
+          await Task.Delay(Delay, cancellationToken);
         }
-        catch
+        catch (OperationCanceledException)
         {
-          // Suppress the delay task cancellation exception.
+          // Suppress task cancellation exceptions.
+        }
+        catch (Exception e)
+        {
+          AutoUpdateException?.Invoke(this, new ThreadExceptionEventArgs(e));
         }
       }
     }
@@ -112,7 +127,8 @@ namespace VisaDeviceBuilder
         return;
 
       CancellationTokenSource = new CancellationTokenSource();
-      AutoUpdaterTask = Task.Run(AutoUpdateLoopAsync, CancellationTokenSource.Token);
+      AutoUpdaterTask = Task.Run(() => AutoUpdateLoopAsync(CancellationTokenSource.Token),
+        CancellationTokenSource.Token);
     }
 
     /// <inheritdoc />
@@ -124,16 +140,8 @@ namespace VisaDeviceBuilder
       if (AutoUpdaterTask == null || CancellationTokenSource == null)
         return;
 
-      try
-      {
-        CancellationTokenSource.Cancel();
-        AutoUpdaterTask.Wait();
-      }
-      catch
-      {
-        // Suppress possible exceptions.
-      }
-
+      CancellationTokenSource.Cancel();
+      AutoUpdaterTask.Wait();
       AutoUpdaterTask.Dispose();
       AutoUpdaterTask = null;
       CancellationTokenSource.Dispose();
@@ -151,9 +159,15 @@ namespace VisaDeviceBuilder
 
       Stop();
 
+      foreach (var property in AsyncProperties)
+        property.GetterException -= OnAutoUpdateException;
+
       GC.SuppressFinalize(this);
       _disposed = true;
     }
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync() => new ValueTask(Task.Run(Dispose));
 
     /// <inheritdoc />
     [ExcludeFromCodeCoverage]

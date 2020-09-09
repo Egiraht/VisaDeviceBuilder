@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace VisaDeviceBuilder
 {
-  public interface IAutoUpdater : IDisposable
+  public interface IAutoUpdater : IDisposable, IAsyncDisposable
   {
     /// <summary>
     ///   Gets the collection of asynchronous properties that are updated by this auto-updater instance.
