@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -532,9 +534,21 @@ namespace VisaDeviceBuilder.WPF
 
         IsUpdatingVisaResources = true;
 
-        var resources = await Task.Run(() => ResourceManager != null
-          ? ResourceManager.Find("?*::INSTR")
-          : GlobalResourceManager.Find("?*::INSTR"));
+        // Searching for resources and aliases using the selected VISA resource manager.
+        var resources = await Task.Run(() =>
+          (ResourceManager != null
+            ? ResourceManager.Find("?*::INSTR")
+            : GlobalResourceManager.Find("?*::INSTR"))
+          .Aggregate(new List<string>(), (results, resource) =>
+          {
+            var parseResult = ResourceManager != null
+              ? ResourceManager.Parse(resource)
+              : GlobalResourceManager.Parse(resource);
+            results.Add(string.IsNullOrWhiteSpace(parseResult.AliasIfExists)
+              ? parseResult.OriginalResourceName
+              : parseResult.AliasIfExists);
+            return results;
+          }));
 
         AvailableVisaResources.Clear();
         foreach (var resource in resources)
