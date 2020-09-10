@@ -60,8 +60,8 @@ namespace VisaDeviceBuilder.Tests
     {
       await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
       Assert.Equal(device.TestAsyncProperty, device.AsyncProperties[nameof(device.TestAsyncProperty)]);
-      Assert.Equal(device.TestAsyncAction, device.AsyncActions[nameof(device.TestAsyncAction)]);
-      Assert.Throws<KeyNotFoundException>(() => device.AsyncActions[nameof(device.InvalidAsyncAction)]);
+      Assert.Equal(device.TestDeviceAction, device.DeviceActions[nameof(device.TestDeviceAction)]);
+      Assert.Throws<KeyNotFoundException>(() => device.DeviceActions[nameof(device.InvalidDeviceAction)]);
 
       device.ThrowOnInitialization = true;
       await Assert.ThrowsAnyAsync<Exception>(device.OpenSessionAsync);

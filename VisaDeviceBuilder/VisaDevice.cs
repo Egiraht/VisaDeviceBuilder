@@ -69,7 +69,7 @@ namespace VisaDeviceBuilder
     public IDictionary<string, IAsyncProperty> AsyncProperties { get; }
 
     /// <inheritdoc />
-    public IDictionary<string, AsyncAction> AsyncActions { get; }
+    public IDictionary<string, Action> DeviceActions { get; }
 
     /// <summary>
     ///   Creates a new instance of a custom VISA device.
@@ -99,7 +99,7 @@ namespace VisaDeviceBuilder
       AliasName = parsedResourceName.AliasIfExists;
       Interface = parsedResourceName.InterfaceType;
       AsyncProperties = CollectOwnAsyncProperties();
-      AsyncActions = CollectOwnAsyncActions();
+      DeviceActions = CollectOwnDeviceActions();
     }
 
     /// <summary>
@@ -116,19 +116,19 @@ namespace VisaDeviceBuilder
         .ToDictionary(property => property.Name, property => (IAsyncProperty) property.GetValue(this));
 
     /// <summary>
-    ///   Collects all asynchronous actions defined in the current device class that represent class methods having
-    ///   the <see cref="AsyncAction" /> signature and decorated with <see cref="AsyncActionAttribute" /> attribute.
+    ///   Collects all device actions defined in the current device class that represent class methods having
+    ///   the <see cref="Action" /> signature and decorated with <see cref="DeviceActionAttribute" /> attribute.
     /// </summary>
     /// <returns>
-    ///   The dictionary with the collected asynchronous actions.
-    ///   Keys of the dictionary contain the names of corresponding asynchronous actions stored as values.
+    ///   The dictionary with the collected device actions.
+    ///   Keys of the dictionary contain the names of corresponding device actions stored as values.
     /// </returns>
-    private IDictionary<string, AsyncAction> CollectOwnAsyncActions() =>
+    private IDictionary<string, Action> CollectOwnDeviceActions() =>
       GetType()
         .GetMethods()
-        .Where(method => Utilities.ValidateDelegate<AsyncAction>(method) &&
-          method.GetCustomAttribute<AsyncActionAttribute>() != null)
-        .ToDictionary(method => method.Name, method => (AsyncAction) method.CreateDelegate(typeof(AsyncAction), this));
+        .Where(method => Utilities.ValidateDelegate<Action>(method) &&
+          method.GetCustomAttribute<DeviceActionAttribute>() != null)
+        .ToDictionary(method => method.Name, method => (Action) method.CreateDelegate(typeof(Action), this));
 
     /// <inheritdoc />
     public void OpenSession()
@@ -181,12 +181,12 @@ namespace VisaDeviceBuilder
     public virtual Task<string> GetIdentifierAsync() => Task.Run(GetIdentifier);
 
     /// <inheritdoc />
+    [DeviceAction]
     public virtual void Reset()
     {
     }
 
     /// <inheritdoc />
-    [AsyncAction]
     public virtual Task ResetAsync() => Task.Run(Reset);
 
     /// <summary>

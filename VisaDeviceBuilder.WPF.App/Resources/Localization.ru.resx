@@ -42,10 +42,10 @@
   <data name="SetOnlyAsyncProperty" xml:space="preserve">
     <value>Значение только для записи</value>
   </data>
-  <data name="ResetAsync" xml:space="preserve">
+  <data name="Reset" xml:space="preserve">
     <value>Сброс</value>
   </data>
-  <data name="TestAsyncAction" xml:space="preserve">
+  <data name="TestDeviceAction" xml:space="preserve">
     <value>Тестовое действие</value>
   </data>
   <data name="TestMessageDevice" xml:space="preserve">

@@ -81,18 +81,19 @@ namespace VisaDeviceBuilder.Tests.Components
     }
 
     /// <summary>
-    ///   Defines the device's valid asynchronous action that must be enlisted into the
-    ///   <see cref="IVisaDevice.AsyncActions" /> dictionary.
+    ///   Defines the valid device action that must be enlisted into the <see cref="IVisaDevice.DeviceActions" />
+    ///   dictionary.
     /// </summary>
-    [AsyncAction, ExcludeFromCodeCoverage]
-    public Task TestAsyncAction() => Task.CompletedTask;
+    [DeviceAction, ExcludeFromCodeCoverage]
+    public void TestDeviceAction()
+    {
+    }
 
     /// <summary>
-    ///   Defines the device's invalid asynchronous action that must not be enlisted into the
-    ///   <see cref="IVisaDevice.AsyncActions" /> dictionary because it does not match the <see cref="AsyncAction" />
-    ///   delegate signature.
+    ///   Defines the invalid device action that must not be enlisted into the <see cref="IVisaDevice.DeviceActions" />
+    ///   dictionary because it does not match the <see cref="Action" /> delegate signature.
     /// </summary>
-    [AsyncAction, ExcludeFromCodeCoverage]
-    public Task<string> InvalidAsyncAction() => Task.FromResult(string.Empty);
+    [DeviceAction, ExcludeFromCodeCoverage]
+    public string InvalidDeviceAction() => string.Empty;
   }
 }

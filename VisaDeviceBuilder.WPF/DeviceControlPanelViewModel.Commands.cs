@@ -33,8 +33,7 @@ namespace VisaDeviceBuilder.WPF
     ///   The command for updating the asynchronous properties of the connected device.
     /// </summary>
     public ICommand UpdateAsyncPropertiesCommand => _updateAsyncPropertiesCommand ??=
-      new RelayCommand(_ => AsyncActionExecutor.Instance.Execute((AsyncAction) UpdateAsyncPropertiesAsync),
-        _ => AsyncActionExecutor.Instance.CanExecute((AsyncAction) UpdateAsyncPropertiesAsync));
+      new RelayCommand(_ => UpdateAsyncPropertiesAsync(), _ => !IsUpdatingAsyncProperties);
 
     /// <summary>
     ///   The command for sending a message to the connected device.

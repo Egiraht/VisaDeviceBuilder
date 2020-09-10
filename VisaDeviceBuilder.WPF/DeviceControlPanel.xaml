@@ -108,7 +108,7 @@
 
       <!-- Row 7 -->
       <Menu Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2"
-            x:Name="AsyncActionsComboBox"
+            x:Name="DeviceActionsComboBox"
             Style="{StaticResource EnableOnDeviceIsReadyStyle}"
             Background="Transparent" Padding="4 2">
         <MenuItem x:Name="UpdateMenuItem"
@@ -116,12 +116,12 @@
                   Command="{Binding UpdateAsyncPropertiesCommand}" />
 
         <MenuItem Header="{x:Static res:Localization.OtherActions}" HeaderStringFormat="{}{0}..."
-                  ItemsSource="{Binding AsyncActions}">
+                  ItemsSource="{Binding DeviceActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
               <Setter Property="Header" Value="{Binding LocalizedName}" />
-              <Setter Property="CommandParameter" Value="{Binding AsyncAction}" />
-              <Setter Property="Command" Value="{x:Static comp:AsyncActionExecutor.Instance}" />
+              <Setter Property="CommandParameter" Value="{Binding DeviceAction}" />
+              <Setter Property="Command" Value="{x:Static comp:DeviceActionExecutor.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>
         </MenuItem>

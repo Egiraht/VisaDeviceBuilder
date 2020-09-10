@@ -42,10 +42,10 @@
   <data name="RandomAsyncProperty" xml:space="preserve">
     <value>Random value</value>
   </data>
-  <data name="ResetAsync" xml:space="preserve">
+  <data name="Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
-  <data name="TestAsyncAction" xml:space="preserve">
+  <data name="TestDeviceAction" xml:space="preserve">
     <value>Test action</value>
   </data>
   <data name="TestMessageDevice" xml:space="preserve">

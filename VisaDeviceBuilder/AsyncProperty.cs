@@ -133,20 +133,21 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual void UpdateGetter()
     {
-      if (!CanGet)
-        return;
-
-      try
+      lock (SynchronizationLock)
       {
-        lock (SynchronizationLock)
+        if (!CanGet)
+          return;
+
+        try
+        {
           GetterValue = GetterDelegate?.Invoke() ?? string.Empty;
-
-        OnPropertyChanged(nameof(Getter));
-        OnGetterUpdated();
-      }
-      catch (Exception e)
-      {
-        OnGetterException(e);
+          OnPropertyChanged(nameof(Getter));
+          OnGetterUpdated();
+        }
+        catch (Exception e)
+        {
+          OnGetterException(e);
+        }
       }
     }
 
@@ -161,25 +162,26 @@ namespace VisaDeviceBuilder
     /// </param>
     protected virtual void ProcessSetter(string newValue)
     {
-      if (!CanSet)
-        return;
-
-      try
+      lock (SynchronizationLock)
       {
-        lock (SynchronizationLock)
+        if (!CanSet)
+          return;
+
+        try
+        {
           SetterDelegate?.Invoke(newValue);
+          SetterValue = string.Empty;
+          OnPropertyChanged(nameof(Setter));
+          OnSetterCompleted();
+        }
+        catch (Exception e)
+        {
+          OnSetterException(e);
+        }
 
-        SetterValue = string.Empty;
-        OnPropertyChanged(nameof(Setter));
-        OnSetterCompleted();
+        if (AutoUpdateGetterAfterSetterCompletes)
+          UpdateGetter();
       }
-      catch (Exception e)
-      {
-        OnSetterException(e);
-      }
-
-      if (AutoUpdateGetterAfterSetterCompletes)
-        UpdateGetter();
     }
 
     /// <inheritdoc />

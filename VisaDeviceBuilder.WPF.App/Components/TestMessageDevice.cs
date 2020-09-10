@@ -182,12 +182,9 @@ namespace VisaDeviceBuilder.WPF.App.Components
     public override string SendMessage(string message) => message;
 
     /// <inheritdoc />
-    public override void Reset() => ResetAsync().Wait();
-
-    /// <inheritdoc />
-    public override async Task ResetAsync()
+    public override void Reset()
     {
-      await Task.Delay(CommunicationDelay);
+      Task.Delay(CommunicationDelay).Wait();
       StringAsyncProperty.Setter = string.Empty;
       IntegerAsyncProperty.Setter = default;
       FloatingPointAsyncProperty.Setter = default;
@@ -195,12 +192,12 @@ namespace VisaDeviceBuilder.WPF.App.Components
     }
 
     /// <summary>
-    ///   Defines the device's test asynchronous action.
+    ///   Defines the device's test device action.
     /// </summary>
-    [AsyncAction]
-    public async Task TestAsyncAction()
+    [DeviceAction]
+    public void TestDeviceAction()
     {
-      await Task.Delay(CommunicationDelay);
+      Task.Delay(CommunicationDelay).Wait();
       StringAsyncProperty.Setter = StringAsyncProperty.Getter + "+";
       IntegerAsyncProperty.Setter = IntegerAsyncProperty.Getter + 1;
       FloatingPointAsyncProperty.Setter = FloatingPointAsyncProperty.Getter + 1;

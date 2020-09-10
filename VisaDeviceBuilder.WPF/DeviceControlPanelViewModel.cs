@@ -54,6 +54,11 @@ namespace VisaDeviceBuilder.WPF
     private bool _isUpdatingVisaResources = false;
 
     /// <summary>
+    ///   The backing field for the <see cref="IsUpdatingAsyncProperties" /> property.
+    /// </summary>
+    private bool _isUpdatingAsyncProperties = false;
+
+    /// <summary>
     ///   The backing field for the <see cref="DeviceLabel" /> property.
     /// </summary>
     private string _deviceLabel = string.Empty;
@@ -270,6 +275,20 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
+    ///   Checks if the asynchronous properties are being updated at the moment after calling the
+    ///   <see cref="UpdateAsyncPropertiesAsync"/> method.
+    /// </summary>
+    public bool IsUpdatingAsyncProperties
+    {
+      get => _isUpdatingAsyncProperties;
+      protected set
+      {
+        _isUpdatingAsyncProperties = value;
+        OnPropertyChanged();
+      }
+    }
+
+    /// <summary>
     ///   Gets the <see cref="IVisaDevice" /> instance bound to this control.
     /// </summary>
     public IVisaDevice? Device
@@ -308,10 +327,10 @@ namespace VisaDeviceBuilder.WPF
       new ObservableCollection<AsyncPropertyMetadata>();
 
     /// <summary>
-    ///   Gets the collection of asynchronous actions and corresponding metadata defined for the device.
+    ///   Gets the collection of device actions and corresponding metadata defined for the device.
     /// </summary>
-    public ObservableCollection<AsyncActionMetadata> AsyncActions { get; } =
-      new ObservableCollection<AsyncActionMetadata>();
+    public ObservableCollection<DeviceActionMetadata> DeviceActions { get; } =
+      new ObservableCollection<DeviceActionMetadata>();
 
     /// <summary>
     ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available
@@ -411,6 +430,11 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
+    ///   Gets the shared locking object used for synchronization of various asynchronous operations.
+    /// </summary>
+    protected object SynchronizationLock { get; } = new object();
+
+    /// <summary>
     ///   Event that is called on any property change.
     /// </summary>
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -425,7 +449,7 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public DeviceControlPanelViewModel()
     {
-      AsyncActionExecutor.Instance.Exception += OnException;
+      DeviceActionExecutor.Instance.Exception += OnException;
     }
 
     /// <summary>
@@ -436,7 +460,7 @@ namespace VisaDeviceBuilder.WPF
     protected virtual void LocalizeNames()
     {
       AsyncProperties.Clear();
-      AsyncActions.Clear();
+      DeviceActions.Clear();
 
       if (Device == null)
         return;
@@ -449,12 +473,12 @@ namespace VisaDeviceBuilder.WPF
           AsyncProperty = asyncProperty
         });
 
-      foreach (var (name, asyncAction) in Device.AsyncActions)
-        AsyncActions.Add(new AsyncActionMetadata
+      foreach (var (name, deviceAction) in Device.DeviceActions)
+        DeviceActions.Add(new DeviceActionMetadata
         {
           OriginalName = name,
           LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
-          AsyncAction = asyncAction
+          DeviceAction = deviceAction
         });
     }
 
@@ -486,6 +510,7 @@ namespace VisaDeviceBuilder.WPF
           asyncProperty.GetterException += OnException;
           asyncProperty.SetterException += OnException;
         }
+
         LocalizeNames();
         AutoUpdater = new AutoUpdater(Device);
       }
@@ -580,12 +605,19 @@ namespace VisaDeviceBuilder.WPF
 
         if (AutoUpdater != null)
           await AutoUpdater.StopAsync();
-        await AsyncActionExecutor.Instance.WaitForAllActionsToCompleteAsync();
+        await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
 
-        var sessionClosingTask = Device!.CloseSessionAsync();
-        OnPropertyChanged(nameof(ConnectionState));
-        OnPropertyChanged(nameof(CanConnect));
-        await sessionClosingTask;
+        // Waiting for remaining asynchronous operations to complete before session closing.
+        await Task.Run(() =>
+        {
+          lock (SynchronizationLock)
+          {
+            var sessionClosingTask = Device!.CloseSessionAsync();
+            OnPropertyChanged(nameof(ConnectionState));
+            OnPropertyChanged(nameof(CanConnect));
+            sessionClosingTask.Wait();
+          }
+        });
       }
       catch (Exception e)
       {
@@ -602,39 +634,53 @@ namespace VisaDeviceBuilder.WPF
     ///   Asynchronously updates getters of all asynchronous properties available in the attached <see cref="Device" />
     ///   instance.
     /// </summary>
-    public virtual async Task UpdateAsyncPropertiesAsync()
+    public virtual Task UpdateAsyncPropertiesAsync() => Task.Run(() =>
     {
-      try
+      lock (SynchronizationLock)
       {
-        if (Device?.IsSessionOpened != true)
+        if (IsUpdatingAsyncProperties)
           return;
+        IsUpdatingAsyncProperties = true;
 
-        foreach (var (_, property) in Device.AsyncProperties)
-          await property.UpdateGetterAsync();
+        try
+        {
+          if (Device?.IsSessionOpened != true)
+            return;
+
+          foreach (var (_, property) in Device.AsyncProperties)
+            property.UpdateGetter();
+        }
+        catch (Exception e)
+        {
+          OnException(e);
+        }
+        finally
+        {
+          IsUpdatingAsyncProperties = false;
+        }
       }
-      catch (Exception e)
-      {
-        OnException(e);
-      }
-    }
+    });
 
     /// <summary>
     ///   Asynchronously sends the message to the connected device.
     /// </summary>
-    public virtual async Task SendMessageAsync()
+    public virtual Task SendMessageAsync() => Task.Run(() =>
     {
-      try
+      lock (SynchronizationLock)
       {
-        if (!IsMessageDevice)
-          return;
+        try
+        {
+          if (!IsMessageDevice)
+            return;
 
-        ResponseMessage = await ((IMessageDevice) Device!).SendMessageAsync(RequestMessage);
+          ResponseMessage = ((IMessageDevice) Device!).SendMessage(RequestMessage);
+        }
+        catch (Exception exception)
+        {
+          OnException(exception);
+        }
       }
-      catch (Exception exception)
-      {
-        OnException(exception);
-      }
-    }
+    });
 
     /// <summary>
     ///   Invokes the <see cref="PropertyChanged" /> event.
@@ -678,7 +724,7 @@ namespace VisaDeviceBuilder.WPF
         AutoUpdater?.Dispose();
         Device?.Dispose();
         ResourceManager?.Dispose();
-        AsyncActionExecutor.Instance.Exception -= OnException;
+        DeviceActionExecutor.Instance.Exception -= OnException;
       }
       catch
       {

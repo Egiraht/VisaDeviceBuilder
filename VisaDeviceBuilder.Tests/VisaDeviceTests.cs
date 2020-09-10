@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
@@ -36,10 +35,10 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
       Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
 
-      // Testing the dictionaries of automatically collected asynchronous properties and actions.
+      // Testing the dictionaries of automatically collected asynchronous properties and device actions.
       Assert.Empty(device.AsyncProperties);
-      Assert.Equal(device.ResetAsync, device.AsyncActions[nameof(device.ResetAsync)]);
-      Assert.Throws<KeyNotFoundException>(() => device.AsyncActions[nameof(device.OpenSessionAsync)]);
+      Assert.Equal(device.Reset, device.DeviceActions[nameof(device.Reset)]);
+      Assert.DoesNotContain(nameof(device.OpenSession), device.DeviceActions);
 
       // Checking the connection states.
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);

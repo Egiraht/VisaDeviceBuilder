@@ -35,7 +35,7 @@ namespace VisaDeviceBuilder.WPF.Components
     ///   Creates a new command instance.
     /// </summary>
     /// <param name="action">
-    ///   The asynchronous action to be started.
+    ///   The device action to be started.
     ///   The provided action can be executed without any conditions.
     /// </param>
     public RelayCommand(Func<object, Task> action)
@@ -61,7 +61,7 @@ namespace VisaDeviceBuilder.WPF.Components
     ///   Creates a new command instance.
     /// </summary>
     /// <param name="action">
-    ///   The asynchronous action to be conditionally started.
+    ///   The device action to be conditionally started.
     /// </param>
     /// <param name="condition">
     ///   The conditional callback that defines if the action can be executed at the moment.

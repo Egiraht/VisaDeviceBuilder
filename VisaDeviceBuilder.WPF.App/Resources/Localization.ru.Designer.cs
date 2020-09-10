@@ -99,9 +99,9 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Сброс.
         /// </summary>
-        public static string ResetAsync {
+        public static string Reset {
             get {
-                return ResourceManager.GetString("ResetAsync", resourceCulture);
+                return ResourceManager.GetString("Reset", resourceCulture);
             }
         }
         
@@ -126,9 +126,9 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Тестовое действие.
         /// </summary>
-        public static string TestAsyncAction {
+        public static string TestDeviceAction {
             get {
-                return ResourceManager.GetString("TestAsyncAction", resourceCulture);
+                return ResourceManager.GetString("TestDeviceAction", resourceCulture);
             }
         }
         
