@@ -70,9 +70,22 @@ namespace VisaDeviceBuilder
     IDictionary<string, AsyncAction> AsyncActions { get; }
 
     /// <summary>
+    ///   Synchronously opens a connection session with the device.
+    /// </summary>
+    void OpenSession();
+
+    /// <summary>
     ///   Asynchronously opens a connection session with the device.
     /// </summary>
     Task OpenSessionAsync();
+
+    /// <summary>
+    ///   Reads the device identifier string.
+    /// </summary>
+    /// <returns>
+    ///   A string containing the identifier of the connected device.
+    /// </returns>
+    string GetIdentifier();
 
     /// <summary>
     ///   Asynchronously reads the device identifier string.
@@ -83,9 +96,19 @@ namespace VisaDeviceBuilder
     Task<string> GetIdentifierAsync();
 
     /// <summary>
+    ///   Resets the device to some predefined state.
+    /// </summary>
+    void Reset();
+
+    /// <summary>
     ///   Asynchronously resets the device to some predefined state.
     /// </summary>
     Task ResetAsync();
+
+    /// <summary>
+    ///   Closes the connection session with the device.
+    /// </summary>
+    void CloseSession();
 
     /// <summary>
     ///   Asynchronously closes the connection session with the device.

@@ -67,7 +67,7 @@ namespace VisaDeviceBuilder.Tests
 
       RemoteValue = TestValue;
       property.Setter = string.Empty;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       await property.UpdateGetterAsync();
       Assert.Equal(RemoteValue, property.Getter);
       Assert.Empty(property.Setter);
@@ -90,7 +90,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestValue, property.Setter);
       Assert.Empty(RemoteValue);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Empty(property.Setter);
       Assert.Equal(TestValue, RemoteValue);
 
@@ -115,7 +115,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestValue, property.Setter);
       Assert.Empty(RemoteValue);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Empty(property.Setter);
       Assert.Equal(TestValue, RemoteValue);
 
@@ -138,7 +138,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Empty(property.Getter);
 
       property.Setter = TestValue;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Empty(property.Getter);
 
       await property.UpdateGetterAsync();
@@ -148,7 +148,7 @@ namespace VisaDeviceBuilder.Tests
       property.Setter = string.Empty;
       Assert.Equal(TestValue, property.Getter);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Empty(property.Getter);
     }
 
@@ -172,7 +172,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(setterPassed);
       Assert.Empty(lastChangedPropertyName);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.False(getterPassed);
       Assert.True(setterPassed);
       Assert.Equal(nameof(AsyncProperty.Setter), lastChangedPropertyName);
@@ -201,7 +201,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Null(setterException);
 
       property.Setter = TestValue;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Null(getterException);
       Assert.Equal(SetterExceptionMessage, setterException?.Message);
 

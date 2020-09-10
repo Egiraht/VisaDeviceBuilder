@@ -131,7 +131,7 @@ namespace VisaDeviceBuilder
         .ToDictionary(method => method.Name, method => (AsyncAction) method.CreateDelegate(typeof(AsyncAction), this));
 
     /// <inheritdoc />
-    public async Task OpenSessionAsync()
+    public void OpenSession()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(AliasName);
@@ -147,18 +147,15 @@ namespace VisaDeviceBuilder
       try
       {
         DeviceConnectionState = DeviceConnectionState.Initializing;
-        await Task.Run(() =>
-        {
-          Session = ResourceManager != null
+        Session = ResourceManager != null
             ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
             : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
-        });
-        await InitializeAsync();
+        Initialize();
         DeviceConnectionState = DeviceConnectionState.Connected;
       }
       catch (Exception e)
       {
-        await CloseSessionAsync();
+        CloseSession();
         DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
 
         throw e is VisaDeviceException visaDeviceException
@@ -167,25 +164,40 @@ namespace VisaDeviceBuilder
       }
     }
 
+    /// <inheritdoc />
+    public Task OpenSessionAsync() => Task.Run(OpenSession);
+
     /// <summary>
-    ///   Asynchronously initializes the device after the successful session opening.
+    ///   Initializes the device after the successful session opening.
     /// </summary>
-    protected virtual Task InitializeAsync() => Task.CompletedTask;
+    protected virtual void Initialize()
+    {
+    }
 
     /// <inheritdoc />
-    public virtual Task<string> GetIdentifierAsync() => Task.FromResult(AliasName);
+    public virtual string GetIdentifier() => AliasName;
+
+    /// <inheritdoc />
+    public virtual Task<string> GetIdentifierAsync() => Task.Run(GetIdentifier);
+
+    /// <inheritdoc />
+    public virtual void Reset()
+    {
+    }
 
     /// <inheritdoc />
     [AsyncAction]
-    public virtual Task ResetAsync() => Task.CompletedTask;
+    public virtual Task ResetAsync() => Task.Run(Reset);
 
     /// <summary>
-    ///   Asynchronously de-initializes the device before the session closing.
+    ///   De-initializes the device before the session closing.
     /// </summary>
-    protected virtual Task DeInitializeAsync() => Task.CompletedTask;
+    protected virtual void DeInitialize()
+    {
+    }
 
     /// <inheritdoc />
-    public async Task CloseSessionAsync()
+    public void CloseSession()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(AliasName);
@@ -196,7 +208,7 @@ namespace VisaDeviceBuilder
       try
       {
         DeviceConnectionState = DeviceConnectionState.DeInitializing;
-        await DeInitializeAsync();
+        DeInitialize();
         Session?.Dispose();
       }
       catch
@@ -211,27 +223,27 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public virtual void Dispose() => Task.Run(DisposeAsync).Wait();
+    public virtual Task CloseSessionAsync() => Task.Run(CloseSession);
 
     /// <inheritdoc />
-    public virtual async ValueTask DisposeAsync()
+    public virtual void Dispose()
     {
       if (_isDisposed)
         return;
 
-      await CloseSessionAsync();
+      CloseSession();
 
       GC.SuppressFinalize(this);
       _isDisposed = true;
     }
 
+    /// <inheritdoc />
+    public virtual ValueTask DisposeAsync() => new ValueTask(Task.Run(Dispose));
+
     /// <summary>
     ///   Disposes the object on finalization.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    ~VisaDevice()
-    {
-      Dispose();
-    }
+    ~VisaDevice() => Dispose();
   }
 }

@@ -7,7 +7,17 @@ using System.Threading.Tasks;
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The class representing an asynchronous property with a string value.
+  ///   <para>
+  ///     The class representing an asynchronous property with a string value.
+  ///   </para>
+  ///   <para>
+  ///     The <see cref="Getter" /> and <see cref="Setter" /> properties represent the value accessors of the
+  ///     asynchronous property while the actual read and write operations are performed asynchronously according
+  ///     to the provided callbacks.
+  ///   </para>
+  ///   <para>
+  ///     The asynchronous property can be created as read-only, write-only, and read-write.
+  ///   </para>
   /// </summary>
   public class AsyncProperty : IAsyncProperty
   {
@@ -52,7 +62,7 @@ namespace VisaDeviceBuilder
       set
       {
         SetterValue = value;
-        SetterTask = ProcessSetterAsync(value);
+        SetterTask = Task.Run(() => ProcessSetter(value));
       }
     }
 
@@ -121,20 +131,15 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public virtual async Task UpdateGetterAsync()
+    public virtual void UpdateGetter()
     {
       if (!CanGet)
         return;
 
       try
       {
-        await Task.Run(() =>
-        {
-          lock (SynchronizationLock)
-          {
-            GetterValue = GetterDelegate?.Invoke() ?? string.Empty;
-          }
-        });
+        lock (SynchronizationLock)
+          GetterValue = GetterDelegate?.Invoke() ?? string.Empty;
 
         OnPropertyChanged(nameof(Getter));
         OnGetterUpdated();
@@ -145,26 +150,24 @@ namespace VisaDeviceBuilder
       }
     }
 
+    /// <inheritdoc />
+    public Task UpdateGetterAsync() => Task.Run(UpdateGetter);
+
     /// <summary>
-    ///   Asynchronously processes the new value assigned to the the <see cref="Setter" /> property.
+    ///   Synchronously processes the new value assigned to the the <see cref="Setter" /> property.
     /// </summary>
-    /// <param name="value">
+    /// <param name="newValue">
     ///   The value passed to the <see cref="Setter" /> property.
     /// </param>
-    protected virtual async Task ProcessSetterAsync(string value)
+    protected virtual void ProcessSetter(string newValue)
     {
       if (!CanSet)
         return;
 
       try
       {
-        await Task.Run(() =>
-        {
-          lock (SynchronizationLock)
-          {
-            SetterDelegate?.Invoke(value);
-          }
-        });
+        lock (SynchronizationLock)
+          SetterDelegate?.Invoke(newValue);
 
         SetterValue = string.Empty;
         OnPropertyChanged(nameof(Setter));
@@ -176,11 +179,11 @@ namespace VisaDeviceBuilder
       }
 
       if (AutoUpdateGetterAfterSetterCompletes)
-        await UpdateGetterAsync();
+        UpdateGetter();
     }
 
     /// <inheritdoc />
-    public async Task WaitUntilSetterCompletes() => await (SetterTask ?? Task.CompletedTask);
+    public Task GetSetterProcessingTask() => SetterTask ?? Task.CompletedTask;
 
     /// <summary>
     ///   Calls the <see cref="GetterUpdated" /> event.

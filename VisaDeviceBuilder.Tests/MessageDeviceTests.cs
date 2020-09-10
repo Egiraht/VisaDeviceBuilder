@@ -70,7 +70,7 @@ namespace VisaDeviceBuilder.Tests
       await device.OpenSessionAsync();
 
       device.TestAsyncProperty.Setter = int.MaxValue;
-      await device.TestAsyncProperty.WaitUntilSetterCompletes();
+      await device.TestAsyncProperty.GetSetterProcessingTask();
       await device.TestAsyncProperty.UpdateGetterAsync();
       Assert.Equal(int.MaxValue, device.TestAsyncProperty.Getter);
 

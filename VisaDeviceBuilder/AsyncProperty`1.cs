@@ -1,14 +1,25 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Threading.Tasks;
 
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The class representing an asynchronous property with a value of type <typeparamref name="TValue" />.
-  ///   For backward compatibility with the <see cref="AsyncProperty" /> ancestor class the implicit value conversions
-  ///   between the <typeparamref name="TValue" /> type and the string type are performed.
+  ///   <para>
+  ///     The class representing an asynchronous property with a value of type <typeparamref name="TValue" />.
+  ///   </para>
+  ///   <para>
+  ///     The <see cref="Getter" /> and <see cref="Setter" /> properties represent the value accessors of the
+  ///     asynchronous property while the actual read and write operations are performed asynchronously according
+  ///     to the provided callbacks.
+  ///   </para>
+  ///   <para>
+  ///     The asynchronous property can be created as read-only, write-only, and read-write.
+  ///   </para>
+  ///   <para>
+  ///     For interoperation with the <see cref="AsyncProperty" /> base class the implicit value conversions between
+  ///     the <typeparamref name="TValue" /> type and the string type are performed.
+  ///   </para>
   /// </summary>
   /// <typeparam name="TValue">
   ///   Type of the asynchronous property value.
@@ -252,9 +263,9 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    protected override async Task ProcessSetterAsync(string value)
+    protected override void ProcessSetter(string value)
     {
-      await base.ProcessSetterAsync(value);
+      base.ProcessSetter(value);
       SetterValue = TypeToStringConverter(default!);
     }
 

@@ -85,7 +85,7 @@ namespace VisaDeviceBuilder.Tests
 
       DoubleRemoteValue = DoubleTestValue;
       property.Setter = default;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
 
       await property.UpdateGetterAsync();
@@ -93,7 +93,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(FromDoubleConverter(DoubleRemoteValue), baseProperty.Getter);
 
       baseProperty.Setter = FromDoubleConverter(default);
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
 
       await baseProperty.UpdateGetterAsync();
@@ -121,7 +121,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(DoubleTestValue, property.Setter);
       Assert.Equal(FromDoubleConverter(DoubleTestValue), baseProperty.Setter);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
@@ -135,7 +135,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(DoubleTestValue, property.Setter);
       Assert.Equal(FromDoubleConverter(DoubleTestValue), baseProperty.Setter);
 
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
@@ -165,7 +165,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(DoubleTestValue, property.Setter);
       Assert.Equal(FromDoubleConverter(DoubleTestValue), baseProperty.Setter);
 
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
@@ -179,7 +179,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(DoubleTestValue, property.Setter);
       Assert.Equal(FromDoubleConverter(DoubleTestValue), baseProperty.Setter);
 
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
@@ -208,7 +208,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(serializedNullObject, baseProperty.Setter);
 
       property.Setter = null;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(TestValue, RemoteObject?.String);
       Assert.Equal(DoubleTestValue, RemoteObject?.Double);
 
@@ -218,7 +218,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(serializedTestObject, baseProperty.Getter);
 
       baseProperty.Setter = serializedNullObject;
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(TestValue, RemoteObject?.String);
       Assert.Equal(DoubleTestValue, RemoteObject?.Double);
 
@@ -249,7 +249,7 @@ namespace VisaDeviceBuilder.Tests
 
       RemoteObject = null;
       property.Setter = newObject;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
@@ -260,7 +260,7 @@ namespace VisaDeviceBuilder.Tests
 
       RemoteObject = null;
       baseProperty.Setter = serializedTestObject;
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
@@ -291,7 +291,7 @@ namespace VisaDeviceBuilder.Tests
 
       RemoteObject = null;
       property.Setter = newObject;
-      await property.WaitUntilSetterCompletes();
+      await property.GetSetterProcessingTask();
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
@@ -302,7 +302,7 @@ namespace VisaDeviceBuilder.Tests
 
       RemoteObject = null;
       baseProperty.Setter = serializedTestObject;
-      await baseProperty.WaitUntilSetterCompletes();
+      await baseProperty.GetSetterProcessingTask();
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 

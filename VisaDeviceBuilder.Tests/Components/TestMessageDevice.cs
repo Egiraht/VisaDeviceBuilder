@@ -67,14 +67,18 @@ namespace VisaDeviceBuilder.Tests.Components
     }
 
     /// <inheritdoc />
-    protected override Task InitializeAsync() => ThrowOnInitialization
-      ? throw new Exception("Test exception")
-      : Task.CompletedTask;
+    protected override void Initialize()
+    {
+      if (ThrowOnInitialization)
+        throw new Exception("Test exception");
+    }
 
     /// <inheritdoc />
-    protected override Task DeInitializeAsync() => ThrowOnDeInitialization
-      ? throw new Exception("Test exception")
-      : Task.CompletedTask;
+    protected override void DeInitialize()
+    {
+      if (ThrowOnDeInitialization)
+        throw new Exception("Test exception");
+    }
 
     /// <summary>
     ///   Defines the device's valid asynchronous action that must be enlisted into the

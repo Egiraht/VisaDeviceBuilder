@@ -29,9 +29,9 @@ namespace VisaDeviceBuilder
     public override HardwareInterfaceType[] SupportedInterfaces => SupportedMessageBasedInterfaces;
 
     /// <summary>
-    ///   Gets the request lock object used for request queue control.
+    ///   Gets the shared message locking object used for device message requests synchronization.
     /// </summary>
-    protected object RequestLock { get; } = new object();
+    protected object MessageLock { get; } = new object();
 
     /// <summary>
     ///   Creates a new instance of a custom message-based VISA device.
@@ -49,10 +49,12 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    protected override Task InitializeAsync() => Session != null
-      ? Task.CompletedTask
-      : throw new VisaDeviceException(this,
-        new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions."));
+    protected override void Initialize()
+    {
+      if (Session == null)
+        throw new VisaDeviceException(this,
+          new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions."));
+    }
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
@@ -64,7 +66,7 @@ namespace VisaDeviceBuilder
         throw new VisaDeviceException(this,
           new InvalidOperationException("Cannot send a message as there is no opened VISA session."));
 
-      lock (RequestLock)
+      lock (MessageLock)
       {
         Session.FormattedIO.WriteLine(message);
         return Session.FormattedIO.ReadLine().TrimEnd('\x0A');
@@ -72,6 +74,9 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session (<see cref="InvalidOperationException" />).
+    /// </exception>
     public virtual Task<string> SendMessageAsync(string message) => Task.Run(() => SendMessage(message));
   }
 }
