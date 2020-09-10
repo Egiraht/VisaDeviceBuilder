@@ -100,7 +100,8 @@ namespace VisaDeviceBuilder
         {
           foreach (var property in AsyncProperties)
           {
-            await property.UpdateGetterAsync();
+            property.RequestGetterUpdate();
+            await property.GetGetterUpdatingTask();
             cancellationToken.ThrowIfCancellationRequested();
           }
           AutoUpdateCycle?.Invoke(this, EventArgs.Empty);

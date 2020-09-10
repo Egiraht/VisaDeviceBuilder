@@ -71,7 +71,8 @@ namespace VisaDeviceBuilder.Tests
 
       device.TestAsyncProperty.Setter = int.MaxValue;
       await device.TestAsyncProperty.GetSetterProcessingTask();
-      await device.TestAsyncProperty.UpdateGetterAsync();
+      device.TestAsyncProperty.RequestGetterUpdate();
+      await device.TestAsyncProperty.GetGetterUpdatingTask();
       Assert.Equal(int.MaxValue, device.TestAsyncProperty.Getter);
 
       // All possible exceptions during the device de-initialization and object disposal must be suppressed.

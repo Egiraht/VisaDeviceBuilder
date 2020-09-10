@@ -68,7 +68,8 @@ namespace VisaDeviceBuilder.Tests
       RemoteValue = TestValue;
       property.Setter = string.Empty;
       await property.GetSetterProcessingTask();
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(RemoteValue, property.Getter);
       Assert.Empty(property.Setter);
     }
@@ -94,7 +95,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Empty(property.Setter);
       Assert.Equal(TestValue, RemoteValue);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Empty(property.Getter);
     }
 
@@ -119,11 +121,13 @@ namespace VisaDeviceBuilder.Tests
       Assert.Empty(property.Setter);
       Assert.Equal(TestValue, RemoteValue);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(TestValue, property.Getter);
 
       RemoteValue = string.Empty;
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Empty(property.Getter);
     }
 
@@ -141,7 +145,8 @@ namespace VisaDeviceBuilder.Tests
       await property.GetSetterProcessingTask();
       Assert.Empty(property.Getter);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(TestValue, property.Getter);
 
       property.AutoUpdateGetterAfterSetterCompletes = true;
@@ -178,7 +183,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(nameof(AsyncProperty.Setter), lastChangedPropertyName);
 
       setterPassed = false;
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.True(getterPassed);
       Assert.False(setterPassed);
       Assert.Equal(nameof(AsyncProperty.Getter), lastChangedPropertyName);
@@ -206,7 +212,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(SetterExceptionMessage, setterException?.Message);
 
       setterException = null;
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Null(setterException);
       Assert.Equal(GetterExceptionMessage, getterException?.Message);
     }

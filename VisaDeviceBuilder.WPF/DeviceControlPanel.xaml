@@ -129,12 +129,10 @@
 
       <!-- Row 8 -->
       <CheckBox Grid.Row="8" Grid.Column="0"
-                Style="{StaticResource EnableOnDeviceIsReadyStyle}"
                 IsChecked="{Binding IsAutoUpdaterEnabled, Mode=TwoWay}"
                 Content="{x:Static res:Localization.AutoUpdateMs}" ContentStringFormat="{}{0}:" />
       <TextBox Grid.Row="8" Grid.Column="1"
                x:Name="AutoUpdatePeriodInput"
-               Style="{StaticResource EnableOnDeviceIsReadyStyle}"
                Text="{Binding AutoUpdaterDelay, Mode=TwoWay}"
                KeyDown="UpdateTextBoxValueOnEnterKeyDown" />
 

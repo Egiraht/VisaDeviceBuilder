@@ -28,7 +28,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Sets the new string value of the asynchronous property.
     ///   Exceptions thrown during the new value processing can be handled using the <see cref="SetterException" />
-    ///   event.
+    ///   event while this property does not throw any exceptions.
     /// </summary>
     string Setter { get; set; }
 
@@ -61,18 +61,21 @@ namespace VisaDeviceBuilder
     event ThreadExceptionEventHandler? SetterException;
 
     /// <summary>
-    ///   Performs the update of the <see cref="Getter" /> property.
+    ///   Requests the asynchronous update of the <see cref="Getter" /> property.
     ///   Exceptions thrown during the update can be handled using the <see cref="GetterException" /> event while
     ///   this method does not throw any exceptions.
     /// </summary>
-    void UpdateGetter();
+    void RequestGetterUpdate();
 
     /// <summary>
-    ///   Performs the asynchronous update of the <see cref="Getter" /> property.
-    ///   Exceptions thrown during the update can be handled using the <see cref="GetterException" /> event while
-    ///   this method does not throw any exceptions.
+    ///   Gets the <see cref="Task" /> object wrapping the asynchronous <see cref="Getter" /> value updating.
+    ///   This object can be awaited until the value updating is finished.
     /// </summary>
-    Task UpdateGetterAsync();
+    /// <returns>
+    ///   The running <see cref="Getter" /> updating <see cref="Task" /> object or the
+    ///   <see cref="Task.CompletedTask" /> object if no <see cref="Getter" /> updating is running at the moment.
+    /// </returns>
+    Task GetGetterUpdatingTask();
 
     /// <summary>
     ///   Gets the <see cref="Task" /> object wrapping the asynchronous new <see cref="Setter" /> value processing.

@@ -88,7 +88,8 @@ namespace VisaDeviceBuilder.Tests
       await property.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(DoubleRemoteValue, property.Getter);
       Assert.Equal(FromDoubleConverter(DoubleRemoteValue), baseProperty.Getter);
 
@@ -96,7 +97,8 @@ namespace VisaDeviceBuilder.Tests
       await baseProperty.GetSetterProcessingTask();
       Assert.Equal(DoubleTestValue, DoubleRemoteValue);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(DoubleRemoteValue, property.Getter);
       Assert.Equal(FromDoubleConverter(DoubleRemoteValue), baseProperty.Getter);
     }
@@ -126,7 +128,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(default, property.Getter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Getter);
 
@@ -140,7 +143,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(default, property.Getter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Getter);
     }
@@ -170,7 +174,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(DoubleRemoteValue, property.Getter);
       Assert.Equal(FromDoubleConverter(DoubleRemoteValue), baseProperty.Getter);
 
@@ -184,7 +189,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, property.Setter);
       Assert.Equal(FromDoubleConverter(default), baseProperty.Setter);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(DoubleRemoteValue, property.Getter);
       Assert.Equal(FromDoubleConverter(DoubleRemoteValue), baseProperty.Getter);
     }
@@ -212,7 +218,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestValue, RemoteObject?.String);
       Assert.Equal(DoubleTestValue, RemoteObject?.Double);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(RemoteObject?.String, property.Getter?.String);
       Assert.Equal(RemoteObject?.Double, property.Getter?.Double);
       Assert.Equal(serializedTestObject, baseProperty.Getter);
@@ -222,7 +229,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestValue, RemoteObject?.String);
       Assert.Equal(DoubleTestValue, RemoteObject?.Double);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(RemoteObject?.String, property.Getter?.String);
       Assert.Equal(RemoteObject?.Double, property.Getter?.Double);
       Assert.Equal(serializedTestObject, baseProperty.Getter);
@@ -253,7 +261,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(default, property.Getter?.String);
       Assert.Equal(default, property.Getter?.Double);
       Assert.Equal(serializedNullObject, baseProperty.Getter);
@@ -264,7 +273,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(default, property.Getter?.String);
       Assert.Equal(default, property.Getter?.Double);
       Assert.Equal(serializedNullObject, baseProperty.Getter);
@@ -295,7 +305,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
-      await property.UpdateGetterAsync();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
       Assert.Equal(RemoteObject?.String, property.Getter?.String);
       Assert.Equal(RemoteObject?.Double, property.Getter?.Double);
       Assert.Equal(serializedTestObject, baseProperty.Getter);
@@ -306,7 +317,8 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(newObject.String, RemoteObject?.String);
       Assert.Equal(newObject.Double, RemoteObject?.Double);
 
-      await baseProperty.UpdateGetterAsync();
+      baseProperty.RequestGetterUpdate();
+      await baseProperty.GetGetterUpdatingTask();
       Assert.Equal(RemoteObject?.String, property.Getter?.String);
       Assert.Equal(RemoteObject?.Double, property.Getter?.Double);
       Assert.Equal(serializedTestObject, baseProperty.Getter);

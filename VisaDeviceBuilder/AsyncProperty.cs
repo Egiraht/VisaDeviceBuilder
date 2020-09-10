@@ -32,6 +32,11 @@ namespace VisaDeviceBuilder
     protected string SetterValue { get; set; } = string.Empty;
 
     /// <summary>
+    ///   Gets or sets the <see cref="Task" /> of the currently running <see cref="Getter" /> property value updating.
+    /// </summary>
+    protected Task? GetterTask { get; set; }
+
+    /// <summary>
     ///   Gets or sets the <see cref="Task" /> of the currently running <see cref="Setter" /> property value processing.
     /// </summary>
     protected Task? SetterTask { get; set; }
@@ -62,7 +67,11 @@ namespace VisaDeviceBuilder
       set
       {
         SetterValue = value;
-        SetterTask = Task.Run(() => ProcessSetter(value));
+        SetterTask = Task.Run(() =>
+        {
+          ProcessSetter(value);
+          SetterTask = null;
+        });
       }
     }
 
@@ -130,8 +139,10 @@ namespace VisaDeviceBuilder
       SetterDelegate = setterDelegate;
     }
 
-    /// <inheritdoc />
-    public virtual void UpdateGetter()
+    /// <summary>
+    ///   Updates the value of the <see cref="Setter" /> property.
+    /// </summary>
+    protected virtual void UpdateGetter()
     {
       lock (SynchronizationLock)
       {
@@ -152,10 +163,20 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public Task UpdateGetterAsync() => Task.Run(UpdateGetter);
+    public void RequestGetterUpdate()
+    {
+      GetterTask = Task.Run(() =>
+      {
+        UpdateGetter();
+        GetterTask = null;
+      });
+    }
+
+    /// <inheritdoc />
+    public Task GetGetterUpdatingTask() => GetterTask ?? Task.CompletedTask;
 
     /// <summary>
-    ///   Synchronously processes the new value assigned to the the <see cref="Setter" /> property.
+    ///   Processes the new value assigned to the <see cref="Setter" /> property.
     /// </summary>
     /// <param name="newValue">
     ///   The value passed to the <see cref="Setter" /> property.

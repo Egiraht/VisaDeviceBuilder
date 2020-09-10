@@ -192,8 +192,8 @@
 
     <Style.Triggers>
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
-        Value="{x:Static visa:DeviceConnectionState.Connected}">
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.IsDeviceReady}"
+        Value="True">
         <Setter Property="IsEnabled" Value="True" />
       </DataTrigger>
     </Style.Triggers>

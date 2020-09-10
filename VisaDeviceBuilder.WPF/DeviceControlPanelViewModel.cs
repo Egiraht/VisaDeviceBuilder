@@ -607,6 +607,16 @@ namespace VisaDeviceBuilder.WPF
           await AutoUpdater.StopAsync();
         await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
 
+        // Waiting for all asynchronous properties processing to complete.
+        foreach (var asyncPropertyMetadata in AsyncProperties)
+        {
+          if (asyncPropertyMetadata.AsyncProperty == null)
+            continue;
+
+          await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
+          await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
+        }
+
         // Waiting for remaining asynchronous operations to complete before session closing.
         await Task.Run(() =>
         {
@@ -648,7 +658,10 @@ namespace VisaDeviceBuilder.WPF
             return;
 
           foreach (var (_, property) in Device.AsyncProperties)
-            property.UpdateGetter();
+          {
+            property.RequestGetterUpdate();
+            property.GetGetterUpdatingTask().Wait();
+          }
         }
         catch (Exception e)
         {
