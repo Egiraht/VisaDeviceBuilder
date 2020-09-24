@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -12,12 +13,12 @@ namespace VisaDeviceBuilder.WPF.Components
     /// <summary>
     ///   The action to be executed when the command is called.
     /// </summary>
-    public Action<object>? Action { get; }
+    public Action<object?>? Action { get; }
 
     /// <summary>
     ///   The conditional callback that defines if the action can be executed at the moment.
     /// </summary>
-    public Func<object, bool>? Condition { get; }
+    public Func<object?, bool>? Condition { get; }
 
     /// <summary>
     ///   Creates a new command instance.
@@ -26,7 +27,7 @@ namespace VisaDeviceBuilder.WPF.Components
     ///   The action to be executed.
     ///   The provided action can be executed without any conditions.
     /// </param>
-    public RelayCommand(Action<object> action)
+    public RelayCommand(Action<object?> action)
     {
       Action = action;
     }
@@ -38,7 +39,7 @@ namespace VisaDeviceBuilder.WPF.Components
     ///   The device action to be started.
     ///   The provided action can be executed without any conditions.
     /// </param>
-    public RelayCommand(Func<object, Task> action)
+    public RelayCommand(Func<object?, Task> action)
     {
       Action = parameter => action(parameter);
     }
@@ -52,7 +53,7 @@ namespace VisaDeviceBuilder.WPF.Components
     /// <param name="condition">
     ///   The conditional callback that defines if the action can be executed at the moment.
     /// </param>
-    public RelayCommand(Action<object> action, Func<object, bool> condition) : this(action)
+    public RelayCommand(Action<object?> action, Func<object?, bool> condition) : this(action)
     {
       Condition = condition;
     }
@@ -66,13 +67,13 @@ namespace VisaDeviceBuilder.WPF.Components
     /// <param name="condition">
     ///   The conditional callback that defines if the action can be executed at the moment.
     /// </param>
-    public RelayCommand(Func<object, Task> action, Func<object, bool> condition) : this(action)
+    public RelayCommand(Func<object?, Task> action, Func<object?, bool> condition) : this(action)
     {
       Condition = condition;
     }
 
     /// <inheritdoc />
-    public bool CanExecute(object parameter)
+    public bool CanExecute(object? parameter = null)
     {
       try
       {
@@ -85,13 +86,14 @@ namespace VisaDeviceBuilder.WPF.Components
     }
 
     /// <inheritdoc />
-    public void Execute(object parameter)
+    public void Execute(object? parameter = null)
     {
       if (CanExecute(parameter))
         Action?.Invoke(parameter);
     }
 
     /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
     public event EventHandler? CanExecuteChanged
     {
       add => CommandManager.RequerySuggested += value;

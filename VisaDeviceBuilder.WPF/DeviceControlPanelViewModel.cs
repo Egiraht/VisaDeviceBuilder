@@ -451,7 +451,7 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public DeviceControlPanelViewModel()
     {
-      DeviceActionExecutor.Instance.Exception += OnException;
+      DeviceActionExecutor.Exception += OnException;
     }
 
     /// <summary>
@@ -751,7 +751,7 @@ namespace VisaDeviceBuilder.WPF
         AutoUpdater?.Dispose();
         Device?.Dispose();
         ResourceManager?.Dispose();
-        DeviceActionExecutor.Instance.Exception -= OnException;
+        DeviceActionExecutor.Exception -= OnException;
       }
       catch
       {

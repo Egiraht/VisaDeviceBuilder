@@ -1,8 +1,11 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace VisaDeviceBuilder.WPF.Components
 {
   /// <summary>
   ///   Defines the model class containing the asynchronous property metadata.
   /// </summary>
+  [ExcludeFromCodeCoverage]
   public class AsyncPropertyMetadata
   {
     /// <summary>

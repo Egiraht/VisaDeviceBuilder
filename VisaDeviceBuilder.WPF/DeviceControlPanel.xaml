@@ -121,7 +121,7 @@
             <Style TargetType="MenuItem">
               <Setter Property="Header" Value="{Binding LocalizedName}" />
               <Setter Property="CommandParameter" Value="{Binding DeviceAction}" />
-              <Setter Property="Command" Value="{x:Static comp:DeviceActionExecutor.Instance}" />
+              <Setter Property="Command" Value="{x:Static comp:DeviceActionCommand.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>
         </MenuItem>

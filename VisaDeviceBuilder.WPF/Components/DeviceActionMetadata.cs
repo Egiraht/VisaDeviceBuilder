@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace VisaDeviceBuilder.WPF.Components
 {
   /// <summary>
   ///   Defines the model class containing the device action metadata.
   /// </summary>
+  [ExcludeFromCodeCoverage]
   public class DeviceActionMetadata
   {
     /// <summary>
