@@ -60,12 +60,12 @@ namespace VisaDeviceBuilder.Tests
     ///   <see cref="TestObject" /> to string conversion method.
     /// </summary>
     private static string ToTestObjectConverter(TestObject? value) =>
-      JsonSerializer.Serialize(value) ?? string.Empty;
+      JsonSerializer.Serialize(value);
 
     /// <summary>
     ///   String to <see cref="TestObject" /> conversion method.
     /// </summary>
-    private static TestObject? FromTestObjectConverter(string? value) =>
+    private static TestObject? FromTestObjectConverter(string value) =>
       JsonSerializer.Deserialize<TestObject?>(value);
 
     /// <summary>

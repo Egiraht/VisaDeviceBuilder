@@ -113,7 +113,7 @@ namespace VisaDeviceBuilder
       GetType()
         .GetProperties()
         .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
-        .ToDictionary(property => property.Name, property => (IAsyncProperty) property.GetValue(this));
+        .ToDictionary(property => property.Name, property => (IAsyncProperty) property.GetValue(this)!);
 
     /// <summary>
     ///   Collects all device actions defined in the current device class that represent class methods having

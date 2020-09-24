@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Common project properties. -->
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Title>Visa device builder library unit tests</Title>
+    <Title>WPF GUI controls library unit tests</Title>
     <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
     <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
     <RepositoryType>Git</RepositoryType>
