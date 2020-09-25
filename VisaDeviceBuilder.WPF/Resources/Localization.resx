@@ -26,9 +26,6 @@
   <data name="UpdateProperties" xml:space="preserve">
     <value>Update properties</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>Reset</value>
-  </data>
   <data name="OtherActions" xml:space="preserve">
     <value>Other actions</value>
   </data>
@@ -56,24 +53,6 @@
   <data name="Error" xml:space="preserve">
     <value>Error</value>
   </data>
-  <data name="SearchingForResources" xml:space="preserve">
-    <value>Searching for resources...</value>
-  </data>
-  <data name="DeviceIsInitializing" xml:space="preserve">
-    <value>Initializing the device...</value>
-  </data>
-  <data name="DeviceWasInitialized" xml:space="preserve">
-    <value>The device has been successfully initialized.</value>
-  </data>
-  <data name="DeviceIsDeInitializing" xml:space="preserve">
-    <value>De-initializing the device...</value>
-  </data>
-  <data name="DeviceWasDisconnected" xml:space="preserve">
-    <value>The device has been disconnected.</value>
-  </data>
-  <data name="DeviceWasDisconnectedWithError" xml:space="preserve">
-    <value>The device has been disconnected because of an error.</value>
-  </data>
   <data name="DeviceIdentifier" xml:space="preserve">
     <value>Device identifier</value>
   </data>
@@ -100,5 +79,8 @@
   </data>
   <data name="InvalidResourceManagerType" xml:space="preserve">
     <value>The specified VISA resource manager type "{0}" does not implement the "{1}" interface.</value>
+  </data>
+  <data name="CannotCreateVisaDeviceInstance" xml:space="preserve">
+    <value>Cannot create a new VISA device instance of type "{0}".</value>
   </data>
 </root>

@@ -70,6 +70,15 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot create a new VISA device instance of type &quot;{0}&quot;..
+        /// </summary>
+        public static string CannotCreateVisaDeviceInstance {
+            get {
+                return ResourceManager.GetString("CannotCreateVisaDeviceInstance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connect device.
         /// </summary>
         public static string Connect {
@@ -102,51 +111,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         public static string DeviceIdentifier {
             get {
                 return ResourceManager.GetString("DeviceIdentifier", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to De-initializing the device....
-        /// </summary>
-        public static string DeviceIsDeInitializing {
-            get {
-                return ResourceManager.GetString("DeviceIsDeInitializing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Initializing the device....
-        /// </summary>
-        public static string DeviceIsInitializing {
-            get {
-                return ResourceManager.GetString("DeviceIsInitializing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The device has been disconnected..
-        /// </summary>
-        public static string DeviceWasDisconnected {
-            get {
-                return ResourceManager.GetString("DeviceWasDisconnected", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The device has been disconnected because of an error..
-        /// </summary>
-        public static string DeviceWasDisconnectedWithError {
-            get {
-                return ResourceManager.GetString("DeviceWasDisconnectedWithError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The device has been successfully initialized..
-        /// </summary>
-        public static string DeviceWasInitialized {
-            get {
-                return ResourceManager.GetString("DeviceWasInitialized", resourceCulture);
             }
         }
         
@@ -246,24 +210,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         public static string PropertyNewValue {
             get {
                 return ResourceManager.GetString("PropertyNewValue", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Reset.
-        /// </summary>
-        public static string Reset {
-            get {
-                return ResourceManager.GetString("Reset", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Searching for resources....
-        /// </summary>
-        public static string SearchingForResources {
-            get {
-                return ResourceManager.GetString("SearchingForResources", resourceCulture);
             }
         }
         

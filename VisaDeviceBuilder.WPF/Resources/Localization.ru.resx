@@ -26,9 +26,6 @@
   <data name="UpdateProperties" xml:space="preserve">
     <value>Обновить свойства</value>
   </data>
-  <data name="Reset" xml:space="preserve">
-    <value>Сброс</value>
-  </data>
   <data name="OtherActions" xml:space="preserve">
     <value>Прочие действия</value>
   </data>
@@ -56,24 +53,6 @@
   <data name="Error" xml:space="preserve">
     <value>Ошибка</value>
   </data>
-  <data name="SearchingForResources" xml:space="preserve">
-    <value>Идёт поиск ресурсов...</value>
-  </data>
-  <data name="DeviceIsInitializing" xml:space="preserve">
-    <value>Инициализация устройства...</value>
-  </data>
-  <data name="DeviceWasInitialized" xml:space="preserve">
-    <value>Устройство было успешно инициализировано.</value>
-  </data>
-  <data name="DeviceIsDeInitializing" xml:space="preserve">
-    <value>Деинициализация устройства...</value>
-  </data>
-  <data name="DeviceWasDisconnected" xml:space="preserve">
-    <value>Устройство было отключено.</value>
-  </data>
-  <data name="DeviceWasDisconnectedWithError" xml:space="preserve">
-    <value>Устройство было отключено из-за наличия ошибок.</value>
-  </data>
   <data name="DeviceIdentifier" xml:space="preserve">
     <value>Идентификатор устройства</value>
   </data>
@@ -100,5 +79,8 @@
   </data>
   <data name="InvalidResourceManagerType" xml:space="preserve">
     <value>Указанный тип менеджера ресурсов VISA "{0}" не реализует интерфейс "{1}".</value>
+  </data>
+  <data name="CannotCreateVisaDeviceInstance" xml:space="preserve">
+    <value>Невозможно создать новый экземпляр устройства VISA типа "{0}".</value>
   </data>
 </root>

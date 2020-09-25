@@ -89,17 +89,17 @@
                 MinHeight="45">
         <DataGrid.Columns>
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=LocalizedName, Mode=OneWay}"
+                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.LocalizedName), Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyName}"
                               Width="Auto" MinWidth="100"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=AsyncProperty.Getter, Mode=OneWay}"
+                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.AsyncProperty).Getter, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyActualValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=AsyncProperty.Setter, Mode=TwoWay}"
+                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.AsyncProperty).Setter, Mode=TwoWay}"
                               Header="{x:Static res:Localization.PropertyNewValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="False" CanUserResize="True" />
@@ -119,8 +119,8 @@
                   ItemsSource="{Binding DeviceActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
-              <Setter Property="Header" Value="{Binding LocalizedName}" />
-              <Setter Property="CommandParameter" Value="{Binding DeviceAction}" />
+              <Setter Property="Header" Value="{Binding (comp:DeviceActionMetadata.LocalizedName)}" />
+              <Setter Property="CommandParameter" Value="{Binding (comp:DeviceActionMetadata.DeviceAction)}" />
               <Setter Property="Command" Value="{x:Static comp:DeviceActionCommand.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>

@@ -18,7 +18,8 @@ namespace VisaDeviceBuilder.WPF
   ///   <see cref="IVisaDevice" /> interface.
   ///   All possible device exceptions can be handled using the <see cref="Exception" /> event.
   /// </summary>
-  public partial class DeviceControlPanelViewModel : INotifyPropertyChanged, IDisposable
+  // TODO: Extract cross-platform logic into the main VisaDeviceBuilder library.
+  public partial class DeviceControlPanelViewModel : INotifyPropertyChanged, IDisposable, IAsyncDisposable
   {
     /// <summary>
     ///   The object disposal flag.
@@ -36,9 +37,9 @@ namespace VisaDeviceBuilder.WPF
     private Type? _resourceManagerType;
 
     /// <summary>
-    ///   The backing field for the <see cref="ResourceManager" /> property.
+    ///   The backing field for the <see cref="CanConnect" /> property.
     /// </summary>
-    private IResourceManager? _resourceManager;
+    private bool _canConnect = true;
 
     /// <summary>
     ///   The backing field for the <see cref="IsDeviceReady" /> property.
@@ -61,6 +62,11 @@ namespace VisaDeviceBuilder.WPF
     private bool _isUpdatingAsyncProperties = false;
 
     /// <summary>
+    ///   The backing field for the <see cref="IsDisconnectionRequested" /> property.
+    /// </summary>
+    private bool _isDisconnectionRequested = false;
+
+    /// <summary>
     ///   The backing field for the <see cref="DeviceLabel" /> property.
     /// </summary>
     private string _deviceLabel = string.Empty;
@@ -69,6 +75,11 @@ namespace VisaDeviceBuilder.WPF
     ///   The backing field for the <see cref="IsMessageInputPanelEnabled" /> property.
     /// </summary>
     private bool _isMessageInputPanelEnabled;
+
+    /// <summary>
+    ///   The backing field for the <see cref="ConnectionState" /> property.
+    /// </summary>
+    private DeviceConnectionState _connectionState;
 
     /// <summary>
     ///   The backing field for the <see cref="Identifier" /> property.
@@ -114,7 +125,7 @@ namespace VisaDeviceBuilder.WPF
     ///   Gets or sets the type of the device.
     ///   The device class defined by the specified type must implement the <see cref="IVisaDevice" /> interface.
     /// </summary>
-    /// <exception cref="InvalidCastException">
+    /// <exception cref="InvalidOperationException">
     ///   The provided type value does not implement the <see cref="IVisaDevice" /> interface.
     /// </exception>
     public Type DeviceType
@@ -124,7 +135,7 @@ namespace VisaDeviceBuilder.WPF
       {
         if (!value.IsClass || !typeof(IVisaDevice).IsAssignableFrom(value))
         {
-          OnException(new InvalidCastException(string.Format(Localization.InvalidVisaDeviceType, value.Name,
+          OnException(new InvalidOperationException(string.Format(Localization.InvalidVisaDeviceType, value.Name,
             nameof(IVisaDevice))));
           return;
         }
@@ -132,7 +143,6 @@ namespace VisaDeviceBuilder.WPF
         _deviceType = value;
         OnPropertyChanged();
         OnPropertyChanged(nameof(DeviceLabel));
-        CreateNewDeviceInstance();
       }
     }
 
@@ -142,7 +152,7 @@ namespace VisaDeviceBuilder.WPF
     ///   interface, or the value can be <c>null</c>.
     ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
     /// </summary>
-    /// <exception cref="InvalidCastException">
+    /// <exception cref="InvalidOperationException">
     ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
     /// </exception>
     public Type? ResourceManagerType
@@ -152,14 +162,13 @@ namespace VisaDeviceBuilder.WPF
       {
         if (value != null && (!value.IsClass || !typeof(IResourceManager).IsAssignableFrom(value)))
         {
-          OnException(new InvalidCastException(string.Format(Localization.InvalidResourceManagerType, value.Name,
+          OnException(new InvalidOperationException(string.Format(Localization.InvalidResourceManagerType, value.Name,
             nameof(IResourceManager))));
           return;
         }
 
         _resourceManagerType = value;
         OnPropertyChanged();
-        CreateNewDeviceInstance();
       }
     }
 
@@ -199,7 +208,6 @@ namespace VisaDeviceBuilder.WPF
       {
         _resourceName = value;
         OnPropertyChanged();
-        CreateNewDeviceInstance();
       }
     }
 
@@ -209,39 +217,15 @@ namespace VisaDeviceBuilder.WPF
     public ObservableCollection<string> AvailableVisaResources { get; } = new ObservableCollection<string>();
 
     /// <summary>
-    ///   Gets the attached custom VISA resource manager instance.
-    /// </summary>
-    public IResourceManager? ResourceManager
-    {
-      get => _resourceManager;
-      private set
-      {
-        _resourceManager = value;
-        OnPropertyChanged();
-      }
-    }
-
-    /// <summary>
     ///   Checks if the device can be connected at the moment.
     /// </summary>
     public bool CanConnect
     {
-      get
+      get => _canConnect;
+      protected set
       {
-        try
-        {
-          if (ResourceManager != null)
-            ResourceManager.Parse(ResourceName);
-          else
-            GlobalResourceManager.Parse(ResourceName);
-        }
-        catch
-        {
-          return false;
-        }
-
-        return ConnectionState == DeviceConnectionState.Disconnected ||
-          ConnectionState == DeviceConnectionState.DisconnectedWithError;
+        _canConnect = value;
+        OnPropertyChanged();
       }
     }
 
@@ -251,7 +235,7 @@ namespace VisaDeviceBuilder.WPF
     public bool IsDeviceReady
     {
       get => _isDeviceReady;
-      private set
+      protected set
       {
         _isDeviceReady = value;
         OnPropertyChanged();
@@ -261,7 +245,15 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Gets the current device connection state.
     /// </summary>
-    public DeviceConnectionState ConnectionState => Device?.DeviceConnectionState ?? DeviceConnectionState.Disconnected;
+    public DeviceConnectionState ConnectionState
+    {
+      get => _connectionState;
+      protected set
+      {
+        _connectionState = value;
+        OnPropertyChanged();
+      }
+    }
 
     /// <summary>
     ///   Checks if the <see cref="AvailableVisaResources" /> property is being updated.
@@ -291,12 +283,25 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
+    ///   Checks if the device disconnection has been requested.
+    /// </summary>
+    public bool IsDisconnectionRequested
+    {
+      get => _isDisconnectionRequested;
+      protected set
+      {
+        _isDisconnectionRequested = value;
+        OnPropertyChanged();
+      }
+    }
+
+    /// <summary>
     ///   Gets the <see cref="IVisaDevice" /> instance bound to this control.
     /// </summary>
     public IVisaDevice? Device
     {
       get => _device;
-      set
+      protected set
       {
         _device = value;
         OnPropertyChanged();
@@ -315,7 +320,7 @@ namespace VisaDeviceBuilder.WPF
     public string Identifier
     {
       get => _identifier;
-      private set
+      protected set
       {
         _identifier = value;
         OnPropertyChanged();
@@ -348,7 +353,6 @@ namespace VisaDeviceBuilder.WPF
       {
         _localizationResourceManager = value;
         OnPropertyChanged();
-        LocalizeNames();
       }
     }
 
@@ -377,7 +381,7 @@ namespace VisaDeviceBuilder.WPF
         _isAutoUpdaterEnabled = value;
         OnPropertyChanged();
 
-        if (!IsDeviceReady || AutoUpdater == null)
+        if (AutoUpdater == null)
           return;
 
         if (_isAutoUpdaterEnabled)
@@ -398,12 +402,20 @@ namespace VisaDeviceBuilder.WPF
         _autoUpdaterDelay = value;
         OnPropertyChanged();
 
-        if (AutoUpdater == null)
-          return;
-
-        AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
+        if (AutoUpdater != null)
+          AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
       }
     }
+
+    /// <summary>
+    ///   Stores the <see cref="Task" /> for the established device connection.
+    /// </summary>
+    protected Task? DeviceConnectionTask { get; set; }
+
+    /// <summary>
+    ///   Stores the cancellation token source that allows to stop the device connection task and disconnect the device.
+    /// </summary>
+    protected CancellationTokenSource? DeviceConnectionStopTokenSource { get; set; }
 
     /// <summary>
     ///   Gets or sets the command message string to be sent to the device.
@@ -424,7 +436,7 @@ namespace VisaDeviceBuilder.WPF
     public string ResponseMessage
     {
       get => _responseMessage;
-      private set
+      protected set
       {
         _responseMessage = value;
         OnPropertyChanged();
@@ -432,9 +444,9 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Gets the shared locking object used for synchronization of various asynchronous operations.
+    ///   Gets the shared locking object used for device disconnection synchronization.
     /// </summary>
-    protected object SynchronizationLock { get; } = new object();
+    protected object DisconnectionLock { get; } = new object();
 
     /// <summary>
     ///   Event that is called on any property change.
@@ -449,17 +461,99 @@ namespace VisaDeviceBuilder.WPF
     /// <summary>
     ///   Creates a new view-model instance.
     /// </summary>
-    public DeviceControlPanelViewModel()
+    public DeviceControlPanelViewModel() => DeviceActionExecutor.Exception += OnException;
+
+    /// <summary>
+    ///   Asynchronously updates the list of VISA resource names.
+    /// </summary>
+    public virtual async Task UpdateResourcesListAsync()
     {
-      DeviceActionExecutor.Exception += OnException;
+      try
+      {
+        if (IsUpdatingVisaResources)
+          return;
+        IsUpdatingVisaResources = true;
+
+        // Searching for resources and aliases using the selected VISA resource manager.
+        var resources = await Task.Run(() =>
+        {
+          using var resourceManager = ResourceManagerType != null
+            ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
+            : null;
+          return (resourceManager != null ? resourceManager.Find("?*::INSTR") : GlobalResourceManager.Find("?*::INSTR"))
+            .Aggregate(new List<string>(), (results, resource) =>
+            {
+              var parseResult = resourceManager != null
+                ? resourceManager.Parse(resource)
+                : GlobalResourceManager.Parse(resource);
+              results.Add(string.IsNullOrWhiteSpace(parseResult.AliasIfExists)
+                ? parseResult.OriginalResourceName
+                : parseResult.AliasIfExists);
+              return results;
+            });
+        });
+
+        AvailableVisaResources.Clear();
+        foreach (var resource in resources)
+          AvailableVisaResources.Add(resource);
+      }
+      catch (VisaException)
+      {
+        AvailableVisaResources.Clear();
+      }
+      catch (Exception e)
+      {
+        OnException(e);
+      }
+      finally
+      {
+        IsUpdatingVisaResources = false;
+      }
     }
 
     /// <summary>
-    ///   Rebuilds the collections of asynchronous properties and actions and localizes the names using the specified
-    ///   <see cref="LocalizationResourceManager" />.
+    ///   Creates a new VISA device instance.
+    /// </summary>
+    /// <param name="resourceName">
+    ///   The VISA resource name to create a new VISA device instance for.
+    /// </param>
+    /// <param name="deviceType">
+    ///   The type of the VISA device to create an instance for.
+    ///   The specified device type must implement the <see cref="IVisaDevice" /> interface and have a public
+    ///   constructor accepting a resource name string and an optional <see cref="IResourceManager" /> instance.
+    /// </param>
+    /// <param name="resourceManager">
+    ///   The optional instance of custom VISA resource manager.
+    ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used for
+    ///   instance creation.
+    /// </param>
+    /// <returns>
+    ///   A new <see cref="IVisaDevice" /> instance.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    ///   The provided <paramref name="deviceType" /> does not implement the <see cref="IVisaDevice" /> interface.
+    /// </exception>
+    /// <exception cref="NotSupportedException">
+    ///   Cannot create a new VISA device instance of the provided <paramref name="deviceType" /> as it does not
+    ///   have a suitable constructor.
+    /// </exception>
+    protected static IVisaDevice CreateDeviceInstance(string resourceName, Type deviceType,
+      IResourceManager? resourceManager)
+    {
+      if (!deviceType.IsClass || !typeof(IVisaDevice).IsAssignableFrom(deviceType))
+        throw new InvalidOperationException(string.Format(Localization.InvalidVisaDeviceType,
+          deviceType.Name, nameof(IVisaDevice)));
+
+      return (IVisaDevice) (Activator.CreateInstance(deviceType, resourceName, resourceManager) ??
+        throw new NotSupportedException(string.Format(Localization.CannotCreateVisaDeviceInstance, deviceType.Name)));
+    }
+
+    /// <summary>
+    ///   Rebuilds the collections of asynchronous properties and device actions and localizes the names using the
+    ///   specified <see cref="LocalizationResourceManager" />.
     ///   If <see cref="LocalizationResourceManager" /> is not provided, the original names are used.
     /// </summary>
-    protected virtual void LocalizeNames()
+    protected virtual void RebuildCollections()
     {
       AsyncProperties.Clear();
       DeviceActions.Clear();
@@ -485,172 +579,173 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Creates a new VISA device instance attached to this control.
+    ///   Starts the asynchronous device connection process.
+    ///   The created device connection task can be accessed via the <see cref="DeviceConnectionTask" /> property.
     /// </summary>
-    protected virtual void CreateNewDeviceInstance()
+    public virtual void Connect()
     {
+      if (!CanConnect)
+        return;
+
+      // Checking the VISA resource name.
+      using (var resourceManager = ResourceManagerType != null
+        ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
+        : null)
+      {
+        try
+        {
+          if (resourceManager != null)
+            resourceManager.Parse(ResourceName);
+          else
+            GlobalResourceManager.Parse(ResourceName);
+        }
+        catch
+        {
+          return;
+        }
+      }
+
+      DeviceConnectionTask = CreateDeviceConnectionTask();
+    }
+
+    /// <summary>
+    ///   Creates the asynchronous device connection <see cref="Task" /> that handles the entire device
+    ///   connection and disconnection process.
+    /// </summary>
+    protected virtual async Task CreateDeviceConnectionTask()
+    {
+      if (!CanConnect)
+        return;
+
       try
       {
-        AutoUpdater?.Dispose();
-        Device?.Dispose();
-        ResourceManager?.Dispose();
-
-        ResourceManager = ResourceManagerType != null
+        using var resourceManager = ResourceManagerType != null
           ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
           : null;
 
-        Device = CanConnect
-          ? (IVisaDevice?) Activator.CreateInstance(DeviceType, ResourceName, ResourceManager)
-          : null;
-        OnPropertyChanged(nameof(CanConnect));
-
-        if (Device == null)
-          return;
-
-        foreach (var (_, asyncProperty) in Device.AsyncProperties)
+        await using (Device = CreateDeviceInstance(ResourceName, DeviceType, resourceManager))
+        await using (AutoUpdater = new AutoUpdater(Device))
+        using (DeviceConnectionStopTokenSource = new CancellationTokenSource())
         {
-          asyncProperty.GetterException += OnException;
-          asyncProperty.SetterException += OnException;
-        }
+          var stopToken = DeviceConnectionStopTokenSource.Token;
+          CanConnect = false;
+          ConnectionState = DeviceConnectionState.Initializing;
 
-        LocalizeNames();
-        AutoUpdater = new AutoUpdater(Device);
-      }
-      catch (Exception e)
-      {
-        OnException(e);
-      }
-    }
+          // Trying to connect to the device.
+          stopToken.ThrowIfCancellationRequested();
+          var sessionOpeningTask = Device.OpenSessionAsync();
+          await sessionOpeningTask;
 
-    /// <summary>
-    ///   Asynchronously updates the list of VISA resource names.
-    /// </summary>
-    public virtual async Task UpdateResourcesListAsync()
-    {
-      try
-      {
-        if (IsUpdatingVisaResources)
-          return;
+          // Rebuilding and localizing the collections of asynchronous properties and device actions.
+          RebuildCollections();
 
-        IsUpdatingVisaResources = true;
+          // Getting the device identifier string.
+          stopToken.ThrowIfCancellationRequested();
+          Identifier = await Device.GetIdentifierAsync();
 
-        // Searching for resources and aliases using the selected VISA resource manager.
-        var resources = await Task.Run(() =>
-          (ResourceManager != null
-            ? ResourceManager.Find("?*::INSTR")
-            : GlobalResourceManager.Find("?*::INSTR"))
-          .Aggregate(new List<string>(), (results, resource) =>
+          // Trying to get the initial getter values of the asynchronous properties.
+          ThreadExceptionEventHandler throwOnGetterUpdate = (_, args) => throw args.Exception;
+          foreach (var (_, asyncProperty) in Device.AsyncProperties)
           {
-            var parseResult = ResourceManager != null
-              ? ResourceManager.Parse(resource)
-              : GlobalResourceManager.Parse(resource);
-            results.Add(string.IsNullOrWhiteSpace(parseResult.AliasIfExists)
-              ? parseResult.OriginalResourceName
-              : parseResult.AliasIfExists);
-            return results;
-          }));
+            stopToken.ThrowIfCancellationRequested();
+            asyncProperty.GetterException += throwOnGetterUpdate;
+            asyncProperty.RequestGetterUpdate();
+            await asyncProperty.GetGetterUpdatingTask();
+            asyncProperty.GetterException -= throwOnGetterUpdate;
+          }
 
-        AvailableVisaResources.Clear();
-        foreach (var resource in resources)
-          AvailableVisaResources.Add(resource);
-      }
-      catch (VisaException)
-      {
-        AvailableVisaResources.Clear();
-      }
-      catch (Exception e)
-      {
-        OnException(e);
-      }
-      finally
-      {
-        IsUpdatingVisaResources = false;
-      }
-    }
+          // Subscribing on further exception events of the asynchronous properties.
+          foreach (var (_, asyncProperty) in Device.AsyncProperties)
+          {
+            asyncProperty.GetterException += OnException;
+            asyncProperty.SetterException += OnException;
+          }
 
-    /// <summary>
-    ///   Asynchronously connects to the device.
-    /// </summary>
-    public virtual async Task ConnectAsync()
-    {
-      try
-      {
-        if (!CanConnect)
-          return;
-
-        var sessionOpeningTask = Device!.OpenSessionAsync();
-        OnPropertyChanged(nameof(ConnectionState));
-        OnPropertyChanged(nameof(CanConnect));
-        await sessionOpeningTask;
-
-        Identifier = await Device.GetIdentifierAsync();
-        await UpdateAsyncPropertiesAsync();
-
-        if (AutoUpdater != null)
-        {
-          AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
+          // Configuring the auto-updater.
+          stopToken.ThrowIfCancellationRequested();
+          AutoUpdater.Delay = TimeSpan.FromMilliseconds(AutoUpdaterDelay);
           if (IsAutoUpdaterEnabled)
             AutoUpdater.Start();
-        }
 
-        IsDeviceReady = true;
+          // Waiting for the disconnection request.
+          IsDeviceReady = true;
+          ConnectionState = DeviceConnectionState.Connected;
+          await Task.Delay(-1, stopToken);
+
+          // Waiting for the auto-updater to stop.
+          IsDeviceReady = false;
+          ConnectionState = DeviceConnectionState.DeInitializing;
+          if (AutoUpdater != null)
+            await AutoUpdater.StopAsync();
+
+          // Waiting for the device actions to complete.
+          await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
+
+          // Waiting for all asynchronous properties processing to complete.
+          foreach (var asyncPropertyMetadata in AsyncProperties)
+          {
+            if (asyncPropertyMetadata.AsyncProperty == null)
+              continue;
+
+            await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
+            await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
+          }
+
+          // Waiting for remaining asynchronous operations to complete before session closing.
+          await Task.Run(() =>
+          {
+            lock (DisconnectionLock)
+              Device.CloseSessionAsync().Wait();
+          });
+          ConnectionState = DeviceConnectionState.Disconnected;
+        }
+      }
+      catch (OperationCanceledException)
+      {
+        // Suppress task cancellation exceptions.
       }
       catch (Exception e)
       {
         OnException(e);
+        ConnectionState = DeviceConnectionState.DisconnectedWithError;
       }
       finally
       {
-        OnPropertyChanged(nameof(ConnectionState));
-        OnPropertyChanged(nameof(CanConnect));
+        DeviceConnectionStopTokenSource = null;
+        AutoUpdater = null;
+        Device = null;
+
+        Identifier = string.Empty;
+        RebuildCollections();
+
+        IsDeviceReady = false;
+        CanConnect = true;
       }
     }
 
     /// <summary>
-    ///   Asynchronously disconnects from the device.
+    ///   Stops the device connection loop.
     /// </summary>
     public virtual async Task DisconnectAsync()
     {
+      if (IsDisconnectionRequested || DeviceConnectionTask == null || DeviceConnectionStopTokenSource == null)
+        return;
+      IsDisconnectionRequested = true;
+
       try
       {
-        if (!IsDeviceReady)
-          return;
-        IsDeviceReady = false;
-
-        if (AutoUpdater != null)
-          await AutoUpdater.StopAsync();
-        await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
-
-        // Waiting for all asynchronous properties processing to complete.
-        foreach (var asyncPropertyMetadata in AsyncProperties)
-        {
-          if (asyncPropertyMetadata.AsyncProperty == null)
-            continue;
-
-          await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
-          await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
-        }
-
-        // Waiting for remaining asynchronous operations to complete before session closing.
-        await Task.Run(() =>
-        {
-          lock (SynchronizationLock)
-          {
-            var sessionClosingTask = Device!.CloseSessionAsync();
-            OnPropertyChanged(nameof(ConnectionState));
-            OnPropertyChanged(nameof(CanConnect));
-            sessionClosingTask.Wait();
-          }
-        });
+        DeviceConnectionStopTokenSource.Cancel();
+        await DeviceConnectionTask;
       }
-      catch (Exception e)
+      catch (OperationCanceledException)
       {
-        OnException(e);
+        // Suppress task cancellation exception.
       }
       finally
       {
-        OnPropertyChanged(nameof(ConnectionState));
-        OnPropertyChanged(nameof(CanConnect));
+        DeviceConnectionTask.Dispose();
+        DeviceConnectionTask = null;
+        IsDisconnectionRequested = false;
       }
     }
 
@@ -660,17 +755,14 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public virtual Task UpdateAsyncPropertiesAsync() => Task.Run(() =>
     {
-      lock (SynchronizationLock)
+      lock (DisconnectionLock)
       {
-        if (IsUpdatingAsyncProperties)
+        if (Device?.IsSessionOpened != true || IsUpdatingAsyncProperties)
           return;
         IsUpdatingAsyncProperties = true;
 
         try
         {
-          if (Device?.IsSessionOpened != true)
-            return;
-
           foreach (var (_, property) in Device.AsyncProperties)
           {
             property.RequestGetterUpdate();
@@ -693,7 +785,7 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public virtual Task SendMessageAsync() => Task.Run(() =>
     {
-      lock (SynchronizationLock)
+      lock (DisconnectionLock)
       {
         try
         {
@@ -726,7 +818,7 @@ namespace VisaDeviceBuilder.WPF
     ///   The exception instance to be provided with the event.
     /// </param>
     protected virtual void OnException(Exception exception) =>
-      Exception?.Invoke(this, new ThreadExceptionEventArgs(exception));
+      OnException(this, new ThreadExceptionEventArgs(exception));
 
     /// <summary>
     ///   Invokes the <see cref="Exception" /> event.
@@ -737,20 +829,17 @@ namespace VisaDeviceBuilder.WPF
     /// <param name="args">
     ///   The event arguments object containing the thrown exception.
     /// </param>
-    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) =>
-      Exception?.Invoke(sender, args);
+    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) => Exception?.Invoke(sender, args);
 
     /// <inheritdoc />
-    public virtual void Dispose()
+    public async ValueTask DisposeAsync()
     {
       if (_isDisposed)
         return;
 
       try
       {
-        AutoUpdater?.Dispose();
-        Device?.Dispose();
-        ResourceManager?.Dispose();
+        await DisconnectAsync();
         DeviceActionExecutor.Exception -= OnException;
       }
       catch
@@ -765,9 +854,9 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <inheritdoc />
-    ~DeviceControlPanelViewModel()
-    {
-      Dispose();
-    }
+    public virtual void Dispose() => Task.Run(DisposeAsync).Wait();
+
+    /// <inheritdoc />
+    ~DeviceControlPanelViewModel() => Dispose();
   }
 }
