@@ -6,12 +6,24 @@ using Xunit;
 
 namespace VisaDeviceBuilder.Tests
 {
+  /// <summary>
+  ///   The unit tests class covering the <see cref="DeviceActionExecutor" /> class.
+  /// </summary>
   public class DeviceActionExecutorTests
   {
+    /// <summary>
+    ///   Defines the asynchronous device action delay to simulate long operations.
+    /// </summary>
     private const int DeviceActionDelay = 10;
 
+    /// <summary>
+    ///   Defines the test string value.
+    /// </summary>
     private const string TestString = "Test string";
 
+    /// <summary>
+    ///   Testing device actions execution.
+    /// </summary>
     [Fact]
     public async Task DeviceActionsTest()
     {
@@ -57,6 +69,9 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestString, value);
     }
 
+    /// <summary>
+    ///   Testing handling of device action exceptions.
+    /// </summary>
     [Fact]
     public async Task ExceptionsTest()
     {

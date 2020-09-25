@@ -5,12 +5,24 @@ using Xunit;
 
 namespace VisaDeviceBuilder.WPF.Tests
 {
+  /// <summary>
+  ///   The unit tests class covering the <see cref="DeviceActionCommand" /> class.
+  /// </summary>
   public class DeviceActionCommandTests
   {
+    /// <summary>
+    ///   Defines the asynchronous device action delay to simulate long operations.
+    /// </summary>
     private const int DeviceActionDelay = 10;
 
+    /// <summary>
+    ///   Defines the test string value.
+    /// </summary>
     private const string TestString = "Test string";
 
+    /// <summary>
+    ///   Testing the singleton class instance uniqueness.
+    /// </summary>
     [Fact]
     public void SingletonInstanceTest()
     {
@@ -18,6 +30,9 @@ namespace VisaDeviceBuilder.WPF.Tests
       Assert.Same(DeviceActionCommand.Instance, DeviceActionCommand.Instance);
     }
 
+    /// <summary>
+    ///   Testing device actions execution.
+    /// </summary>
     [Fact]
     public async Task DeviceActionTest()
     {
