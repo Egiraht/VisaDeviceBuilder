@@ -61,38 +61,74 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Значение с плавающей точкой.
+        ///   Looks up a localized string similar to Ограничение выходного тока, А.
         /// </summary>
-        public static string FloatingPointAsyncProperty {
+        public static string CurrentLimit {
             get {
-                return ResourceManager.GetString("FloatingPointAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("CurrentLimit", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Значение только для чтения.
+        ///   Looks up a localized string similar to Текст на дисплее.
         /// </summary>
-        public static string GetOnlyAsyncProperty {
+        public static string DisplayedText {
             get {
-                return ResourceManager.GetString("GetOnlyAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("DisplayedText", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Целочисленное значение.
+        ///   Looks up a localized string similar to Дисплей устройства включён.
         /// </summary>
-        public static string IntegerAsyncProperty {
+        public static string IsDisplayEnabled {
             get {
-                return ResourceManager.GetString("IntegerAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("IsDisplayEnabled", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Случайное значение.
+        ///   Looks up a localized string similar to Выход устройства включён.
         /// </summary>
-        public static string RandomAsyncProperty {
+        public static string IsOutputEnabled {
             get {
-                return ResourceManager.GetString("RandomAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("IsOutputEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Защита от перенапряжения включена.
+        /// </summary>
+        public static string IsOverVoltageProtectionEnabled {
+            get {
+                return ResourceManager.GetString("IsOverVoltageProtectionEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Измеренный выходной ток, А.
+        /// </summary>
+        public static string MeasuredCurrent {
+            get {
+                return ResourceManager.GetString("MeasuredCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Измеренное выходное напряжение, В.
+        /// </summary>
+        public static string MeasuredVoltage {
+            get {
+                return ResourceManager.GetString("MeasuredVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Уровень защиты от перенапряжения, В.
+        /// </summary>
+        public static string OverVoltageLevel {
+            get {
+                return ResourceManager.GetString("OverVoltageLevel", resourceCulture);
             }
         }
         
@@ -106,38 +142,38 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Значение только для записи.
+        ///   Looks up a localized string similar to Заблокирвать переднюю панель устройства.
         /// </summary>
-        public static string SetOnlyAsyncProperty {
+        public static string SetControlLock {
             get {
-                return ResourceManager.GetString("SetOnlyAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("SetControlLock", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Строковое значение.
+        ///   Looks up a localized string similar to Использовать управление с передней панели устройства.
         /// </summary>
-        public static string StringAsyncProperty {
+        public static string SetLocalControl {
             get {
-                return ResourceManager.GetString("StringAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("SetLocalControl", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Тестовое действие.
+        ///   Looks up a localized string similar to Использовать удалённое управление устройством.
         /// </summary>
-        public static string TestDeviceAction {
+        public static string SetRemoteControl {
             get {
-                return ResourceManager.GetString("TestDeviceAction", resourceCulture);
+                return ResourceManager.GetString("SetRemoteControl", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Тестовое текстовое устройство.
+        ///   Looks up a localized string similar to Требуемое выходное напряжение, В.
         /// </summary>
-        public static string TestMessageDevice {
+        public static string TargetVoltage {
             get {
-                return ResourceManager.GetString("TestMessageDevice", resourceCulture);
+                return ResourceManager.GetString("TargetVoltage", resourceCulture);
             }
         }
         

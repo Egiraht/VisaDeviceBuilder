@@ -11,14 +11,13 @@
         Title="{x:Static res:Localization.Title}">
   <StackPanel Orientation="Horizontal">
     <!--
-      Creating the control panel of TestMessageDevice type.
+      Creating the control panel for KeysightE364xA VISA devices.
       It uses the GlobalResourceManager to invoke the Keysight VISA implementation library for device discovery and
-      session management.
-      The Keysight IO Libraries Suite package must be installed before compilation.
+      session management. The Keysight IO Libraries Suite package must be installed before compilation.
     -->
-    <wpf:DeviceControlPanel DeviceType="comp:TestMessageDevice"
+    <wpf:DeviceControlPanel DeviceType="comp:KeysightE364xA"
                             ResourceManagerType="{x:Null}"
-                            DeviceLabel="{x:Static res:Localization.TestMessageDevice}"
+                            DeviceLabel="Keysight E364xA"
                             IsAutoUpdaterEnabled="True"
                             AutoUpdaterDelay="10"
                             IsMessageInputPanelEnabled="True"

@@ -24,31 +24,43 @@
   <data name="Title" xml:space="preserve">
     <value>VISA device control panel</value>
   </data>
-  <data name="StringAsyncProperty" xml:space="preserve">
-    <value>String value</value>
+  <data name="SetLocalControl" xml:space="preserve">
+    <value>Use the device front panel control</value>
   </data>
-  <data name="IntegerAsyncProperty" xml:space="preserve">
-    <value>Integer value</value>
+  <data name="SetControlLock" xml:space="preserve">
+    <value>Lock the device front panel</value>
   </data>
-  <data name="FloatingPointAsyncProperty" xml:space="preserve">
-    <value>Floating point value</value>
-  </data>
-  <data name="SetOnlyAsyncProperty" xml:space="preserve">
-    <value>Set-only value</value>
-  </data>
-  <data name="GetOnlyAsyncProperty" xml:space="preserve">
-    <value>Get-only value</value>
-  </data>
-  <data name="RandomAsyncProperty" xml:space="preserve">
-    <value>Random value</value>
+  <data name="SetRemoteControl" xml:space="preserve">
+    <value>Use the device remote control</value>
   </data>
   <data name="Reset" xml:space="preserve">
     <value>Reset</value>
   </data>
-  <data name="TestDeviceAction" xml:space="preserve">
-    <value>Test action</value>
+  <data name="IsOutputEnabled" xml:space="preserve">
+    <value>Device output is enabled</value>
   </data>
-  <data name="TestMessageDevice" xml:space="preserve">
-    <value>Test message device</value>
+  <data name="TargetVoltage" xml:space="preserve">
+    <value>Target output voltage (V)</value>
+  </data>
+  <data name="CurrentLimit" xml:space="preserve">
+    <value>Output current limit (A)</value>
+  </data>
+  <data name="MeasuredVoltage" xml:space="preserve">
+    <value>Measured output voltage (V)</value>
+  </data>
+  <data name="MeasuredCurrent" xml:space="preserve">
+    <value>Measured output current (A)</value>
+  </data>
+  <data name="IsOverVoltageProtectionEnabled" xml:space="preserve">
+    <value>Over-voltage protection is enabled</value>
+  </data>
+  <data name="OverVoltageLevel" xml:space="preserve">
+    <value>Over-voltage protection level (V)</value>
+  </data>
+  <data name="IsDisplayEnabled" xml:space="preserve">
+    <value>Device display is enabled</value>
+  </data>
+  <data name="DisplayedText" xml:space="preserve">
+    <value>Device display text</value>
   </data>
 </root>

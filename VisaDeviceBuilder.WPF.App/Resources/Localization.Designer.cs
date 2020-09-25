@@ -61,38 +61,74 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Floating point value.
+        ///   Looks up a localized string similar to Output current limit (A).
         /// </summary>
-        public static string FloatingPointAsyncProperty {
+        public static string CurrentLimit {
             get {
-                return ResourceManager.GetString("FloatingPointAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("CurrentLimit", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get-only value.
+        ///   Looks up a localized string similar to Device display text.
         /// </summary>
-        public static string GetOnlyAsyncProperty {
+        public static string DisplayedText {
             get {
-                return ResourceManager.GetString("GetOnlyAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("DisplayedText", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Integer value.
+        ///   Looks up a localized string similar to Device display is enabled.
         /// </summary>
-        public static string IntegerAsyncProperty {
+        public static string IsDisplayEnabled {
             get {
-                return ResourceManager.GetString("IntegerAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("IsDisplayEnabled", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Random value.
+        ///   Looks up a localized string similar to Device output is enabled.
         /// </summary>
-        public static string RandomAsyncProperty {
+        public static string IsOutputEnabled {
             get {
-                return ResourceManager.GetString("RandomAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("IsOutputEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Over-voltage protection is enabled.
+        /// </summary>
+        public static string IsOverVoltageProtectionEnabled {
+            get {
+                return ResourceManager.GetString("IsOverVoltageProtectionEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured output current (A).
+        /// </summary>
+        public static string MeasuredCurrent {
+            get {
+                return ResourceManager.GetString("MeasuredCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measured output voltage (V).
+        /// </summary>
+        public static string MeasuredVoltage {
+            get {
+                return ResourceManager.GetString("MeasuredVoltage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Over-voltage protection level (V).
+        /// </summary>
+        public static string OverVoltageLevel {
+            get {
+                return ResourceManager.GetString("OverVoltageLevel", resourceCulture);
             }
         }
         
@@ -106,38 +142,38 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Set-only value.
+        ///   Looks up a localized string similar to Lock the device front panel.
         /// </summary>
-        public static string SetOnlyAsyncProperty {
+        public static string SetControlLock {
             get {
-                return ResourceManager.GetString("SetOnlyAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("SetControlLock", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to String value.
+        ///   Looks up a localized string similar to Use the device front panel control.
         /// </summary>
-        public static string StringAsyncProperty {
+        public static string SetLocalControl {
             get {
-                return ResourceManager.GetString("StringAsyncProperty", resourceCulture);
+                return ResourceManager.GetString("SetLocalControl", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test action.
+        ///   Looks up a localized string similar to Use the device remote control.
         /// </summary>
-        public static string TestDeviceAction {
+        public static string SetRemoteControl {
             get {
-                return ResourceManager.GetString("TestDeviceAction", resourceCulture);
+                return ResourceManager.GetString("SetRemoteControl", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test message device.
+        ///   Looks up a localized string similar to Target output voltage (V).
         /// </summary>
-        public static string TestMessageDevice {
+        public static string TargetVoltage {
             get {
-                return ResourceManager.GetString("TestMessageDevice", resourceCulture);
+                return ResourceManager.GetString("TargetVoltage", resourceCulture);
             }
         }
         

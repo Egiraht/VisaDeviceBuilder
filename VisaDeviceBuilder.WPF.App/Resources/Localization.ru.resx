@@ -24,31 +24,43 @@
   <data name="Title" xml:space="preserve">
     <value>Контрольная панель для устройств VISA</value>
   </data>
-  <data name="StringAsyncProperty" xml:space="preserve">
-    <value>Строковое значение</value>
+  <data name="SetLocalControl" xml:space="preserve">
+    <value>Использовать управление с передней панели устройства</value>
   </data>
-  <data name="IntegerAsyncProperty" xml:space="preserve">
-    <value>Целочисленное значение</value>
+  <data name="SetRemoteControl" xml:space="preserve">
+    <value>Использовать удалённое управление устройством</value>
   </data>
-  <data name="FloatingPointAsyncProperty" xml:space="preserve">
-    <value>Значение с плавающей точкой</value>
-  </data>
-  <data name="RandomAsyncProperty" xml:space="preserve">
-    <value>Случайное значение</value>
-  </data>
-  <data name="GetOnlyAsyncProperty" xml:space="preserve">
-    <value>Значение только для чтения</value>
-  </data>
-  <data name="SetOnlyAsyncProperty" xml:space="preserve">
-    <value>Значение только для записи</value>
+  <data name="SetControlLock" xml:space="preserve">
+    <value>Заблокирвать переднюю панель устройства</value>
   </data>
   <data name="Reset" xml:space="preserve">
     <value>Сброс</value>
   </data>
-  <data name="TestDeviceAction" xml:space="preserve">
-    <value>Тестовое действие</value>
+  <data name="IsOutputEnabled" xml:space="preserve">
+    <value>Выход устройства включён</value>
   </data>
-  <data name="TestMessageDevice" xml:space="preserve">
-    <value>Тестовое текстовое устройство</value>
+  <data name="TargetVoltage" xml:space="preserve">
+    <value>Требуемое выходное напряжение, В</value>
+  </data>
+  <data name="CurrentLimit" xml:space="preserve">
+    <value>Ограничение выходного тока, А</value>
+  </data>
+  <data name="MeasuredCurrent" xml:space="preserve">
+    <value>Измеренный выходной ток, А</value>
+  </data>
+  <data name="MeasuredVoltage" xml:space="preserve">
+    <value>Измеренное выходное напряжение, В</value>
+  </data>
+  <data name="IsOverVoltageProtectionEnabled" xml:space="preserve">
+    <value>Защита от перенапряжения включена</value>
+  </data>
+  <data name="OverVoltageLevel" xml:space="preserve">
+    <value>Уровень защиты от перенапряжения, В</value>
+  </data>
+  <data name="IsDisplayEnabled" xml:space="preserve">
+    <value>Дисплей устройства включён</value>
+  </data>
+  <data name="DisplayedText" xml:space="preserve">
+    <value>Текст на дисплее</value>
   </data>
 </root>

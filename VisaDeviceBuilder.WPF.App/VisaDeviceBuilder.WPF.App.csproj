@@ -13,7 +13,10 @@
     <PackageTags>VISA, device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <NeutralLanguage>en</NeutralLanguage>
-    <Description>The test WPF application for controlling a message-based VISA device.</Description>
+    <Description>
+      The example application that uses the GUI control panel for remote control of the Keysight E364xA series devices.
+      The installed Keysight IO Libraries Suite package is required for work.
+    </Description>
   </PropertyGroup>
 
   <!-- Project properties for "Release" configuration. -->
@@ -25,7 +28,7 @@
   </PropertyGroup>
 
   <!-- The reference for external Keysight.Visa assembly. -->
-  <!-- Keysight IO Libraries Suite package must be installed before compilation. -->
+  <!-- Keysight IO Libraries Suite package must be installed before compilation and usage. -->
   <ItemGroup>
     <Reference Include="Keysight.Visa">
       <HintPath>C:\Program Files\Keysight\IO Libraries Suite\Keysight.Visa.dll</HintPath>
