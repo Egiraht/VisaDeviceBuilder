@@ -16,11 +16,13 @@
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
 
-  <Style TargetType="Separator">
-    <Setter Property="Margin" Value="2 4" />
-  </Style>
+  <Style TargetType="Button" BasedOn="{StaticResource {x:Type Control}}" />
+  <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type Control}}" />
+  <Style TargetType="ComboBox" BasedOn="{StaticResource {x:Type Control}}" />
+  <Style TargetType="CheckBox" BasedOn="{StaticResource {x:Type Control}}" />
+  <Style TargetType="Separator" BasedOn="{StaticResource {x:Type Control}}" />
 
-  <Style TargetType="DataGrid">
+  <Style TargetType="DataGrid" BasedOn="{StaticResource {x:Type Control}}">
     <Setter Property="HorizontalAlignment" Value="Stretch" />
     <Setter Property="Background" Value="DarkGray" />
     <Setter Property="VerticalGridLinesBrush" Value="DarkGray" />
@@ -104,7 +106,7 @@
     </Style.Triggers>
   </Style>
 
-  <Style x:Key="DeviceStateDisplayStyle" TargetType="ContentControl">
+  <Style x:Key="DeviceStateDisplayStyle" TargetType="ContentControl" BasedOn="{StaticResource {x:Type Control}}">
     <Setter Property="Content" Value="{x:Static res:Localization.Disconnected}" />
     <Setter Property="Foreground" Value="Gray" />
 

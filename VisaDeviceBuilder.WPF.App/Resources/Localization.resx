@@ -63,4 +63,7 @@
   <data name="DisplayedText" xml:space="preserve">
     <value>Device display text</value>
   </data>
+  <data name="Beep" xml:space="preserve">
+    <value>Emit a beep</value>
+  </data>
 </root>

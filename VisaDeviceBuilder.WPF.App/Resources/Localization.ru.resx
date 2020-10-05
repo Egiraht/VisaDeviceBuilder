@@ -63,4 +63,7 @@
   <data name="DisplayedText" xml:space="preserve">
     <value>Текст на дисплее</value>
   </data>
+  <data name="Beep" xml:space="preserve">
+    <value>Подать звуковой сигнал</value>
+  </data>
 </root>

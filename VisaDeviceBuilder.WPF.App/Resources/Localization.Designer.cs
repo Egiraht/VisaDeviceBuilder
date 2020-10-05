@@ -61,6 +61,15 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Emit a beep.
+        /// </summary>
+        public static string Beep {
+            get {
+                return ResourceManager.GetString("Beep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Output current limit (A).
         /// </summary>
         public static string CurrentLimit {
