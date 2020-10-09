@@ -58,17 +58,30 @@ namespace VisaDeviceBuilder.WPF.App.Components
         try
         {
           message = message.Trim();
-          var response = base.SendMessage($"*CLS;{message};*OPC?");
+
+          // Sending the message and trying to get confirmation.
+          if (message.Contains('?'))
+            return base.SendMessage($"*CLS;{message}").TrimEnd('\x0D', '\x0A');
+          var response = base.SendMessage($"*CLS;{message};*OPC?").TrimEnd('\x0D', '\x0A');
           return Regex.Replace(response, @";?1$", string.Empty);
         }
         catch (Exception e)
         {
           var errorStack = new List<string>();
-          var error = GetError();
-          while (!error.StartsWith("0") && !error.StartsWith("+0"))
+
+          // Trying to get the list of device errors.
+          try
           {
-            errorStack.Add(error);
-            error = GetError();
+            var error = GetError();
+            while (!error.StartsWith("0") && !error.StartsWith("+0"))
+            {
+              errorStack.Add(error);
+              error = GetError();
+            }
+          }
+          catch
+          {
+            // Ignore exceptions.
           }
 
           if (errorStack.Any())

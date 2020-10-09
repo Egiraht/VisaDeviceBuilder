@@ -95,7 +95,7 @@ namespace VisaDeviceBuilder.WPF.App.Components
     /// </summary>
     public IAsyncProperty<string> DisplayedText => _displayedText ??= new AsyncProperty<string>(
       () => SendMessage("DISP:TEXT?").Trim('"'),
-      value => SendMessage($"DISP:TEXT {value}"));
+      value => SendMessage($"DISP:TEXT \"{value}\""));
 
     /// <summary>
     ///   Checks if the device's interface is <see cref="HardwareInterfaceType.Gpib" /> or
@@ -127,10 +127,6 @@ namespace VisaDeviceBuilder.WPF.App.Components
     {
       base.Initialize();
 
-      if (!Regex.IsMatch(GetIdentifier(), @"E364[0-5]A", RegexOptions.IgnoreCase))
-        throw new VisaDeviceException(this,
-          new NotSupportedException("The specified VISA resource is not a Keysight E364xA device."));
-
       // Serial connection configuration.
       if (Session is ISerialSession serialSession)
       {
@@ -138,14 +134,14 @@ namespace VisaDeviceBuilder.WPF.App.Components
         serialSession.DataBits = 8;
         serialSession.Parity = SerialParity.None;
         serialSession.StopBits = SerialStopBitsMode.Two;
-        serialSession.FlowControl = SerialFlowControlModes.DtrDsr;
-        serialSession.ReadTermination = SerialTerminationMethod.TerminationCharacter;
-        serialSession.WriteTermination = SerialTerminationMethod.TerminationCharacter;
-        serialSession.TerminationCharacter = 0x0A;
-        serialSession.TerminationCharacterEnabled = true;
-
-        SetRemoteControlAsync().Wait();
       }
+
+      if (!Regex.IsMatch(GetIdentifier(), @"E364[0-5]A", RegexOptions.IgnoreCase))
+        throw new VisaDeviceException(this,
+          new NotSupportedException("The specified VISA resource is not a Keysight E364xA device."));
+
+      if (Session is ISerialSession)
+        SetRemoteControl();
     }
 
     /// <summary>
