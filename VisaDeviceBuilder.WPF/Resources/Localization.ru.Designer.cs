@@ -70,15 +70,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Невозможно создать новый экземпляр устройства VISA типа &quot;{0}&quot;..
-        /// </summary>
-        public static string CannotCreateVisaDeviceInstance {
-            get {
-                return ResourceManager.GetString("CannotCreateVisaDeviceInstance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Подключить устройство.
         /// </summary>
         public static string Connect {
@@ -147,24 +138,6 @@ namespace VisaDeviceBuilder.WPF.Resources {
         public static string Initializing {
             get {
                 return ResourceManager.GetString("Initializing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Указанный тип менеджера ресурсов VISA &quot;{0}&quot; не реализует интерфейс &quot;{1}&quot;..
-        /// </summary>
-        public static string InvalidResourceManagerType {
-            get {
-                return ResourceManager.GetString("InvalidResourceManagerType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Указанный тип устройства VISA &quot;{0}&quot; не реализует интерфейс &quot;{1}&quot;..
-        /// </summary>
-        public static string InvalidVisaDeviceType {
-            get {
-                return ResourceManager.GetString("InvalidVisaDeviceType", resourceCulture);
             }
         }
         

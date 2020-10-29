@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:visa="clr-namespace:VisaDeviceBuilder;assembly=VisaDeviceBuilder"
              xmlns:local="clr-namespace:VisaDeviceBuilder.WPF"
              xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources"
              xmlns:comp="clr-namespace:VisaDeviceBuilder.WPF.Components"
@@ -89,17 +90,17 @@
                 MinHeight="45">
         <DataGrid.Columns>
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.LocalizedName), Mode=OneWay}"
+                              Binding="{Binding Path=(visa:AsyncPropertyMetadata.LocalizedName), Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyName}"
                               Width="Auto" MinWidth="100"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.AsyncProperty).Getter, Mode=OneWay}"
+                              Binding="{Binding Path=(visa:AsyncPropertyMetadata.AsyncProperty).Getter, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyActualValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(comp:AsyncPropertyMetadata.AsyncProperty).Setter, Mode=TwoWay}"
+                              Binding="{Binding Path=(visa:AsyncPropertyMetadata.AsyncProperty).Setter, Mode=TwoWay}"
                               Header="{x:Static res:Localization.PropertyNewValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="False" CanUserResize="True" />
@@ -119,8 +120,8 @@
                   ItemsSource="{Binding DeviceActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
-              <Setter Property="Header" Value="{Binding (comp:DeviceActionMetadata.LocalizedName)}" />
-              <Setter Property="CommandParameter" Value="{Binding (comp:DeviceActionMetadata.DeviceAction)}" />
+              <Setter Property="Header" Value="{Binding (visa:DeviceActionMetadata.LocalizedName)}" />
+              <Setter Property="CommandParameter" Value="{Binding (visa:DeviceActionMetadata.DeviceAction)}" />
               <Setter Property="Command" Value="{x:Static comp:DeviceActionCommand.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>

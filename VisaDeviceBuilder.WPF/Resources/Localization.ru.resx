@@ -74,13 +74,4 @@
   <data name="PropertyNewValue" xml:space="preserve">
     <value>Новое значение</value>
   </data>
-  <data name="InvalidVisaDeviceType" xml:space="preserve">
-    <value>Указанный тип устройства VISA "{0}" не реализует интерфейс "{1}".</value>
-  </data>
-  <data name="InvalidResourceManagerType" xml:space="preserve">
-    <value>Указанный тип менеджера ресурсов VISA "{0}" не реализует интерфейс "{1}".</value>
-  </data>
-  <data name="CannotCreateVisaDeviceInstance" xml:space="preserve">
-    <value>Невозможно создать новый экземпляр устройства VISA типа "{0}".</value>
-  </data>
 </root>
