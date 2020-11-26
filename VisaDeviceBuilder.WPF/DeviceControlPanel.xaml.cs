@@ -47,8 +47,8 @@ namespace VisaDeviceBuilder.WPF
     /// </exception>
     public Type? ResourceManagerType
     {
-      get => ViewModel.ResourceManagerType;
-      set => ViewModel.ResourceManagerType = value;
+      get => ViewModel.VisaResourceManagerType;
+      set => ViewModel.VisaResourceManagerType = value;
     }
 
     /// <summary>
@@ -79,7 +79,7 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <summary>
-    ///   Checks or sets the value if the message input panel should be enabled.
+    ///   Gets or sets the flag indicating if the custom message input panel should be enabled.
     /// </summary>
     public bool IsMessageInputPanelEnabled
     {

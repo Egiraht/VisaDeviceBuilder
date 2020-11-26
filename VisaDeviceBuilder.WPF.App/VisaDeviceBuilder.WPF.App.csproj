@@ -2,11 +2,11 @@
   <!-- Common project properties. -->
   <PropertyGroup>
     <ApplicationName>App</ApplicationName>
-    <TargetFramework>net5.0-windows7.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <OutputType>WinExe</OutputType>
     <Nullable>enable</Nullable>
-    <Title>WPF test GUI application</Title>
+    <Title>Keysight E364xA control panel</Title>
     <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
     <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
     <RepositoryType>Git</RepositoryType>

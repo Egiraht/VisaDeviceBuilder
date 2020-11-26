@@ -31,17 +31,7 @@ namespace VisaDeviceBuilder
     /// <exception cref="InvalidOperationException">
     ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
     /// </exception>
-    Type? ResourceManagerType { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the text label used for device distinguishing among the devices of similar type.
-    /// </summary>
-    string DeviceLabel { get; set; }
-
-    /// <summary>
-    ///   Checks or sets the value if the message input panel should be enabled.
-    /// </summary>
-    bool IsMessageInputPanelEnabled { get; set; }
+    Type? VisaResourceManagerType { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA resource name used for VISA device location and connection.
@@ -132,16 +122,6 @@ namespace VisaDeviceBuilder
     int AutoUpdaterDelay { get; set; }
 
     /// <summary>
-    ///   Gets or sets the command message string to be sent to the device.
-    /// </summary>
-    string RequestMessage { get; set; }
-
-    /// <summary>
-    ///   Gets the command response string received from the device for the last command.
-    /// </summary>
-    string ResponseMessage { get; }
-
-    /// <summary>
     ///   Checks if the device disconnection has been requested using the <see cref="DisconnectAsync" /> method.
     /// </summary>
     bool IsDisconnectionRequested { get; }
@@ -172,10 +152,5 @@ namespace VisaDeviceBuilder
     ///   instance.
     /// </summary>
     Task UpdateAsyncPropertiesAsync();
-
-    /// <summary>
-    ///   Asynchronously sends the message to the connected device.
-    /// </summary>
-    Task SendMessageAsync();
   }
 }

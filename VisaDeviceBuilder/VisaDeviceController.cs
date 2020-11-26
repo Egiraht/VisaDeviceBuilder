@@ -26,19 +26,15 @@ namespace VisaDeviceBuilder
     /* The private backing fields. */
     private bool _isDisposed = false;
     private Type _deviceType = typeof(VisaDevice);
-    private Type? _resourceManagerType;
+    private Type? _visaResourceManagerType;
     private bool _canConnect = true;
     private bool _isDeviceReady = false;
     private string _resourceName = string.Empty;
     private bool _isUpdatingVisaResources = false;
     private bool _isUpdatingAsyncProperties = false;
     private bool _isDisconnectionRequested = false;
-    private string _deviceLabel = string.Empty;
-    private bool _isMessageInputPanelEnabled;
     private DeviceConnectionState _connectionState;
     private string _identifier = string.Empty;
-    private string _requestMessage = string.Empty;
-    private string _responseMessage = string.Empty;
     private IVisaDevice? _device;
     private LocalizationResourceManager? _localizationResourceManager;
     private IAutoUpdater? _autoUpdater;
@@ -60,14 +56,13 @@ namespace VisaDeviceBuilder
 
         _deviceType = value;
         OnPropertyChanged();
-        OnPropertyChanged(nameof(DeviceLabel));
       }
     }
 
     /// <inheritdoc />
-    public Type? ResourceManagerType
+    public Type? VisaResourceManagerType
     {
-      get => _resourceManagerType;
+      get => _visaResourceManagerType;
       set
       {
         if (value != null && (!value.IsClass || !typeof(IResourceManager).IsAssignableFrom(value)))
@@ -77,29 +72,7 @@ namespace VisaDeviceBuilder
           return;
         }
 
-        _resourceManagerType = value;
-        OnPropertyChanged();
-      }
-    }
-
-    /// <inheritdoc />
-    public string DeviceLabel
-    {
-      get => !string.IsNullOrEmpty(_deviceLabel) ? _deviceLabel : DeviceType.Name;
-      set
-      {
-        _deviceLabel = value;
-        OnPropertyChanged();
-      }
-    }
-
-    /// <inheritdoc />
-    public bool IsMessageInputPanelEnabled
-    {
-      get => _isMessageInputPanelEnabled;
-      set
-      {
-        _isMessageInputPanelEnabled = value;
+        _visaResourceManagerType = value;
         OnPropertyChanged();
       }
     }
@@ -286,28 +259,6 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected CancellationTokenSource? DisconnectionTokenSource { get; set; }
 
-    /// <inheritdoc />
-    public string RequestMessage
-    {
-      get => _requestMessage;
-      set
-      {
-        _requestMessage = value;
-        OnPropertyChanged();
-      }
-    }
-
-    /// <inheritdoc />
-    public string ResponseMessage
-    {
-      get => _responseMessage;
-      protected set
-      {
-        _responseMessage = value;
-        OnPropertyChanged();
-      }
-    }
-
     /// <summary>
     ///   Gets the shared locking object used for device disconnection synchronization.
     /// </summary>
@@ -336,14 +287,16 @@ namespace VisaDeviceBuilder
         // Searching for resources and aliases using the selected VISA resource manager.
         var resources = await Task.Run(() =>
         {
-          using var resourceManager = ResourceManagerType != null
-            ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
+          using var visaResourceManager = VisaResourceManagerType != null
+            ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
             : null;
-          return (resourceManager != null ? resourceManager.Find("?*::INSTR") : GlobalResourceManager.Find("?*::INSTR"))
+          return (visaResourceManager != null
+              ? visaResourceManager.Find("?*::INSTR")
+              : GlobalResourceManager.Find("?*::INSTR"))
             .Aggregate(new List<string>(), (results, resource) =>
             {
-              var parseResult = resourceManager != null
-                ? resourceManager.Parse(resource)
+              var parseResult = visaResourceManager != null
+                ? visaResourceManager.Parse(resource)
                 : GlobalResourceManager.Parse(resource);
               results.Add(string.IsNullOrWhiteSpace(parseResult.AliasIfExists)
                 ? parseResult.OriginalResourceName
@@ -444,14 +397,14 @@ namespace VisaDeviceBuilder
         return;
 
       // Checking the VISA resource name.
-      using (var resourceManager = ResourceManagerType != null
-        ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
+      using (var visaResourceManager = VisaResourceManagerType != null
+        ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
         : null)
       {
         try
         {
-          if (resourceManager != null)
-            resourceManager.Parse(ResourceName);
+          if (visaResourceManager != null)
+            visaResourceManager.Parse(ResourceName);
           else
             GlobalResourceManager.Parse(ResourceName);
         }
@@ -475,11 +428,10 @@ namespace VisaDeviceBuilder
 
       try
       {
-        using var resourceManager = ResourceManagerType != null
-          ? (IResourceManager?) Activator.CreateInstance(ResourceManagerType)
-          : null;
-
-        await using (Device = CreateDeviceInstance(ResourceName, DeviceType, resourceManager))
+        using (var visaResourceManager = VisaResourceManagerType != null
+          ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
+          : null)
+        await using (Device = CreateDeviceInstance(ResourceName, DeviceType, visaResourceManager))
         await using (AutoUpdater = new AutoUpdater(Device))
         using (DisconnectionTokenSource = new CancellationTokenSource())
         {
@@ -635,26 +587,6 @@ namespace VisaDeviceBuilder
       finally
       {
         IsUpdatingAsyncProperties = false;
-      }
-    }
-
-    /// <inheritdoc />
-    public virtual async Task SendMessageAsync()
-    {
-      try
-      {
-        if (!IsMessageDevice)
-          return;
-
-        ResponseMessage = await Task.Run(() =>
-        {
-          lock (DisconnectionLock)
-            return ((IMessageDevice) Device!).SendMessage(RequestMessage);
-        });
-      }
-      catch (Exception exception)
-      {
-        OnException(exception);
       }
     }
 

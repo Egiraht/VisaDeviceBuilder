@@ -1,3 +1,6 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using VisaDeviceBuilder.WPF.Components;
 
@@ -10,20 +13,66 @@ namespace VisaDeviceBuilder.WPF
   public class DeviceControlPanelViewModel : VisaDeviceController
   {
     /* The private backing fields. */
+    private string _deviceLabel = string.Empty;
+    private bool _isMessageInputPanelEnabled = false;
+    private string _requestMessage = string.Empty;
+    private string _responseMessage = string.Empty;
     private ICommand? _updateResourcesListCommand;
     private ICommand? _connectCommand;
     private ICommand? _disconnectCommand;
     private ICommand? _updateAsyncPropertiesCommand;
     private ICommand? _sendMessageCommand;
 
-    /// <inheritdoc />
-    protected override void OnPropertyChanged(string? propertyName = null)
+    /// <summary>
+    ///   Gets or sets the text label used for device distinguishing among the devices of similar type.
+    /// </summary>
+    public string DeviceLabel
     {
-      base.OnPropertyChanged(propertyName);
+      get => !string.IsNullOrEmpty(_deviceLabel) ? _deviceLabel : DeviceType.Name;
+      set
+      {
+        _deviceLabel = value;
+        OnPropertyChanged();
+      }
+    }
 
-      // Forces all RelayCommand instances to call their CanExecuteChanged events.
-      // This fixes some buttons that do not get their states updated after corresponding RelayCommand execution.
-      CommandManager.InvalidateRequerySuggested();
+    /// <summary>
+    ///   Gets or sets the flag indicating if the custom message input should be enabled.
+    /// </summary>
+    public bool IsMessageInputPanelEnabled
+    {
+      get => _isMessageInputPanelEnabled;
+      set
+      {
+        _isMessageInputPanelEnabled = value;
+        OnPropertyChanged();
+      }
+    }
+
+    /// <summary>
+    ///   Gets or sets the command message string to be sent to the device.
+    /// </summary>
+    public string RequestMessage
+    {
+      get => _requestMessage;
+      set
+      {
+        _requestMessage = value;
+        OnPropertyChanged();
+      }
+    }
+
+    /// <summary>
+    ///   Gets the command response string received from the device for the last command.
+    /// </summary>
+    public string ResponseMessage
+    {
+      get => _responseMessage;
+      protected set
+      {
+        _responseMessage = value;
+        OnPropertyChanged();
+      }
     }
 
     /// <summary>
@@ -55,5 +104,37 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public ICommand SendMessageCommand => _sendMessageCommand ??=
       new RelayCommand(_ => SendMessageAsync(), _ => IsMessageDevice && IsDeviceReady);
+
+    /// <summary>
+    ///   Asynchronously sends the message to the connected device.
+    /// </summary>
+    public virtual async Task SendMessageAsync()
+    {
+      try
+      {
+        if (!IsMessageDevice || !IsMessageInputPanelEnabled)
+          return;
+
+        ResponseMessage = await Task.Run(() =>
+        {
+          lock (DisconnectionLock)
+            return ((IMessageDevice) Device!).SendMessage(RequestMessage);
+        });
+      }
+      catch (Exception exception)
+      {
+        OnException(exception);
+      }
+    }
+
+    /// <inheritdoc />
+    protected override void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+      base.OnPropertyChanged(propertyName);
+
+      // Forces all RelayCommand instances to call their CanExecuteChanged events.
+      // This fixes some buttons that do not get their states updated after corresponding RelayCommand execution.
+      CommandManager.InvalidateRequerySuggested();
+    }
   }
 }
