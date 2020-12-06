@@ -13,6 +13,8 @@
     <NoWarn>1701;1702;NU1701</NoWarn>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>This library targets convenient creation of VISA device abstractions that can be controlled via GUI control panels.</Description>
+    <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder</PackageProjectUrl>
   </PropertyGroup>
 
   <!-- Project properties for "Release" configuration. -->

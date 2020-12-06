@@ -17,6 +17,8 @@
       The example application that uses the GUI control panel for remote control of the Keysight E364xA series devices.
       The installed Keysight IO Libraries Suite package is required for work.
     </Description>
+    <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder.WPF.App</PackageProjectUrl>
   </PropertyGroup>
 
   <!-- Project properties for "Release" configuration. -->

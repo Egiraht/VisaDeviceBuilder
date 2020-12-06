@@ -13,6 +13,8 @@
     <NeutralLanguage>en</NeutralLanguage>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>The library providing simple WPF GUI controls for VISA devices.</Description>
+    <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder.WPF</PackageProjectUrl>
   </PropertyGroup>
 
   <!-- Project properties for "Release" configuration. -->
