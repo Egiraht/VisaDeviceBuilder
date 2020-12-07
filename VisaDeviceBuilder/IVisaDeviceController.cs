@@ -39,7 +39,8 @@ namespace VisaDeviceBuilder
     string ResourceName { get; set; }
 
     /// <summary>
-    ///   Gets the collection of available VISA resources.
+    ///   Gets the collection of available VISA resources. The collection may contain both canonical VISA resource
+    ///   names and corresponding alias names if they are available.
     /// </summary>
     ObservableCollection<string> AvailableVisaResources { get; }
 
@@ -111,7 +112,7 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Gets or sets the flag controlling if the background auto-updater for asynchronous properties should be
-    ///   enabled.
+    ///   enabled. When enabled, the auto-updater works only when the device is connected and is ready.
     /// </summary>
     bool IsAutoUpdaterEnabled { get; set; }
 

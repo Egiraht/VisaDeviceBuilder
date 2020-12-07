@@ -110,7 +110,7 @@ namespace VisaDeviceBuilder.Tests.Components
     public short ManufacturerId { get; } = 0x1234;
 
     /// <inheritdoc />
-    public IEnumerable<string> Find(string pattern) => new[]
+    public IEnumerable<string> Find(string pattern = "") => new[]
     {
       CustomTestDeviceResourceName,
       SerialTestDeviceResourceName,

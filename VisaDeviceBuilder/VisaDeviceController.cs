@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -170,7 +171,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public bool IsMessageDevice => Device is IMessageDevice;
+    public bool IsMessageDevice => DeviceType.GetInterface(nameof(IMessageDevice)) != null;
 
     /// <inheritdoc />
     public string Identifier
@@ -278,31 +279,31 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual async Task UpdateResourcesListAsync()
     {
+      if (IsUpdatingVisaResources)
+        return;
+      IsUpdatingVisaResources = true;
+
       try
       {
-        if (IsUpdatingVisaResources)
-          return;
-        IsUpdatingVisaResources = true;
-
         // Searching for resources and aliases using the selected VISA resource manager.
         var resources = await Task.Run(() =>
         {
           using var visaResourceManager = VisaResourceManagerType != null
             ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
             : null;
-          return (visaResourceManager != null
-              ? visaResourceManager.Find("?*::INSTR")
-              : GlobalResourceManager.Find("?*::INSTR"))
-            .Aggregate(new List<string>(), (results, resource) =>
-            {
-              var parseResult = visaResourceManager != null
-                ? visaResourceManager.Parse(resource)
-                : GlobalResourceManager.Parse(resource);
-              results.Add(string.IsNullOrWhiteSpace(parseResult.AliasIfExists)
-                ? parseResult.OriginalResourceName
-                : parseResult.AliasIfExists);
-              return results;
-            });
+          var resourceNames = visaResourceManager != null
+            ? visaResourceManager.Find("?*::INSTR")
+            : GlobalResourceManager.Find("?*::INSTR");
+          return resourceNames.Aggregate(new List<string>(), (results, resource) =>
+          {
+            var parseResult = visaResourceManager != null
+              ? visaResourceManager.Parse(resource)
+              : GlobalResourceManager.Parse(resource);
+            results.Add(parseResult.OriginalResourceName);
+            if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
+              results.Add(parseResult.AliasIfExists);
+            return results;
+          });
         });
 
         AvailableVisaResources.Clear();
@@ -395,6 +396,7 @@ namespace VisaDeviceBuilder
     {
       if (!CanConnect)
         return;
+      CanConnect = false;
 
       // Checking the VISA resource name.
       using (var visaResourceManager = VisaResourceManagerType != null
@@ -423,9 +425,6 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual async Task CreateDeviceConnectionTask()
     {
-      if (!CanConnect)
-        return;
-
       try
       {
         using (var visaResourceManager = VisaResourceManagerType != null
@@ -436,7 +435,6 @@ namespace VisaDeviceBuilder
         using (DisconnectionTokenSource = new CancellationTokenSource())
         {
           var disconnectionToken = DisconnectionTokenSource.Token;
-          CanConnect = false;
           ConnectionState = DeviceConnectionState.Initializing;
 
           // Trying to connect to the device.
@@ -479,7 +477,14 @@ namespace VisaDeviceBuilder
           // Waiting for the disconnection request.
           IsDeviceReady = true;
           ConnectionState = DeviceConnectionState.Connected;
-          await Task.Delay(-1, disconnectionToken);
+          try
+          {
+            await Task.Delay(-1, disconnectionToken);
+          }
+          catch (OperationCanceledException)
+          {
+            // Suppress task cancellation exceptions.
+          }
 
           // Waiting for the auto-updater to stop.
           IsDeviceReady = false;
@@ -493,9 +498,6 @@ namespace VisaDeviceBuilder
           // Waiting for all asynchronous properties processing to complete.
           foreach (var asyncPropertyMetadata in AsyncProperties)
           {
-            if (asyncPropertyMetadata.AsyncProperty == null)
-              continue;
-
             await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
             await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
           }
@@ -506,7 +508,6 @@ namespace VisaDeviceBuilder
             lock (DisconnectionLock)
               Device.CloseSession();
           });
-          ConnectionState = DeviceConnectionState.Disconnected;
         }
       }
       catch (OperationCanceledException)
@@ -527,6 +528,8 @@ namespace VisaDeviceBuilder
         Identifier = string.Empty;
         RebuildCollections();
 
+        if (ConnectionState != DeviceConnectionState.DisconnectedWithError)
+          ConnectionState = DeviceConnectionState.Disconnected;
         IsDeviceReady = false;
         CanConnect = true;
       }
@@ -646,6 +649,7 @@ namespace VisaDeviceBuilder
     public virtual void Dispose() => DisposeAsync().AsTask().Wait();
 
     /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
     ~VisaDeviceController() => Dispose();
   }
 }

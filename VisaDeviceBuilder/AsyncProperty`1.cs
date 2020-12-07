@@ -34,7 +34,7 @@ namespace VisaDeviceBuilder
     public new TValue Setter
     {
       get => StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Setter) ? base.Setter : default!);
-      set => base.Setter = TypeToStringConverter(value) ?? string.Empty;
+      set => base.Setter = TypeToStringConverter(value);
     }
 
     /// <summary>
