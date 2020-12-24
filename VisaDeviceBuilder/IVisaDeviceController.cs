@@ -86,14 +86,14 @@ namespace VisaDeviceBuilder
     string Identifier { get; }
 
     /// <summary>
-    ///   Gets the read-only collection of asynchronous properties and corresponding metadata defined for the device.
+    ///   Gets the read-only collection of asynchronous properties defined for the device.
     /// </summary>
-    ReadOnlyObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; }
+    ReadOnlyObservableCollection<IAsyncProperty> AsyncProperties { get; }
 
     /// <summary>
-    ///   Gets the read-only collection of device actions and corresponding metadata defined for the device.
+    ///   Gets the read-only collection of device actions defined for the device.
     /// </summary>
-    ReadOnlyObservableCollection<DeviceActionMetadata> DeviceActions { get; }
+    ReadOnlyObservableCollection<IDeviceAction> DeviceActions { get; }
 
     /// <summary>
     ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available

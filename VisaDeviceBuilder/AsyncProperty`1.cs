@@ -307,5 +307,16 @@ namespace VisaDeviceBuilder
     public static string DefaultTypeToStringConverter(TValue value) => value is IConvertible convertible
       ? convertible.ToString(CultureInfo.InvariantCulture)
       : value?.ToString() ?? "";
+
+    /// <summary>
+    ///   Implicitly converts the provided asynchronous property instance to its getter value.
+    /// </summary>
+    /// <param name="property">
+    ///   The asynchronous property instance to convert.
+    /// </param>
+    /// <returns>
+    ///   The getter value string stored in the provided asynchronous property instance.
+    /// </returns>
+    public static implicit operator TValue(AsyncProperty<TValue> property) => property.Getter;
   }
 }

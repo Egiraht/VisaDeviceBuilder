@@ -31,7 +31,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the shared message locking object used for device message requests synchronization.
     /// </summary>
-    protected object MessageLock { get; } = new object();
+    protected object MessageLock { get; } = new();
 
     /// <summary>
     ///   Creates a new instance of a custom message-based VISA device.

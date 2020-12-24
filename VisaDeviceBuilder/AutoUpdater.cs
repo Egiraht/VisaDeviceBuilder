@@ -70,7 +70,7 @@ namespace VisaDeviceBuilder
     /// <param name="visaDevice">
     ///   The VISA device object which asynchronous properties should be updated by the created auto-updater instance.
     /// </param>
-    public AutoUpdater(IVisaDevice visaDevice) : this(visaDevice.AsyncProperties.Values)
+    public AutoUpdater(IVisaDevice visaDevice) : this(visaDevice.AsyncProperties)
     {
     }
 
@@ -168,7 +168,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public ValueTask DisposeAsync() => new ValueTask(Task.Run(Dispose));
+    public ValueTask DisposeAsync() => new(Task.Run(Dispose));
 
     /// <inheritdoc />
     [ExcludeFromCodeCoverage]

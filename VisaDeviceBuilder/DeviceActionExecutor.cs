@@ -14,7 +14,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the common dictionary that tracks the states of all started device action tasks.
     /// </summary>
-    private static Dictionary<Delegate, Task> DeviceActionTaskTracker { get; } = new Dictionary<Delegate, Task>();
+    private static Dictionary<Delegate, Task> DeviceActionTaskTracker { get; } = new();
 
     /// <summary>
     ///   Checks if no device actions are running at the moment.

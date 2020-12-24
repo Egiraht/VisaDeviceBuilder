@@ -21,6 +21,12 @@ namespace VisaDeviceBuilder
   /// </summary>
   public class AsyncProperty : IAsyncProperty
   {
+    /// <inheritdoc />
+    public string Name { get; set; } = string.Empty;
+
+    /// <inheritdoc />
+    public string LocalizedName { get; set; } = string.Empty;
+
     /// <summary>
     ///   Gets or sets the actual value for the <see cref="Getter" /> property.
     /// </summary>
@@ -81,7 +87,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the shared synchronization lock object.
     /// </summary>
-    protected object SynchronizationLock { get; } = new object();
+    protected object SynchronizationLock { get; } = new();
 
     /// <inheritdoc />
     public event EventHandler? GetterUpdated;
@@ -245,5 +251,16 @@ namespace VisaDeviceBuilder
     /// </param>
     protected void OnSetterException(Exception exception) =>
       SetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
+
+    /// <summary>
+    ///   Implicitly converts the provided asynchronous property instance to its getter value.
+    /// </summary>
+    /// <param name="property">
+    ///   The asynchronous property instance to convert.
+    /// </param>
+    /// <returns>
+    ///   The getter value string stored in the provided asynchronous property instance.
+    /// </returns>
+    public static implicit operator string(AsyncProperty property) => property.Getter;
   }
 }

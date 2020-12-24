@@ -195,7 +195,7 @@
         <MultiDataTrigger.Conditions>
           <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=(DataGridCell.Column).DisplayIndex}"
                      Value="1" />
-          <Condition Binding="{Binding (visa:AsyncPropertyMetadata.AsyncProperty).CanGet}" Value="False" />
+          <Condition Binding="{Binding (visa:IAsyncProperty.CanGet)}" Value="False" />
         </MultiDataTrigger.Conditions>
 
         <Setter Property="Visibility" Value="Hidden" />
@@ -206,7 +206,7 @@
         <MultiDataTrigger.Conditions>
           <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=(DataGridCell.Column).DisplayIndex}"
                      Value="2" />
-          <Condition Binding="{Binding (visa:AsyncPropertyMetadata.AsyncProperty).CanSet}" Value="False" />
+          <Condition Binding="{Binding (visa:IAsyncProperty.CanSet)}" Value="False" />
         </MultiDataTrigger.Conditions>
 
         <Setter Property="Visibility" Value="Hidden" />

@@ -118,9 +118,9 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
       Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, controller.Identifier);
       Assert.NotEmpty(controller.AsyncProperties);
-      Assert.Equal(nameof(TestMessageDevice.TestAsyncProperty), controller.AsyncProperties[0].OriginalName);
+      Assert.Equal(nameof(TestMessageDevice.TestAsyncProperty), controller.AsyncProperties[0].Name);
       Assert.NotEmpty(controller.DeviceActions);
-      Assert.Equal(nameof(TestMessageDevice.TestDeviceAction), controller.DeviceActions[0].OriginalName);
+      Assert.Equal(nameof(TestMessageDevice.TestDeviceAction), controller.DeviceActions[0].Name);
       Assert.True(controller.IsDeviceReady);
       Assert.False(controller.IsDisconnectionRequested);
 

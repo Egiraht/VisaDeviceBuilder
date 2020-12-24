@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.Tests.Components;
@@ -15,7 +14,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The custom VISA resource manager used for testing purposes.
     /// </summary>
-    private TestResourceManager ResourceManager { get; } = new TestResourceManager();
+    private TestResourceManager ResourceManager { get; } = new();
 
     /// <summary>
     ///   Testing the VISA message-based session opening and closing.
@@ -59,9 +58,8 @@ namespace VisaDeviceBuilder.Tests
     public async Task CustomMessageDeviceTest()
     {
       await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
-      Assert.Equal(device.TestAsyncProperty, device.AsyncProperties[nameof(device.TestAsyncProperty)]);
-      Assert.Equal(device.TestDeviceAction, device.DeviceActions[nameof(device.TestDeviceAction)]);
-      Assert.Throws<KeyNotFoundException>(() => device.DeviceActions[nameof(device.InvalidDeviceAction)]);
+      Assert.Contains(device.AsyncProperties, asyncProperty => asyncProperty == device.TestAsyncProperty);
+      Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Action == device.TestDeviceAction);
 
       device.ThrowOnInitialization = true;
       await Assert.ThrowsAnyAsync<Exception>(device.OpenSessionAsync);

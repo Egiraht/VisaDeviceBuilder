@@ -18,7 +18,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The custom VISA resource manager used for testing purposes.
     /// </summary>
-    private TestResourceManager ResourceManager { get; } = new TestResourceManager();
+    private TestResourceManager ResourceManager { get; } = new();
 
     /// <summary>
     ///   Testing the VISA session opening and closing.
@@ -37,8 +37,10 @@ namespace VisaDeviceBuilder.Tests
 
       // Testing the dictionaries of automatically collected asynchronous properties and device actions.
       Assert.Empty(device.AsyncProperties);
-      Assert.Equal(device.Reset, device.DeviceActions[nameof(device.Reset)]);
-      Assert.DoesNotContain(nameof(device.OpenSession), device.DeviceActions);
+      Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Action == device.Reset);
+      Assert.DoesNotContain(device.DeviceActions, deviceAction => deviceAction.Action == device.OpenSession);
+      // TODO: Check collecting of device actions added as IDeviceAction properties.
+      // TODO: Check naming of asynchronous properties and device actions after collecting.
 
       // Checking the connection states.
       Assert.Equal(DeviceConnectionState.Disconnected, device.DeviceConnectionState);

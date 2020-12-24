@@ -23,7 +23,7 @@ namespace VisaDeviceBuilder.Tests.Components
     /// <summary>
     ///   The synchronization locking object.
     /// </summary>
-    private readonly object _synchronizationLock = new object();
+    private readonly object _synchronizationLock = new();
 
     /// <summary>
     ///   The actual value accessed by the <see cref="TestAsyncProperty" /> property.

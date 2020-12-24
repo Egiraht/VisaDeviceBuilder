@@ -86,7 +86,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public ObservableCollection<string> AvailableVisaResources { get; } = new ObservableCollection<string>();
+    public ObservableCollection<string> AvailableVisaResources { get; } = new();
 
     /// <inheritdoc />
     public bool CanConnect
@@ -183,20 +183,18 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the collection of asynchronous properties and corresponding metadata defined for the device.
     /// </summary>
-    protected ObservableCollection<AsyncPropertyMetadata> AsyncPropertyEntries { get; } =
-      new ObservableCollection<AsyncPropertyMetadata>();
+    protected ObservableCollection<IAsyncProperty> AsyncPropertyEntries { get; } = new();
 
     /// <summary>
     ///   Gets the collection of device actions and corresponding metadata defined for the device.
     /// </summary>
-    protected ObservableCollection<DeviceActionMetadata> DeviceActionEntries { get; } =
-      new ObservableCollection<DeviceActionMetadata>();
+    protected ObservableCollection<IDeviceAction> DeviceActionEntries { get; } = new();
 
     /// <inheritdoc />
-    public ReadOnlyObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; }
+    public ReadOnlyObservableCollection<IAsyncProperty> AsyncProperties { get; }
 
     /// <inheritdoc />
-    public ReadOnlyObservableCollection<DeviceActionMetadata> DeviceActions { get; }
+    public ReadOnlyObservableCollection<IDeviceAction> DeviceActions { get; }
 
     /// <inheritdoc />
     public LocalizationResourceManager? LocalizationResourceManager
@@ -269,7 +267,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the shared locking object used for device disconnection synchronization.
     /// </summary>
-    protected object DisconnectionLock { get; } = new object();
+    protected object DisconnectionLock { get; } = new();
 
     /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -297,8 +295,8 @@ namespace VisaDeviceBuilder
     /// </summary>
     public VisaDeviceController()
     {
-      AsyncProperties = new ReadOnlyObservableCollection<AsyncPropertyMetadata>(AsyncPropertyEntries);
-      DeviceActions = new ReadOnlyObservableCollection<DeviceActionMetadata>(DeviceActionEntries);
+      AsyncProperties = new(AsyncPropertyEntries);
+      DeviceActions = new(DeviceActionEntries);
       DeviceActionExecutor.Exception += OnException;
     }
 
@@ -394,21 +392,16 @@ namespace VisaDeviceBuilder
       if (Device == null)
         return;
 
-      foreach (var (name, asyncProperty) in Device.AsyncProperties)
-        AsyncPropertyEntries.Add(new AsyncPropertyMetadata
-        {
-          OriginalName = name,
-          LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
-          AsyncProperty = asyncProperty
-        });
-
-      foreach (var (name, deviceAction) in Device.DeviceActions)
-        DeviceActionEntries.Add(new DeviceActionMetadata
-        {
-          OriginalName = name,
-          LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
-          DeviceAction = deviceAction
-        });
+      foreach (var asyncProperty in Device.AsyncProperties)
+      {
+        asyncProperty.LocalizedName = LocalizationResourceManager?.GetString(asyncProperty.Name) ?? asyncProperty.Name;
+        AsyncPropertyEntries.Add(asyncProperty);
+      }
+      foreach (var deviceAction in Device.DeviceActions)
+      {
+        deviceAction.LocalizedName = LocalizationResourceManager?.GetString(deviceAction.Name) ?? deviceAction.Name;
+        DeviceActionEntries.Add(deviceAction);
+      }
     }
 
     /// <inheritdoc />
@@ -474,7 +467,7 @@ namespace VisaDeviceBuilder
           // Trying to get the initial getter values of the asynchronous properties.
           // If any getter exception occurs on this stage, throw it and disconnect from the device.
           ThreadExceptionEventHandler throwOnGetterUpdate = (_, args) => throw args.Exception;
-          foreach (var (_, asyncProperty) in Device.AsyncProperties)
+          foreach (var asyncProperty in Device.AsyncProperties)
           {
             disconnectionToken.ThrowIfCancellationRequested();
             asyncProperty.GetterException += throwOnGetterUpdate;
@@ -484,7 +477,7 @@ namespace VisaDeviceBuilder
           }
 
           // Subscribing on further exception events of the asynchronous properties.
-          foreach (var (_, asyncProperty) in Device.AsyncProperties)
+          foreach (var asyncProperty in Device.AsyncProperties)
           {
             asyncProperty.GetterException += OnException;
             asyncProperty.SetterException += OnException;
@@ -526,10 +519,10 @@ namespace VisaDeviceBuilder
           await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
 
           // Waiting for all asynchronous properties processing to complete.
-          foreach (var asyncPropertyMetadata in AsyncProperties)
+          foreach (var asyncProperty in AsyncProperties)
           {
-            await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
-            await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
+            await asyncProperty.GetSetterProcessingTask();
+            await asyncProperty.GetGetterUpdatingTask();
           }
 
           // The device de-initialization stage is completed.
@@ -599,7 +592,7 @@ namespace VisaDeviceBuilder
         {
           lock (DisconnectionLock)
           {
-            foreach (var (_, asyncProperty) in Device.AsyncProperties)
+            foreach (var asyncProperty in Device.AsyncProperties)
             {
               if (IsDisconnectionRequested)
                 return;
@@ -663,7 +656,7 @@ namespace VisaDeviceBuilder
     /// <param name="args">
     ///   The event arguments object.
     /// </param>
-    protected virtual void OnAutoUpdaterCycle(object sender, EventArgs args) =>
+    protected virtual void OnAutoUpdaterCycle(object? sender, EventArgs args) =>
       AutoUpdaterCycle?.Invoke(this, Device ?? throw new ArgumentNullException());
 
     /// <summary>
@@ -684,7 +677,7 @@ namespace VisaDeviceBuilder
     /// <param name="args">
     ///   The event arguments object containing the thrown exception.
     /// </param>
-    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) => Exception?.Invoke(this, args);
+    protected virtual void OnException(object? sender, ThreadExceptionEventArgs args) => Exception?.Invoke(this, args);
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()

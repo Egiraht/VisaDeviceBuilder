@@ -11,6 +11,16 @@ namespace VisaDeviceBuilder
   public interface IAsyncProperty : INotifyPropertyChanged
   {
     /// <summary>
+    ///   Gets or sets the optional name of the asynchronous property.
+    /// </summary>
+    string Name { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the optional user-friendly localized name of the asynchronous property.
+    /// </summary>
+    string LocalizedName { get; set; }
+
+    /// <summary>
     ///   Checks if the asynchronous property can be read.
     /// </summary>
     bool CanGet { get; }

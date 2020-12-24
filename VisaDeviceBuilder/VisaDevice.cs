@@ -66,10 +66,10 @@ namespace VisaDeviceBuilder
     public virtual bool IsSessionOpened => Session != null;
 
     /// <inheritdoc />
-    public IDictionary<string, IAsyncProperty> AsyncProperties { get; }
+    public IEnumerable<IAsyncProperty> AsyncProperties { get; }
 
     /// <inheritdoc />
-    public IDictionary<string, Action> DeviceActions { get; }
+    public IEnumerable<IDeviceAction> DeviceActions { get; }
 
     /// <summary>
     ///   Creates a new instance of a custom VISA device.
@@ -103,32 +103,66 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Collects all asynchronous properties defined in the current device class.
-    /// </summary>
-    /// <returns>
-    ///   The dictionary with the collected asynchronous properties.
-    ///   Keys of the dictionary contain the names of corresponding asynchronous properties stored as values.
-    /// </returns>
-    private IDictionary<string, IAsyncProperty> CollectOwnAsyncProperties() =>
-      GetType()
-        .GetProperties()
-        .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
-        .ToDictionary(property => property.Name, property => (IAsyncProperty) property.GetValue(this)!);
-
-    /// <summary>
-    ///   Collects all device actions defined in the current device class that represent class methods having
-    ///   the <see cref="Action" /> signature and decorated with <see cref="DeviceActionAttribute" /> attribute.
+    ///   Collects all asynchronous properties defined in the current device class into a dictionary.
+    ///   Asynchronous properties to be collected must be declared as public properties of types implementing the
+    ///   <see cref="IAsyncProperty" /> interface.
     /// </summary>
     /// <returns>
     ///   The dictionary with the collected device actions.
-    ///   Keys of the dictionary contain the names of corresponding device actions stored as values.
+    ///   Keys of the dictionary contain the declaring member names while the corresponding device action instances are
+    ///   stored as values.
     /// </returns>
-    private IDictionary<string, Action> CollectOwnDeviceActions() =>
-      GetType()
-        .GetMethods()
-        .Where(method => Utilities.ValidateDelegate<Action>(method) &&
-          method.GetCustomAttribute<DeviceActionAttribute>() != null)
-        .ToDictionary(method => method.Name, method => (Action) method.CreateDelegate(typeof(Action), this));
+    private IEnumerable<IAsyncProperty> CollectOwnAsyncProperties() => GetType()
+      .GetProperties()
+      .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
+      .Select(property =>
+      {
+        var result = (IAsyncProperty) property.GetValue(this)!;
+        result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
+        result.LocalizedName = !string.IsNullOrWhiteSpace(result.LocalizedName) ? result.LocalizedName : property.Name;
+        return result;
+      });
+
+    /// <summary>
+    ///   Collects all device actions defined in the current device class into a dictionary.
+    ///   Device actions to be collected must be declared as public properties of types implementing the
+    ///   <see cref="IDeviceAction" /> interface, or as public methods having the <see cref="Action" /> delegate
+    ///   signature and decorated with the <see cref="DeviceActionAttribute" />.
+    /// </summary>
+    /// <returns>
+    ///   The dictionary with the collected device actions.
+    ///   Keys of the dictionary contain the declaring member names while the corresponding device action instances are
+    ///   stored as values.
+    /// </returns>
+    private IEnumerable<IDeviceAction> CollectOwnDeviceActions()
+    {
+      return GetType()
+        .GetProperties()
+        .Where(property => typeof(IDeviceAction).IsAssignableFrom(property.PropertyType) && property.CanRead)
+        .Select(property =>
+        {
+          var result = (IDeviceAction) property.GetValue(this)!;
+          result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
+          result.LocalizedName =
+            !string.IsNullOrWhiteSpace(result.LocalizedName) ? result.LocalizedName : property.Name;
+          return result;
+        })
+        .Concat(GetType()
+          .GetMethods()
+          .Where(method => Utilities.ValidateDelegate<Action>(method) &&
+            method.GetCustomAttribute<DeviceActionAttribute>() != null)
+          .Select(method =>
+          {
+            var attribute = method.GetCustomAttribute<DeviceActionAttribute>();
+            return (IDeviceAction) new DeviceAction((Action) method.CreateDelegate(typeof(Action), this))
+            {
+              Name = !string.IsNullOrWhiteSpace(attribute?.Name) ? attribute.Name : method.Name,
+              LocalizedName = !string.IsNullOrWhiteSpace(attribute?.LocalizedName)
+                ? attribute.LocalizedName
+                : method.Name
+            };
+          }));
+    }
 
     /// <inheritdoc />
     public void OpenSession()
@@ -148,8 +182,8 @@ namespace VisaDeviceBuilder
       {
         DeviceConnectionState = DeviceConnectionState.Initializing;
         Session = ResourceManager != null
-            ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
-            : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
+          ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
+          : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
         Initialize();
         DeviceConnectionState = DeviceConnectionState.Connected;
       }
@@ -238,7 +272,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public virtual ValueTask DisposeAsync() => new ValueTask(Task.Run(Dispose));
+    public virtual ValueTask DisposeAsync() => new(Task.Run(Dispose));
 
     /// <summary>
     ///   Disposes the object on finalization.
