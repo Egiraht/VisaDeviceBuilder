@@ -16,6 +16,11 @@ namespace VisaDeviceBuilder.Tests.Components
     public const int CommunicationDelay = 1;
 
     /// <summary>
+    ///   Defines the test exception text.
+    /// </summary>
+    public const string TestExceptionText = "Test exception";
+
+    /// <summary>
     ///   The synchronization locking object.
     /// </summary>
     private readonly object _synchronizationLock = new object();
@@ -38,6 +43,9 @@ namespace VisaDeviceBuilder.Tests.Components
     {
       lock (_synchronizationLock)
       {
+        if (ThrowOnAsyncPropertyGetter)
+          throw new Exception(TestExceptionText);
+
         Task.Delay(CommunicationDelay).Wait();
         return _value;
       }
@@ -60,6 +68,12 @@ namespace VisaDeviceBuilder.Tests.Components
     /// </summary>
     public bool ThrowOnDeInitialization { get; set; } = false;
 
+    /// <summary>
+    ///   Gets or sets the flag defining if a test exception should be thrown during <see cref="TestAsyncProperty" />
+    ///   getter processing.
+    /// </summary>
+    public bool ThrowOnAsyncPropertyGetter { get; set; } = false;
+
     /// <inheritdoc />
     public TestMessageDevice(string resourceName, IResourceManager? resourceManager = null) :
       base(resourceName, resourceManager)
@@ -70,14 +84,14 @@ namespace VisaDeviceBuilder.Tests.Components
     protected override void Initialize()
     {
       if (ThrowOnInitialization)
-        throw new Exception("Test exception");
+        throw new Exception(TestExceptionText);
     }
 
     /// <inheritdoc />
     protected override void DeInitialize()
     {
       if (ThrowOnDeInitialization)
-        throw new Exception("Test exception");
+        throw new Exception(TestExceptionText);
     }
 
     /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -15,12 +16,12 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the delay after that the test session state check is performed.
     /// </summary>
-    public const int TestSessionCheckDelay = 200;
+    public const int StateCheckPeriod = 10;
 
     /// <summary>
     ///   Defines the test auto-updater delay value in milliseconds.
     /// </summary>
-    public const int TestAutoUpdaterDelay = 123;
+    public const int TestAutoUpdaterDelay = 5;
 
     /// <summary>
     ///   Testing the available VISA resources discovery logic.
@@ -51,6 +52,32 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
+    ///   Testing wrong VISA device and resource manager types detection.
+    /// </summary>
+    [Fact]
+    public void WrongDeviceTypeTest()
+    {
+      Assert.ThrowsAny<Exception>(() =>
+      {
+        using var controller = new VisaDeviceController
+        {
+          DeviceType = typeof(object),
+          VisaResourceManagerType = typeof(TestResourceManager),
+          ResourceName = TestResourceManager.CustomTestDeviceResourceName
+        };
+      });
+      Assert.ThrowsAny<Exception>(() =>
+      {
+        using var controller = new VisaDeviceController
+        {
+          DeviceType = typeof(TestMessageDevice),
+          VisaResourceManagerType = typeof(object),
+          ResourceName = TestResourceManager.CustomTestDeviceResourceName
+        };
+      });
+    }
+
+    /// <summary>
     ///   Testing the VISA message device controller logic.
     /// </summary>
     [Fact]
@@ -69,12 +96,12 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(typeof(TestResourceManager), controller.VisaResourceManagerType);
       Assert.Equal(typeof(TestResourceManager), controller.VisaResourceManagerType);
       Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, controller.ResourceName);
+      Assert.Equal(TestAutoUpdaterDelay, controller.AutoUpdaterDelay);
       Assert.True(controller.IsAutoUpdaterEnabled);
       Assert.Null(controller.LocalizationResourceManager);
       Assert.True(controller.IsMessageDevice);
       Assert.True(controller.CanConnect);
       Assert.Equal(DeviceConnectionState.Disconnected, controller.ConnectionState);
-      Assert.Null(controller.Device);
       Assert.Empty(controller.Identifier);
       Assert.False(controller.IsDeviceReady);
       Assert.False(controller.IsUpdatingAsyncProperties);
@@ -84,19 +111,24 @@ namespace VisaDeviceBuilder.Tests
       controller.Connect(); // Repeated call.
       Assert.False(controller.CanConnect);
 
-      // Testing the long connection session.
-      await Task.Delay(TestSessionCheckDelay);
+      // Testing the connection session that remains opened until disconnection is requested.
+      do
+        await Task.Delay(StateCheckPeriod);
+      while (!controller.IsDeviceReady);
       Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
-      Assert.NotNull(controller.Device);
       Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, controller.Identifier);
+      Assert.NotEmpty(controller.AsyncProperties);
+      Assert.Equal(nameof(TestMessageDevice.TestAsyncProperty), controller.AsyncProperties[0].OriginalName);
+      Assert.NotEmpty(controller.DeviceActions);
+      Assert.Equal(nameof(TestMessageDevice.TestDeviceAction), controller.DeviceActions[0].OriginalName);
       Assert.True(controller.IsDeviceReady);
       Assert.False(controller.IsDisconnectionRequested);
 
+      // Testing the disconnection request.
       var disconnectionTask = controller.DisconnectAsync();
       _ = controller.DisconnectAsync(); // Repeated simultaneous call.
       Assert.True(controller.IsDisconnectionRequested);
       await disconnectionTask;
-      Assert.Null(controller.Device);
       Assert.Empty(controller.Identifier);
       Assert.Equal(DeviceConnectionState.Disconnected, controller.ConnectionState);
       Assert.True(controller.CanConnect);
@@ -104,7 +136,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsUpdatingAsyncProperties);
       Assert.False(controller.IsDisconnectionRequested);
 
-      // Testing the shortest connection session with disconnection on the controller disposal.
+      // Testing the connection session that will be closed immediately on the controller disposal.
       controller.Connect();
     }
 
@@ -130,7 +162,9 @@ namespace VisaDeviceBuilder.Tests
 
       // The device is connected.
       controller.Connect();
-      await Task.Delay(TestSessionCheckDelay);
+      do
+        await Task.Delay(StateCheckPeriod);
+      while (!controller.IsDeviceReady);
       updateAsyncPropertiesTask = controller.UpdateAsyncPropertiesAsync();
       _ = controller.UpdateAsyncPropertiesAsync(); // Repeated simultaneous call.
       Assert.True(controller.IsUpdatingAsyncProperties);
@@ -138,9 +172,92 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsUpdatingAsyncProperties);
     }
 
-    // TODO: Add test for localization.
+    /// <summary>
+    ///   Testing the controller exceptions handling during the device initialization.
+    /// </summary>
+    [Fact]
+    public async Task DeviceInitializationExceptionTest()
+    {
+      var isExceptionCaught = false;
+      object? eventSender = null;
+      Exception? exception = null;
+      await using var controller = new VisaDeviceController
+      {
+        DeviceType = typeof(TestMessageDevice),
+        VisaResourceManagerType = typeof(TestResourceManager),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        IsAutoUpdaterEnabled = true,
+        AutoUpdaterDelay = TestAutoUpdaterDelay
+      };
+      controller.BeforeInitialization += (_, device) =>
+        ((TestMessageDevice) device).ThrowOnAsyncPropertyGetter = true;
+      controller.Exception += (sender, args) =>
+      {
+        isExceptionCaught = true;
+        eventSender = sender;
+        exception = args.Exception;
+      };
 
-    // TODO: Add test for exceptions.
+      // The exception will be thrown during the device initial asynchronous properties update.
+      // The device should occur in the "disconnected with error" state because the exception is caught during
+      // the device initialization stage.
+      controller.Connect();
+      do
+        await Task.Delay(StateCheckPeriod);
+      while (!isExceptionCaught);
+      Assert.Equal(controller, eventSender);
+      Assert.Equal(TestMessageDevice.TestExceptionText, exception?.Message);
+      Assert.Equal(DeviceConnectionState.DisconnectedWithError, controller.ConnectionState);
+    }
+
+    /// <summary>
+    ///   Testing the controller exceptions handling during the device auto-updating.
+    /// </summary>
+    [Fact]
+    public async Task DeviceAutoUpdatingExceptionTest()
+    {
+      var isExceptionCaught = false;
+      object? eventSender = null;
+      Exception? exception = null;
+      await using var controller = new VisaDeviceController
+      {
+        DeviceType = typeof(TestMessageDevice),
+        VisaResourceManagerType = typeof(TestResourceManager),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        IsAutoUpdaterEnabled = true,
+        AutoUpdaterDelay = TestAutoUpdaterDelay
+      };
+      controller.AfterInitialization += (_, device) =>
+        ((TestMessageDevice) device).ThrowOnAsyncPropertyGetter = true;
+      controller.Exception += (sender, args) =>
+      {
+        isExceptionCaught = true;
+        eventSender = sender;
+        exception = args.Exception;
+      };
+
+      // The device initialization stage should pass OK.
+      isExceptionCaught = false;
+      eventSender = null;
+      exception = null;
+      controller.Connect();
+      do
+        await Task.Delay(StateCheckPeriod);
+      while (!controller.IsDeviceReady);
+      Assert.False(isExceptionCaught);
+      Assert.Null(eventSender);
+      Assert.Null(exception);
+      Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
+
+      // The exception will be thrown after the device initialization and will be caught by the auto-updater.
+      // The device should remain in the "connected" state after exception is caught.
+      do
+        await Task.Delay(StateCheckPeriod);
+      while (!isExceptionCaught);
+      Assert.Equal(controller, eventSender);
+      Assert.Equal(TestMessageDevice.TestExceptionText, exception?.Message);
+      Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
+    }
 
     /// <summary>
     ///   Testing the repeated controller object disposal.
@@ -151,5 +268,7 @@ namespace VisaDeviceBuilder.Tests
       using var controller = new VisaDeviceController();
       controller.Dispose();
     }
+
+    // TODO: Add tests for auto-updater control and names localization.
   }
 }

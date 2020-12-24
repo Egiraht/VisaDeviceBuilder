@@ -49,11 +49,8 @@ namespace VisaDeviceBuilder
       set
       {
         if (!value.IsClass || !typeof(IVisaDevice).IsAssignableFrom(value))
-        {
-          OnException(new InvalidOperationException(
-            $"The specified VISA device type \"{value.Name}\" does not implement the \"{nameof(IVisaDevice)}\" interface."));
-          return;
-        }
+          throw new InvalidOperationException(
+            $"The specified VISA device type \"{value.Name}\" does not implement the \"{nameof(IVisaDevice)}\" interface.");
 
         _deviceType = value;
         OnPropertyChanged();
@@ -68,9 +65,8 @@ namespace VisaDeviceBuilder
       {
         if (value != null && (!value.IsClass || !typeof(IResourceManager).IsAssignableFrom(value)))
         {
-          OnException(new InvalidOperationException(
-            $"The specified VISA resource manager type \"{value.Name}\" does not implement the \"{nameof(IResourceManager)}\" interface."));
-          return;
+          throw new InvalidOperationException(
+            $"The specified VISA resource manager type \"{value.Name}\" does not implement the \"{nameof(IResourceManager)}\" interface.");
         }
 
         _visaResourceManagerType = value;
@@ -184,13 +180,23 @@ namespace VisaDeviceBuilder
       }
     }
 
-    /// <inheritdoc />
-    public ObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; } =
+    /// <summary>
+    ///   Gets the collection of asynchronous properties and corresponding metadata defined for the device.
+    /// </summary>
+    protected ObservableCollection<AsyncPropertyMetadata> AsyncPropertyEntries { get; } =
       new ObservableCollection<AsyncPropertyMetadata>();
 
-    /// <inheritdoc />
-    public ObservableCollection<DeviceActionMetadata> DeviceActions { get; } =
+    /// <summary>
+    ///   Gets the collection of device actions and corresponding metadata defined for the device.
+    /// </summary>
+    protected ObservableCollection<DeviceActionMetadata> DeviceActionEntries { get; } =
       new ObservableCollection<DeviceActionMetadata>();
+
+    /// <inheritdoc />
+    public ReadOnlyObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; }
+
+    /// <inheritdoc />
+    public ReadOnlyObservableCollection<DeviceActionMetadata> DeviceActions { get; }
 
     /// <inheritdoc />
     public LocalizationResourceManager? LocalizationResourceManager
@@ -269,12 +275,32 @@ namespace VisaDeviceBuilder
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <inheritdoc />
+    public event EventHandler<IVisaDevice>? BeforeInitialization;
+
+    /// <inheritdoc />
+    public event EventHandler<IVisaDevice>? AfterInitialization;
+
+    /// <inheritdoc />
+    public event EventHandler<IVisaDevice>? BeforeDeInitialization;
+
+    /// <inheritdoc />
+    public event EventHandler<IVisaDevice>? AfterDeInitialization;
+
+    /// <inheritdoc />
+    public event EventHandler<IVisaDevice>? AutoUpdaterCycle;
+
+    /// <inheritdoc />
     public event ThreadExceptionEventHandler? Exception;
 
     /// <summary>
     ///   Creates a new view-model instance.
     /// </summary>
-    public VisaDeviceController() => DeviceActionExecutor.Exception += OnException;
+    public VisaDeviceController()
+    {
+      AsyncProperties = new ReadOnlyObservableCollection<AsyncPropertyMetadata>(AsyncPropertyEntries);
+      DeviceActions = new ReadOnlyObservableCollection<DeviceActionMetadata>(DeviceActionEntries);
+      DeviceActionExecutor.Exception += OnException;
+    }
 
     /// <inheritdoc />
     public virtual async Task UpdateResourcesListAsync()
@@ -335,7 +361,7 @@ namespace VisaDeviceBuilder
     ///   The specified device type must implement the <see cref="IVisaDevice" /> interface and have a public
     ///   constructor accepting a resource name string and an optional <see cref="IResourceManager" /> instance.
     /// </param>
-    /// <param name="resourceManager">
+    /// <param name="visaResourceManager">
     ///   The optional instance of custom VISA resource manager.
     ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used for
     ///   instance creation.
@@ -351,15 +377,9 @@ namespace VisaDeviceBuilder
     ///   have a suitable constructor.
     /// </exception>
     protected static IVisaDevice CreateDeviceInstance(string resourceName, Type deviceType,
-      IResourceManager? resourceManager)
-    {
-      if (!deviceType.IsClass || !typeof(IVisaDevice).IsAssignableFrom(deviceType))
-        throw new InvalidOperationException(
-          $"The specified VISA device type \"{deviceType.Name}\" does not implement the \"{nameof(IVisaDevice)}\" interface.");
-
-      return (IVisaDevice) (Activator.CreateInstance(deviceType, resourceName, resourceManager) ??
+      IResourceManager? visaResourceManager) =>
+      (IVisaDevice) (Activator.CreateInstance(deviceType, resourceName, visaResourceManager) ??
         throw new NotSupportedException($"Cannot create a new VISA device instance of type \"{deviceType.Name}\"."));
-    }
 
     /// <summary>
     ///   Rebuilds the collections of asynchronous properties and device actions and localizes the names using the
@@ -368,14 +388,14 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual void RebuildCollections()
     {
-      AsyncProperties.Clear();
-      DeviceActions.Clear();
+      AsyncPropertyEntries.Clear();
+      DeviceActionEntries.Clear();
 
       if (Device == null)
         return;
 
       foreach (var (name, asyncProperty) in Device.AsyncProperties)
-        AsyncProperties.Add(new AsyncPropertyMetadata
+        AsyncPropertyEntries.Add(new AsyncPropertyMetadata
         {
           OriginalName = name,
           LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
@@ -383,7 +403,7 @@ namespace VisaDeviceBuilder
         });
 
       foreach (var (name, deviceAction) in Device.DeviceActions)
-        DeviceActions.Add(new DeviceActionMetadata
+        DeviceActionEntries.Add(new DeviceActionMetadata
         {
           OriginalName = name,
           LocalizedName = LocalizationResourceManager?.GetString(name) ?? name,
@@ -434,8 +454,10 @@ namespace VisaDeviceBuilder
         await using (AutoUpdater = new AutoUpdater(Device))
         using (DisconnectionTokenSource = new CancellationTokenSource())
         {
+          // Starting the device initialization stage.
           var disconnectionToken = DisconnectionTokenSource.Token;
           ConnectionState = DeviceConnectionState.Initializing;
+          OnBeforeInitialization();
 
           // Trying to connect to the device.
           disconnectionToken.ThrowIfCancellationRequested();
@@ -471,12 +493,17 @@ namespace VisaDeviceBuilder
           // Configuring the auto-updater.
           disconnectionToken.ThrowIfCancellationRequested();
           AutoUpdater.Delay = TimeSpan.FromMilliseconds(AutoUpdaterDelay);
+          AutoUpdater.AutoUpdateCycle += OnAutoUpdaterCycle;
+          AutoUpdater.AutoUpdateException += OnException;
           if (IsAutoUpdaterEnabled)
             AutoUpdater.Start();
 
-          // Waiting for the disconnection request.
+          // The device initialization stage is completed.
+          OnAfterInitialization();
           IsDeviceReady = true;
           ConnectionState = DeviceConnectionState.Connected;
+
+          // Waiting for the disconnection request.
           try
           {
             await Task.Delay(-1, disconnectionToken);
@@ -486,9 +513,12 @@ namespace VisaDeviceBuilder
             // Suppress task cancellation exceptions.
           }
 
-          // Waiting for the auto-updater to stop.
+          // Starting the device de-initialization stage.
           IsDeviceReady = false;
           ConnectionState = DeviceConnectionState.DeInitializing;
+          OnBeforeDeInitialization();
+
+          // Waiting for the auto-updater to stop.
           if (AutoUpdater != null)
             await AutoUpdater.StopAsync();
 
@@ -501,6 +531,9 @@ namespace VisaDeviceBuilder
             await asyncPropertyMetadata.AsyncProperty.GetSetterProcessingTask();
             await asyncPropertyMetadata.AsyncProperty.GetGetterUpdatingTask();
           }
+
+          // The device de-initialization stage is completed.
+          OnAfterDeInitialization();
 
           // Waiting for remaining asynchronous operations to complete before session closing.
           await Task.Run(() =>
@@ -521,16 +554,14 @@ namespace VisaDeviceBuilder
       }
       finally
       {
+        IsDeviceReady = false;
+        Identifier = string.Empty;
         DisconnectionTokenSource = null;
         AutoUpdater = null;
         Device = null;
-
-        Identifier = string.Empty;
-        RebuildCollections();
-
         if (ConnectionState != DeviceConnectionState.DisconnectedWithError)
           ConnectionState = DeviceConnectionState.Disconnected;
-        IsDeviceReady = false;
+        RebuildCollections();
         CanConnect = true;
       }
     }
@@ -546,10 +577,6 @@ namespace VisaDeviceBuilder
       {
         DisconnectionTokenSource.Cancel();
         await ConnectionTask;
-      }
-      catch (OperationCanceledException)
-      {
-        // Suppress task cancellation exception.
       }
       finally
       {
@@ -604,6 +631,42 @@ namespace VisaDeviceBuilder
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
+    ///   Invokes the <see cref="BeforeInitialization" /> event.
+    /// </summary>
+    protected virtual void OnBeforeInitialization() =>
+      BeforeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
+
+    /// <summary>
+    ///   Invokes the <see cref="AfterInitialization" /> event.
+    /// </summary>
+    protected virtual void OnAfterInitialization() =>
+      AfterInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
+
+    /// <summary>
+    ///   Invokes the <see cref="BeforeDeInitialization" /> event.
+    /// </summary>
+    protected virtual void OnBeforeDeInitialization() =>
+      BeforeDeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
+
+    /// <summary>
+    ///   Invokes the <see cref="AfterDeInitialization" /> event.
+    /// </summary>
+    protected virtual void OnAfterDeInitialization() =>
+      AfterDeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
+
+    /// <summary>
+    ///   Invokes the <see cref="AutoUpdaterCycle" /> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The event sender object.
+    /// </param>
+    /// <param name="args">
+    ///   The event arguments object.
+    /// </param>
+    protected virtual void OnAutoUpdaterCycle(object sender, EventArgs args) =>
+      AutoUpdaterCycle?.Invoke(this, Device ?? throw new ArgumentNullException());
+
+    /// <summary>
     ///   Invokes the <see cref="Exception" /> event.
     /// </summary>
     /// <param name="exception">
@@ -621,7 +684,7 @@ namespace VisaDeviceBuilder
     /// <param name="args">
     ///   The event arguments object containing the thrown exception.
     /// </param>
-    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) => Exception?.Invoke(sender, args);
+    protected virtual void OnException(object sender, ThreadExceptionEventArgs args) => Exception?.Invoke(this, args);
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()

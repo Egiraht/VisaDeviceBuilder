@@ -50,8 +50,8 @@ namespace VisaDeviceBuilder
     bool IsUpdatingVisaResources { get; }
 
     /// <summary>
-    ///   Gets the current VISA device instance of <typeparamref cref="DeviceType" /> type created for the current
-    ///   connection.
+    ///   Gets the current VISA device instance with type of the specified <typeparamref cref="DeviceType" /> created
+    ///   for the current connection if it is available.
     /// </summary>
     /// <returns>
     ///   The <see cref="IVisaDevice" /> instance created for the opened device connection or <c>null</c> if no
@@ -60,7 +60,7 @@ namespace VisaDeviceBuilder
     IVisaDevice? Device { get; }
 
     /// <summary>
-    ///   Checks if the <see cref="Device" /> is not <c>null</c> and its type implements <see cref="IMessageDevice" />.
+    ///   Checks if the device is a message device (its type implements the <see cref="IMessageDevice" /> interface).
     /// </summary>
     bool IsMessageDevice { get; }
 
@@ -86,14 +86,14 @@ namespace VisaDeviceBuilder
     string Identifier { get; }
 
     /// <summary>
-    ///   Gets the collection of asynchronous properties and corresponding metadata defined for the device.
+    ///   Gets the read-only collection of asynchronous properties and corresponding metadata defined for the device.
     /// </summary>
-    ObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; }
+    ReadOnlyObservableCollection<AsyncPropertyMetadata> AsyncProperties { get; }
 
     /// <summary>
-    ///   Gets the collection of device actions and corresponding metadata defined for the device.
+    ///   Gets the read-only collection of device actions and corresponding metadata defined for the device.
     /// </summary>
-    ObservableCollection<DeviceActionMetadata> DeviceActions { get; }
+    ReadOnlyObservableCollection<DeviceActionMetadata> DeviceActions { get; }
 
     /// <summary>
     ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available
@@ -128,7 +128,36 @@ namespace VisaDeviceBuilder
     bool IsDisconnectionRequested { get; }
 
     /// <summary>
-    ///   Event that is called on any control exception.
+    ///   The event that is called before the device initialization.
+    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
+    /// </summary>
+    public event EventHandler<IVisaDevice>? BeforeInitialization;
+
+    /// <summary>
+    ///   The event that is called after the device initialization.
+    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
+    /// </summary>
+    public event EventHandler<IVisaDevice>? AfterInitialization;
+
+    /// <summary>
+    ///   The event that is called before the device de-initialization.
+    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
+    /// </summary>
+    public event EventHandler<IVisaDevice>? BeforeDeInitialization;
+
+    /// <summary>
+    ///   The event that is called after the device de-initialization.
+    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
+    /// </summary>
+    public event EventHandler<IVisaDevice>? AfterDeInitialization;
+
+    /// <summary>
+    ///   The event that is called after every single auto-updater cycle elapses.
+    /// </summary>
+    public event EventHandler<IVisaDevice>? AutoUpdaterCycle;
+
+    /// <summary>
+    ///   The event that is called on any device controller exception caught during the connection session.
     /// </summary>
     event ThreadExceptionEventHandler? Exception;
 
@@ -139,7 +168,6 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Starts the asynchronous device connection process.
-    ///   The created device connection task can be accessed via the <see cref="VisaDeviceController.ConnectionTask" /> property.
     /// </summary>
     void Connect();
 
@@ -149,8 +177,8 @@ namespace VisaDeviceBuilder
     Task DisconnectAsync();
 
     /// <summary>
-    ///   Asynchronously updates getters of all asynchronous properties available in the attached <see cref="VisaDeviceController.Device" />
-    ///   instance.
+    ///   Asynchronously updates getters of all asynchronous properties registered in the <see cref="AsyncProperties" />
+    ///   collection.
     /// </summary>
     Task UpdateAsyncPropertiesAsync();
   }
