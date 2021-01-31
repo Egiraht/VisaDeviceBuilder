@@ -1,9 +1,10 @@
 ﻿using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
-using Localization = VisaDeviceBuilder.WPF.App.Resources.Localization;
+using VisaDeviceBuilder.WPF;
+using Localization = VisaDeviceBuilder.SampleApp.Resources.Localization;
 
-namespace VisaDeviceBuilder.WPF.App
+namespace VisaDeviceBuilder.SampleApp
 {
   /// <summary>
   ///   The interaction logic class for the <i>MainWindow.xaml</i> window.

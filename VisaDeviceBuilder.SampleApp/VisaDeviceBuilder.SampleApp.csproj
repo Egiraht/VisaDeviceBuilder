@@ -10,6 +10,7 @@
     <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
     <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
     <RepositoryType>Git</RepositoryType>
+    <IsPackable>false</IsPackable>
     <PackageTags>VISA, device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <NeutralLanguage>en</NeutralLanguage>

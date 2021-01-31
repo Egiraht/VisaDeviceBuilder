@@ -6,7 +6,7 @@ using Ivi.Visa;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable StringLiteralTypo
-namespace VisaDeviceBuilder.WPF.App.Components
+namespace VisaDeviceBuilder.SampleApp.Components
 {
   /// <summary>
   ///   The VISA device class representing a Keysight E364xA series power supply.

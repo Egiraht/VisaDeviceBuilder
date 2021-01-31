@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Ivi.Visa;
 
 // ReSharper disable StringLiteralTypo
-namespace VisaDeviceBuilder.WPF.App.Components
+namespace VisaDeviceBuilder.SampleApp.Components
 {
   /// <summary>
   ///   The base class for VISA devices manufactured by <i>Keysight Technologies Inc.</i> and supporting communication

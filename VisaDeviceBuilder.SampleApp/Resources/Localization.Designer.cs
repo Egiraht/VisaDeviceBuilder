@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace VisaDeviceBuilder.WPF.App.Resources {
+namespace VisaDeviceBuilder.SampleApp.Resources {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace VisaDeviceBuilder.WPF.App.Resources {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.WPF.App.Resources.Localization", typeof(Localization).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("VisaDeviceBuilder.SampleApp.Resources.Localization", typeof(Localization).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
