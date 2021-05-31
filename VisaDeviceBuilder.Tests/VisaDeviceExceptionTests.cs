@@ -1,5 +1,6 @@
 using System;
 using Moq;
+using VisaDeviceBuilder.Abstracts;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests

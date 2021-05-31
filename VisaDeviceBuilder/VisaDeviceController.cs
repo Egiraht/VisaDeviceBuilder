@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using VisaDeviceBuilder.Abstracts;
 using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder

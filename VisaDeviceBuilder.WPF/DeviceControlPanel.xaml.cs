@@ -3,6 +3,7 @@ using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Ivi.Visa;
+using VisaDeviceBuilder.Abstracts;
 using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder.WPF

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder.Tests.Components
 {

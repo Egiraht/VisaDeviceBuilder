@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using VisaDeviceBuilder.Abstracts;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable StringLiteralTypo

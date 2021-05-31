@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Abstracts;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests

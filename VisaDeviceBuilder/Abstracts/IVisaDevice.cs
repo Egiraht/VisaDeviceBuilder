@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Ivi.Visa;
 
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
   ///   The interface describing a connectable VISA device.
@@ -70,11 +70,17 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Synchronously opens a connection session with the device.
     /// </summary>
+    /// <exception cref="VisaDeviceException">
+    ///   An error has occured during session opening with the device.
+    /// </exception>
     void OpenSession();
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
     /// </summary>
+    /// <exception cref="VisaDeviceException">
+    ///   An error has occured during session opening with the device.
+    /// </exception>
     Task OpenSessionAsync();
 
     /// <summary>

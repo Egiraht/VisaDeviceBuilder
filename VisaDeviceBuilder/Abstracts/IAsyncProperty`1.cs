@@ -1,4 +1,4 @@
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
   ///   The interface for asynchronous properties with values of type <typeparamref name="TValue" />.

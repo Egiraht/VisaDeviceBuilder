@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   public interface IAutoUpdater : IDisposable, IAsyncDisposable
   {

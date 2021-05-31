@@ -1,4 +1,5 @@
 using System;
+using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
 {

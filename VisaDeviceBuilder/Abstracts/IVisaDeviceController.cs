@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ivi.Visa;
 
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
   ///   The common interface for VISA device controller classes.

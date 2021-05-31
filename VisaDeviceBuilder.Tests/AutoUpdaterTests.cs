@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Abstracts;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
 

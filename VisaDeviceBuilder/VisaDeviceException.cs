@@ -1,5 +1,6 @@
 using System;
 using Ivi.Visa;
+using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
 {

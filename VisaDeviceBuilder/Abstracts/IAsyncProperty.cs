@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
   ///   The interface for asynchronous properties with string values.

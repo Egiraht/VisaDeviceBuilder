@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace VisaDeviceBuilder
+namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
   ///   The interface describing a message-based VISA device.

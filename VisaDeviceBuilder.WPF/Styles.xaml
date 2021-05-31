@@ -1,6 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:visa="clr-namespace:VisaDeviceBuilder;assembly=VisaDeviceBuilder"
+                    xmlns:visaAbs="clr-namespace:VisaDeviceBuilder.Abstracts;assembly=VisaDeviceBuilder"
                     xmlns:local="clr-namespace:VisaDeviceBuilder.WPF"
                     xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources">
   <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Transparent" />
@@ -195,7 +196,7 @@
         <MultiDataTrigger.Conditions>
           <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=(DataGridCell.Column).DisplayIndex}"
                      Value="1" />
-          <Condition Binding="{Binding (visa:IAsyncProperty.CanGet)}" Value="False" />
+          <Condition Binding="{Binding (visaAbs:IAsyncProperty.CanGet)}" Value="False" />
         </MultiDataTrigger.Conditions>
 
         <Setter Property="Visibility" Value="Hidden" />
@@ -206,7 +207,7 @@
         <MultiDataTrigger.Conditions>
           <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=(DataGridCell.Column).DisplayIndex}"
                      Value="2" />
-          <Condition Binding="{Binding (visa:IAsyncProperty.CanSet)}" Value="False" />
+          <Condition Binding="{Binding (visaAbs:IAsyncProperty.CanSet)}" Value="False" />
         </MultiDataTrigger.Conditions>
 
         <Setter Property="Visibility" Value="Hidden" />
