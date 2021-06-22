@@ -12,17 +12,17 @@ namespace VisaDeviceBuilder.Tests
   public class MessageDeviceTests
   {
     /// <summary>
-    ///   The custom VISA resource manager used for testing purposes.
-    /// </summary>
-    private TestResourceManager ResourceManager { get; } = new();
-
-    /// <summary>
     ///   Testing the VISA message-based session opening and closing.
     /// </summary>
     [Fact]
     public async Task MessageBasedSessionTest()
     {
-      await using var device = new MessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
+      using var resourceManager = new TestResourceManager();
+      await using var device = new MessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
       Assert.Null(device.Session);
 
       // Throw when sending a message with no opened session.
@@ -43,11 +43,20 @@ namespace VisaDeviceBuilder.Tests
     public async Task UnsupportedResourcesTest()
     {
       // Testing the unsupported interface type.
-      await using (var device = new MessageDevice(TestResourceManager.CustomTestDeviceResourceName, ResourceManager))
+      using var resourceManager = new TestResourceManager();
+      await using (var device = new MessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.CustomTestDeviceResourceName
+      })
         await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
 
       // Testing the supported interface type but with the non-message-based session type.
-      await using (var device = new MessageDevice(TestResourceManager.VxiTestDeviceResourceName, ResourceManager))
+      await using (var device = new MessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.VxiTestDeviceResourceName
+      })
         await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
     }
 
@@ -57,7 +66,12 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task CustomMessageDeviceTest()
     {
-      await using var device = new TestMessageDevice(TestResourceManager.SerialTestDeviceResourceName, ResourceManager);
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
       Assert.Contains(device.AsyncProperties, asyncProperty => asyncProperty == device.TestAsyncProperty);
       Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Action == device.TestDeviceAction);
 

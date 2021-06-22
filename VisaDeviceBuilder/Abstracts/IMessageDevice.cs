@@ -27,6 +27,6 @@ namespace VisaDeviceBuilder.Abstracts
     /// <returns>
     ///   The message response string returned by the device.
     /// </returns>
-    Task<string> SendMessageAsync(string message);
+    public Task<string> SendMessageAsync(string message);
   }
 }

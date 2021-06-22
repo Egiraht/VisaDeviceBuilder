@@ -11,20 +11,31 @@ namespace VisaDeviceBuilder.Abstracts
   public interface IVisaDevice : IDisposable, IAsyncDisposable
   {
     /// <summary>
-    ///   Gets the custom VISA resource manager instance used for VISA session management.
+    ///   Gets or sets a custom VISA resource manager for VISA session management.
     ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
     /// </summary>
-    IResourceManager? ResourceManager { get; }
+    /// <remarks>
+    ///   When using the <see cref="GlobalResourceManager" /> class for VISA resource management with the
+    ///   <i>.NET Core</i> runtime, the assembly <i>.dll</i> files of installed VISA .NET implementations must be
+    ///   directly referenced in the project. This is because the <i>.NET Core</i> runtime does not automatically
+    ///   locate assemblies from the system's Global Assembly Cache (GAC) used by the <i>.NET Framework</i> runtime,
+    ///   where the VISA standard prescribes to install the VISA .NET implementation libraries.
+    /// </remarks>
+    IResourceManager? ResourceManager { get; set; }
 
     /// <summary>
-    ///   Gets the unaliased VISA resource name of the device.
+    ///   Gets or sets the VISA resource name of the device.
     /// </summary>
-    string ResourceName { get; }
+    string ResourceName { get; set; }
 
     /// <summary>
-    ///   Gets the connection timeout in milliseconds.
+    ///   Gets the VISA resource information parsed from the <see cref="ResourceName" /> value.
     /// </summary>
-    int ConnectionTimeout { get; }
+    /// <returns>
+    ///   A <see cref="ParseResult" /> object containing the current VISA resource information, or <c>null</c> if
+    ///   <see cref="ResourceName" /> value parsing fails.
+    /// </returns>
+    ParseResult? ResourceNameInfo { get; }
 
     /// <summary>
     ///   Gets the VISA alias name of the device if it is available, otherwise gets its unaliased resource name.
@@ -32,9 +43,9 @@ namespace VisaDeviceBuilder.Abstracts
     string AliasName { get; }
 
     /// <summary>
-    ///   Gets the VISA hardware interface used for communication with the device.
+    ///   Gets or sets the connection timeout in milliseconds.
     /// </summary>
-    HardwareInterfaceType Interface { get; }
+    int ConnectionTimeout { get; set; }
 
     /// <summary>
     ///   Gets the array of VISA hardware interfaces supported by the device.
@@ -44,7 +55,7 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Gets the current device connection state.
     /// </summary>
-    DeviceConnectionState DeviceConnectionState { get; }
+    DeviceConnectionState ConnectionState { get; }
 
     /// <summary>
     ///   Gets the current VISA session object if the connection has been successfully established,
@@ -66,6 +77,11 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Gets the enumeration of device actions defined in the current device.
     /// </summary>
     IEnumerable<IDeviceAction> DeviceActions { get; }
+
+    /// <summary>
+    ///   The event that is called every time the connection state of the device changes.
+    /// </summary>
+    event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
 
     /// <summary>
     ///   Synchronously opens a connection session with the device.

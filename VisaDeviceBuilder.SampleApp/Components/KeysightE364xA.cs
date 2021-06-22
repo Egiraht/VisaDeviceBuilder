@@ -108,21 +108,6 @@ namespace VisaDeviceBuilder.SampleApp.Components
       HardwareInterfaceType.Serial
     };
 
-    /// <summary>
-    ///   Creates a new instance of the <see cref="KeysightE364xA" /> class.
-    /// </summary>
-    /// <param name="resourceName">
-    ///   The VISA resource name of the device.
-    /// </param>
-    /// <param name="resourceManager">
-    ///   The custom VISA resource manager instance used for VISA session management.
-    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
-    /// </param>
-    public KeysightE364xA(string resourceName, IResourceManager? resourceManager = null) :
-      base(resourceName, resourceManager)
-    {
-    }
-
     /// <inheritdoc />
     protected override void Initialize()
     {

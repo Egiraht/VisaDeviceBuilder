@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Ivi.Visa;
 
 // ReSharper disable StringLiteralTypo
 namespace VisaDeviceBuilder.SampleApp.Components
@@ -15,21 +14,6 @@ namespace VisaDeviceBuilder.SampleApp.Components
   /// </summary>
   public class KeysightScpiDevice : MessageDevice
   {
-    /// <summary>
-    ///   Creates a new instance of the <see cref="KeysightScpiDevice" /> class.
-    /// </summary>
-    /// <param name="resourceName">
-    ///   The VISA resource name of the device.
-    /// </param>
-    /// <param name="resourceManager">
-    ///   The custom VISA resource manager instance used for VISA session management.
-    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
-    /// </param>
-    public KeysightScpiDevice(string resourceName, IResourceManager? resourceManager = null) :
-      base(resourceName, resourceManager)
-    {
-    }
-
     /// <summary>
     ///   Gets the oldest error message from the device error queue.
     ///   When there are no errors in the queue, the message starting with the code <c>0</c> or <c>+0</c> is read.

@@ -128,33 +128,14 @@ namespace VisaDeviceBuilder.Abstracts
     bool IsDisconnectionRequested { get; }
 
     /// <summary>
-    ///   The event that is called before the device initialization.
-    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
+    ///   The event that is called every time the connection state of the device changes.
     /// </summary>
-    public event EventHandler<IVisaDevice>? BeforeInitialization;
-
-    /// <summary>
-    ///   The event that is called after the device initialization.
-    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
-    /// </summary>
-    public event EventHandler<IVisaDevice>? AfterInitialization;
-
-    /// <summary>
-    ///   The event that is called before the device de-initialization.
-    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
-    /// </summary>
-    public event EventHandler<IVisaDevice>? BeforeDeInitialization;
-
-    /// <summary>
-    ///   The event that is called after the device de-initialization.
-    ///   As a parameter the event provides the VISA device instance associated with the current device connection.
-    /// </summary>
-    public event EventHandler<IVisaDevice>? AfterDeInitialization;
+    event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
 
     /// <summary>
     ///   The event that is called after every single auto-updater cycle elapses.
     /// </summary>
-    public event EventHandler<IVisaDevice>? AutoUpdaterCycle;
+    event EventHandler<IVisaDevice>? AutoUpdaterCycle;
 
     /// <summary>
     ///   The event that is called on any device controller exception caught during the connection session.

@@ -20,14 +20,9 @@ namespace VisaDeviceBuilder
     public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
-    ///   The backing field for the <see cref="AliasName" /> property.
-    /// </summary>
-    private string _aliasName = "";
-
-    /// <summary>
     ///   The flag indicating if the object has been already disposed.
     /// </summary>
-    private bool _isDisposed = false;
+    private bool _isDisposed;
 
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
@@ -36,71 +31,105 @@ namespace VisaDeviceBuilder
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <inheritdoc />
-    public IResourceManager? ResourceManager { get; }
-
-    /// <inheritdoc />
-    public string ResourceName { get; }
-
-    /// <inheritdoc />
-    public int ConnectionTimeout { get; set; } = DefaultConnectionTimeout;
-
-    /// <inheritdoc />
-    public string AliasName
+    public virtual IResourceManager? ResourceManager
     {
-      get => !string.IsNullOrEmpty(_aliasName) ? _aliasName : ResourceName;
-      protected set => _aliasName = value;
+      get => _resourceManager;
+      set
+      {
+        if (IsSessionOpened)
+          throw new VisaDeviceException(this, "The resource manager cannot be modified when a session is opened.");
+
+        _resourceManager = value;
+      }
     }
+    private IResourceManager? _resourceManager;
 
     /// <inheritdoc />
-    public HardwareInterfaceType Interface { get; }
+    public virtual string ResourceName
+    {
+      get => _resourceName;
+      set
+      {
+        if (IsSessionOpened)
+          throw new VisaDeviceException(this, "The resource name cannot be modified when a session is opened.");
+
+        _resourceName = value;
+      }
+    }
+    private string _resourceName = string.Empty;
+
+    /// <inheritdoc />
+    public int ConnectionTimeout
+    {
+      get => _connectionTimeout;
+      set
+      {
+        if (IsSessionOpened)
+          Session!.TimeoutMilliseconds = value;
+
+        _connectionTimeout = value;
+      }
+    }
+    private int _connectionTimeout = DefaultConnectionTimeout;
+
+    /// <inheritdoc />
+    public ParseResult? ResourceNameInfo => GetResourceNameInfo();
+
+    /// <inheritdoc />
+    public string AliasName => ResourceNameInfo?.AliasIfExists ?? ResourceName;
 
     /// <inheritdoc />
     public virtual HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedInterfaces;
 
     /// <inheritdoc />
-    public DeviceConnectionState DeviceConnectionState { get; protected set; } = DeviceConnectionState.Disconnected;
+    public DeviceConnectionState ConnectionState
+    {
+      get => _connectionState;
+      private set
+      {
+        _connectionState = value;
+        OnConnectionStateChanged(value);
+      }
+    }
+    private DeviceConnectionState _connectionState = DeviceConnectionState.Disconnected;
 
     /// <inheritdoc />
-    public IVisaSession? Session { get; protected set; }
+    public IVisaSession? Session { get; private set; }
 
     /// <inheritdoc />
-    public virtual bool IsSessionOpened => Session != null;
+    public bool IsSessionOpened => Session != null;
 
     /// <inheritdoc />
-    public IEnumerable<IAsyncProperty> AsyncProperties { get; }
+    public virtual IEnumerable<IAsyncProperty> AsyncProperties { get; }
 
     /// <inheritdoc />
-    public IEnumerable<IDeviceAction> DeviceActions { get; }
+    public virtual IEnumerable<IDeviceAction> DeviceActions { get; }
+
+    /// <inheritdoc />
+    public event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
 
     /// <summary>
-    ///   Creates a new instance of a custom VISA device.
+    ///   Creates a new VISA device instance.
     /// </summary>
-    /// <param name="resourceName">
-    ///   The VISA resource name of the device.
-    /// </param>
-    /// <param name="resourceManager">
-    ///   The custom VISA resource manager instance used for VISA session management.
-    ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
-    /// </param>
-    /// <remarks>
-    ///   When using the <see cref="GlobalResourceManager" /> class for VISA resource management with the
-    ///   <i>.NET Core</i> runtime, the assembly <i>.dll</i> files of the installed VISA .NET implementations must be
-    ///   directly referenced in the project. This is because the <i>.NET Core</i> runtime does not automatically
-    ///   locate assemblies from the system's Global Assembly Cache (GAC) used by the <i>.NET Framework</i> runtime,
-    ///   and where the VISA standard prescribes to install the VISA .NET implementation libraries.
-    /// </remarks>
-    public VisaDevice(string resourceName, IResourceManager? resourceManager = null)
+    public VisaDevice()
     {
-      ResourceManager = resourceManager;
-      var parsedResourceName = ResourceManager != null
-        ? ResourceManager.Parse(resourceName)
-        : GlobalResourceManager.Parse(resourceName);
-
-      ResourceName = parsedResourceName.ExpandedUnaliasedName;
-      AliasName = parsedResourceName.AliasIfExists;
-      Interface = parsedResourceName.InterfaceType;
       AsyncProperties = CollectOwnAsyncProperties();
       DeviceActions = CollectOwnDeviceActions();
+    }
+
+    /// <inheritdoc cref="IVisaDevice.ResourceNameInfo" />
+    private ParseResult? GetResourceNameInfo()
+    {
+      try
+      {
+        return ResourceManager != null
+          ? ResourceManager.Parse(ResourceName)
+          : GlobalResourceManager.Parse(ResourceName);
+      }
+      catch
+      {
+        return null;
+      }
     }
 
     /// <summary>
@@ -169,29 +198,34 @@ namespace VisaDeviceBuilder
     public void OpenSession()
     {
       if (_isDisposed)
-        throw new ObjectDisposedException(AliasName);
+        throw new ObjectDisposedException(GetType().Name);
 
-      if (IsSessionOpened)
+      if (ConnectionState != DeviceConnectionState.Disconnected &&
+        ConnectionState != DeviceConnectionState.DisconnectedWithError)
         return;
-
-      if (!SupportedInterfaces.Contains(Interface))
-        throw new VisaDeviceException(this,
-          new NotSupportedException(
-            $"The interface \"{Interface}\" is not supported by devices of type \"{GetType().Name}\"."));
 
       try
       {
-        DeviceConnectionState = DeviceConnectionState.Initializing;
+        ConnectionState = DeviceConnectionState.Initializing;
+
+        if (ResourceNameInfo == null)
+          throw new VisaDeviceException(this, new NotSupportedException(
+            $"Cannot parse the resource name \"{ResourceName}\" using the resource manager \"{ResourceManager?.GetType().Name ?? nameof(GlobalResourceManager)}\"."));
+
+        if (!SupportedInterfaces.Contains(ResourceNameInfo.InterfaceType))
+          throw new VisaDeviceException(this, new NotSupportedException(
+            $"The interface \"{ResourceNameInfo.InterfaceType}\" is not supported by devices of type \"{GetType().Name}\"."));
+
         Session = ResourceManager != null
           ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
           : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
         Initialize();
-        DeviceConnectionState = DeviceConnectionState.Connected;
+        ConnectionState = DeviceConnectionState.Connected;
       }
       catch (Exception e)
       {
         CloseSession();
-        DeviceConnectionState = DeviceConnectionState.DisconnectedWithError;
+        ConnectionState = DeviceConnectionState.DisconnectedWithError;
 
         throw e is VisaDeviceException visaDeviceException
           ? visaDeviceException
@@ -235,14 +269,14 @@ namespace VisaDeviceBuilder
     public void CloseSession()
     {
       if (_isDisposed)
-        throw new ObjectDisposedException(AliasName);
+        throw new ObjectDisposedException(GetType().Name);
 
-      if (!IsSessionOpened)
+      if (ConnectionState != DeviceConnectionState.Connected)
         return;
 
       try
       {
-        DeviceConnectionState = DeviceConnectionState.DeInitializing;
+        ConnectionState = DeviceConnectionState.DeInitializing;
         DeInitialize();
         Session?.Dispose();
       }
@@ -253,12 +287,21 @@ namespace VisaDeviceBuilder
       finally
       {
         Session = null;
-        DeviceConnectionState = DeviceConnectionState.Disconnected;
+        ConnectionState = DeviceConnectionState.Disconnected;
       }
     }
 
     /// <inheritdoc />
-    public virtual Task CloseSessionAsync() => Task.Run(CloseSession);
+    public Task CloseSessionAsync() => Task.Run(CloseSession);
+
+    /// <summary>
+    ///   Invokes the <see cref="ConnectionStateChanged" /> event.
+    /// </summary>
+    /// <param name="state">
+    ///   The new device connection state.
+    /// </param>
+    protected virtual void OnConnectionStateChanged(DeviceConnectionState state) =>
+      ConnectionStateChanged?.Invoke(this, state);
 
     /// <inheritdoc />
     public virtual void Dispose()

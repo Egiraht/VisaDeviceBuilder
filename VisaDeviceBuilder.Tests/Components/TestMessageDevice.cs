@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
-using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder.Tests.Components
@@ -74,12 +73,6 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   getter processing.
     /// </summary>
     public bool ThrowOnAsyncPropertyGetter { get; set; } = false;
-
-    /// <inheritdoc />
-    public TestMessageDevice(string resourceName, IResourceManager? resourceManager = null) :
-      base(resourceName, resourceManager)
-    {
-    }
 
     /// <inheritdoc />
     protected override void Initialize()

@@ -16,7 +16,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the delay after that the test session state check is performed.
     /// </summary>
-    public const int StateCheckPeriod = 10;
+    public const int StateCheckPeriod = 30;
 
     /// <summary>
     ///   Defines the test auto-updater delay value in milliseconds.
@@ -189,8 +189,6 @@ namespace VisaDeviceBuilder.Tests
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
       };
-      controller.BeforeInitialization += (_, device) =>
-        ((TestMessageDevice) device).ThrowOnAsyncPropertyGetter = true;
       controller.Exception += (sender, args) =>
       {
         isExceptionCaught = true;
@@ -202,12 +200,13 @@ namespace VisaDeviceBuilder.Tests
       // The device should occur in the "disconnected with error" state because the exception is caught during
       // the device initialization stage.
       controller.Connect();
+      ((TestMessageDevice) controller.Device!).ThrowOnInitialization = true;
       do
         await Task.Delay(StateCheckPeriod);
       while (!isExceptionCaught);
       Assert.Equal(controller, eventSender);
-      Assert.Equal(TestMessageDevice.TestExceptionText, exception?.Message);
-      Assert.Equal(DeviceConnectionState.DisconnectedWithError, controller.ConnectionState);
+      Assert.NotNull(exception);
+      Assert.Equal(DeviceConnectionState.DisconnectedWithError, ((VisaDeviceController) eventSender!).ConnectionState);
     }
 
     /// <summary>
@@ -227,8 +226,6 @@ namespace VisaDeviceBuilder.Tests
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
       };
-      controller.AfterInitialization += (_, device) =>
-        ((TestMessageDevice) device).ThrowOnAsyncPropertyGetter = true;
       controller.Exception += (sender, args) =>
       {
         isExceptionCaught = true;
@@ -236,27 +233,21 @@ namespace VisaDeviceBuilder.Tests
         exception = args.Exception;
       };
 
-      // The device initialization stage should pass OK.
-      isExceptionCaught = false;
-      eventSender = null;
-      exception = null;
+      // The exception will be thrown after the device initialization and will be caught by the auto-updater.
+      // The device should remain in the "connected" state after exception is caught.
       controller.Connect();
       do
         await Task.Delay(StateCheckPeriod);
       while (!controller.IsDeviceReady);
       Assert.False(isExceptionCaught);
-      Assert.Null(eventSender);
-      Assert.Null(exception);
-      Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
 
-      // The exception will be thrown after the device initialization and will be caught by the auto-updater.
-      // The device should remain in the "connected" state after exception is caught.
+      ((TestMessageDevice) controller.Device!).ThrowOnAsyncPropertyGetter = true;
       do
         await Task.Delay(StateCheckPeriod);
       while (!isExceptionCaught);
       Assert.Equal(controller, eventSender);
-      Assert.Equal(TestMessageDevice.TestExceptionText, exception?.Message);
-      Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
+      Assert.NotNull(exception);
+      Assert.Equal(DeviceConnectionState.Connected, ((VisaDeviceController) eventSender!).ConnectionState);
     }
 
     /// <summary>

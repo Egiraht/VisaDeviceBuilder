@@ -1,3 +1,5 @@
+// TODO: Check and rewrite the whole class and its tests.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -35,7 +37,7 @@ namespace VisaDeviceBuilder
     private bool _isUpdatingVisaResources = false;
     private bool _isUpdatingAsyncProperties = false;
     private bool _isDisconnectionRequested = false;
-    private DeviceConnectionState _connectionState;
+    private DeviceConnectionState _lastConnectionState = DeviceConnectionState.Disconnected;
     private string _identifier = string.Empty;
     private IVisaDevice? _device;
     private LocalizationResourceManager? _localizationResourceManager;
@@ -112,15 +114,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public DeviceConnectionState ConnectionState
-    {
-      get => _connectionState;
-      protected set
-      {
-        _connectionState = value;
-        OnPropertyChanged();
-      }
-    }
+    public DeviceConnectionState ConnectionState => Device?.ConnectionState ?? _lastConnectionState;
 
     /// <inheritdoc />
     public bool IsUpdatingVisaResources
@@ -274,16 +268,7 @@ namespace VisaDeviceBuilder
     public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <inheritdoc />
-    public event EventHandler<IVisaDevice>? BeforeInitialization;
-
-    /// <inheritdoc />
-    public event EventHandler<IVisaDevice>? AfterInitialization;
-
-    /// <inheritdoc />
-    public event EventHandler<IVisaDevice>? BeforeDeInitialization;
-
-    /// <inheritdoc />
-    public event EventHandler<IVisaDevice>? AfterDeInitialization;
+    public event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
 
     /// <inheritdoc />
     public event EventHandler<IVisaDevice>? AutoUpdaterCycle;
@@ -376,9 +361,14 @@ namespace VisaDeviceBuilder
     ///   have a suitable constructor.
     /// </exception>
     protected static IVisaDevice CreateDeviceInstance(string resourceName, Type deviceType,
-      IResourceManager? visaResourceManager) =>
-      (IVisaDevice) (Activator.CreateInstance(deviceType, resourceName, visaResourceManager) ??
-        throw new NotSupportedException($"Cannot create a new VISA device instance of type \"{deviceType.Name}\"."));
+      IResourceManager? visaResourceManager)
+    {
+      if (Activator.CreateInstance(deviceType) is not IVisaDevice device)
+        throw new NotSupportedException($"Cannot create a new VISA device instance of type \"{deviceType.Name}\".");
+      device.ResourceName = resourceName;
+      device.ResourceManager = visaResourceManager;
+      return device;
+    }
 
     /// <summary>
     ///   Rebuilds the collections of asynchronous properties and device actions and localizes the names using the
@@ -398,6 +388,7 @@ namespace VisaDeviceBuilder
         asyncProperty.LocalizedName = LocalizationResourceManager?.GetString(asyncProperty.Name) ?? asyncProperty.Name;
         AsyncPropertyEntries.Add(asyncProperty);
       }
+
       foreach (var deviceAction in Device.DeviceActions)
       {
         deviceAction.LocalizedName = LocalizationResourceManager?.GetString(deviceAction.Name) ?? deviceAction.Name;
@@ -441,22 +432,18 @@ namespace VisaDeviceBuilder
     {
       try
       {
-        using (var visaResourceManager = VisaResourceManagerType != null
+        using var visaResourceManager = VisaResourceManagerType != null
           ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
-          : null)
+          : null;
+
         await using (Device = CreateDeviceInstance(ResourceName, DeviceType, visaResourceManager))
         await using (AutoUpdater = new AutoUpdater(Device))
         using (DisconnectionTokenSource = new CancellationTokenSource())
         {
-          // Starting the device initialization stage.
-          var disconnectionToken = DisconnectionTokenSource.Token;
-          ConnectionState = DeviceConnectionState.Initializing;
-          OnBeforeInitialization();
-
           // Trying to connect to the device.
-          disconnectionToken.ThrowIfCancellationRequested();
-          var sessionOpeningTask = Device.OpenSessionAsync();
-          await sessionOpeningTask;
+          var disconnectionToken = DisconnectionTokenSource.Token;
+          Device.ConnectionStateChanged += ConnectionStateChanged;
+          await Device.OpenSessionAsync();
 
           // Rebuilding and localizing the collections of asynchronous properties and device actions.
           RebuildCollections();
@@ -491,11 +478,7 @@ namespace VisaDeviceBuilder
           AutoUpdater.AutoUpdateException += OnException;
           if (IsAutoUpdaterEnabled)
             AutoUpdater.Start();
-
-          // The device initialization stage is completed.
-          OnAfterInitialization();
           IsDeviceReady = true;
-          ConnectionState = DeviceConnectionState.Connected;
 
           // Waiting for the disconnection request.
           try
@@ -507,12 +490,8 @@ namespace VisaDeviceBuilder
             // Suppress task cancellation exceptions.
           }
 
-          // Starting the device de-initialization stage.
-          IsDeviceReady = false;
-          ConnectionState = DeviceConnectionState.DeInitializing;
-          OnBeforeDeInitialization();
-
           // Waiting for the auto-updater to stop.
+          IsDeviceReady = false;
           if (AutoUpdater != null)
             await AutoUpdater.StopAsync();
 
@@ -526,15 +505,14 @@ namespace VisaDeviceBuilder
             await asyncProperty.GetGetterUpdatingTask();
           }
 
-          // The device de-initialization stage is completed.
-          OnAfterDeInitialization();
-
           // Waiting for remaining asynchronous operations to complete before session closing.
           await Task.Run(() =>
           {
             lock (DisconnectionLock)
               Device.CloseSession();
           });
+          Device.ConnectionStateChanged -= ConnectionStateChanged;
+          _lastConnectionState = DeviceConnectionState.Disconnected;
         }
       }
       catch (OperationCanceledException)
@@ -544,7 +522,7 @@ namespace VisaDeviceBuilder
       catch (Exception e)
       {
         OnException(e);
-        ConnectionState = DeviceConnectionState.DisconnectedWithError;
+        _lastConnectionState = DeviceConnectionState.DisconnectedWithError;
       }
       finally
       {
@@ -553,8 +531,6 @@ namespace VisaDeviceBuilder
         DisconnectionTokenSource = null;
         AutoUpdater = null;
         Device = null;
-        if (ConnectionState != DeviceConnectionState.DisconnectedWithError)
-          ConnectionState = DeviceConnectionState.Disconnected;
         RebuildCollections();
         CanConnect = true;
       }
@@ -625,30 +601,6 @@ namespace VisaDeviceBuilder
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
-    ///   Invokes the <see cref="BeforeInitialization" /> event.
-    /// </summary>
-    protected virtual void OnBeforeInitialization() =>
-      BeforeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
-
-    /// <summary>
-    ///   Invokes the <see cref="AfterInitialization" /> event.
-    /// </summary>
-    protected virtual void OnAfterInitialization() =>
-      AfterInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
-
-    /// <summary>
-    ///   Invokes the <see cref="BeforeDeInitialization" /> event.
-    /// </summary>
-    protected virtual void OnBeforeDeInitialization() =>
-      BeforeDeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
-
-    /// <summary>
-    ///   Invokes the <see cref="AfterDeInitialization" /> event.
-    /// </summary>
-    protected virtual void OnAfterDeInitialization() =>
-      AfterDeInitialization?.Invoke(this, Device ?? throw new ArgumentNullException());
-
-    /// <summary>
     ///   Invokes the <see cref="AutoUpdaterCycle" /> event.
     /// </summary>
     /// <param name="sender">
@@ -667,7 +619,7 @@ namespace VisaDeviceBuilder
     ///   The exception instance to be provided with the event.
     /// </param>
     protected virtual void OnException(Exception exception) =>
-      OnException(this, new ThreadExceptionEventArgs(exception));
+      OnException(this, new ThreadExceptionEventArgs(exception)); // TODO: Wrap into VisaDeviceException.
 
     /// <summary>
     ///   Invokes the <see cref="Exception" /> event.

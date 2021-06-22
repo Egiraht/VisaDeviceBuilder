@@ -34,21 +34,6 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected object MessageLock { get; } = new();
 
-    /// <summary>
-    ///   Creates a new instance of a custom message-based VISA device.
-    /// </summary>
-    /// <param name="resourceName">
-    ///   The VISA resource name of the device.
-    /// </param>
-    /// <param name="resourceManager">
-    ///   The custom VISA resource manager instance used for VISA session management.
-    ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.
-    /// </param>
-    public MessageDevice(string resourceName, IResourceManager? resourceManager = null) :
-      base(resourceName, resourceManager)
-    {
-    }
-
     /// <inheritdoc />
     protected override void Initialize()
     {
