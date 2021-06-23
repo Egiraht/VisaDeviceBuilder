@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
-using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
@@ -10,43 +11,89 @@ namespace VisaDeviceBuilder
   ///     The class representing an asynchronous property with a value of type <typeparamref name="TValue" />.
   ///   </para>
   ///   <para>
-  ///     The <see cref="Getter" /> and <see cref="Setter" /> properties represent the value accessors of the
-  ///     asynchronous property while the actual read and write operations are performed asynchronously according
-  ///     to the provided callbacks.
+  ///     The <see cref="Getter" /> and <see cref="Setter" /> properties represent the corresponding value accessors of
+  ///     the asynchronous property while the actual read and write operations are performed asynchronously according
+  ///     to the callback functions provided to the constructor.
   ///   </para>
   ///   <para>
-  ///     The asynchronous property can be created as read-only, write-only, and read-write.
-  ///   </para>
-  ///   <para>
-  ///     For interoperation with the <see cref="AsyncProperty" /> base class the implicit value conversions between
-  ///     the <typeparamref name="TValue" /> type and the string type are performed.
+  ///     The asynchronous property can be read-only, write-only, or read-write depending on the constructor overload
+  ///     used for object creation.
   ///   </para>
   /// </summary>
   /// <typeparam name="TValue">
   ///   Type of the asynchronous property value.
   /// </typeparam>
-  public class AsyncProperty<TValue> : AsyncProperty, IAsyncProperty<TValue>
+  public class AsyncProperty<TValue> : IAsyncProperty<TValue>
   {
     /// <inheritdoc />
-    public new TValue Getter =>
-      StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Getter) ? base.Getter : default!);
+    public string Name { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public new TValue Setter
+    public bool CanGet { get; } = false;
+
+    /// <inheritdoc />
+    public bool CanSet { get; } = false;
+
+    /// <summary>
+    ///   Gets the getter delegate to be called when the asynchronous property is read.
+    /// </summary>
+    private Func<TValue> GetterDelegate { get; } = () => default!;
+
+    /// <summary>
+    ///   Gets the setter delegate to be called when the asynchronous property is written.
+    /// </summary>
+    private Action<TValue> SetterDelegate { get; } = _ => { };
+
+    /// <inheritdoc />
+    public TValue Getter { get; private set; } = default!;
+
+    /// <inheritdoc />
+    object? IAsyncProperty.Getter => Getter;
+
+    /// <inheritdoc />
+    public TValue Setter
     {
-      get => StringToTypeConverter.Invoke(!string.IsNullOrEmpty(base.Setter) ? base.Setter : default!);
-      set => base.Setter = TypeToStringConverter(value);
+      set => ProcessSetter(value);
     }
 
-    /// <summary>
-    ///   Gets the delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </summary>
-    public Converter<TValue, string> TypeToStringConverter { get; }
+    /// <inheritdoc />
+    object? IAsyncProperty.Setter
+    {
+      set => Setter = ConvertValueFromObject(value);
+    }
+
+    /// <inheritdoc />
+    public Type ValueType => typeof(TValue);
 
     /// <summary>
-    ///   Gets the delegate converting the string value to the value of type <typeparamref name="TValue" />.
+    ///   Gets or sets the <see cref="Task" /> of the currently running <see cref="Getter" /> property value updating.
     /// </summary>
-    public Converter<string, TValue> StringToTypeConverter { get; }
+    private Task? GetterTask { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the <see cref="Task" /> of the currently running <see cref="Setter" /> property value processing.
+    /// </summary>
+    private Task? SetterTask { get; set; }
+
+    /// <inheritdoc />
+    public bool AutoUpdateGetterAfterSetterCompletes { get; set; } = true;
+
+    /// <summary>
+    ///   Gets the shared synchronization lock object.
+    /// </summary>
+    private object SynchronizationLock { get; } = new();
+
+    /// <inheritdoc />
+    public event EventHandler? GetterUpdated;
+
+    /// <inheritdoc />
+    public event EventHandler? SetterCompleted;
+
+    /// <inheritdoc />
+    public event ThreadExceptionEventHandler? GetterException;
+
+    /// <inheritdoc />
+    public event ThreadExceptionEventHandler? SetterException;
 
     /// <summary>
     ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" /> with a custom type to
@@ -55,63 +102,10 @@ namespace VisaDeviceBuilder
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
     /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Func<string> getterDelegate, Converter<TValue, string> typeToStringConverter,
-      Converter<string, TValue> stringToTypeConverter) : base(getterDelegate)
+    public AsyncProperty(Func<TValue> getterDelegate)
     {
-      TypeToStringConverter = typeToStringConverter;
-      StringToTypeConverter = stringToTypeConverter;
-      GetterValue = TypeToStringConverter(default!);
-      SetterValue = TypeToStringConverter(default!);
-    }
-
-    /// <summary>
-    ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" /> with a custom type to
-    ///   string value converter.
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate, Converter<TValue, string> typeToStringConverter,
-      Converter<string, TValue> stringToTypeConverter) :
-      this(() => typeToStringConverter(getterDelegate()), typeToStringConverter, stringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    public AsyncProperty(Func<string> getterDelegate) :
-      this(getterDelegate, DefaultTypeToStringConverter, DefaultStringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate) : this(() => DefaultTypeToStringConverter(getterDelegate()))
-    {
+      GetterDelegate = getterDelegate;
+      CanGet = true;
     }
 
     /// <summary>
@@ -121,64 +115,10 @@ namespace VisaDeviceBuilder
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
     /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Action<string> setterDelegate, Converter<TValue, string> typeToStringConverter,
-      Converter<string, TValue> stringToTypeConverter) : base(setterDelegate)
+    public AsyncProperty(Action<TValue> setterDelegate)
     {
-      TypeToStringConverter = typeToStringConverter;
-      StringToTypeConverter = stringToTypeConverter;
-      GetterValue = TypeToStringConverter(default!);
-      SetterValue = TypeToStringConverter(default!);
-    }
-
-    /// <summary>
-    ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" /> with a custom string to
-    ///   type value converter.
-    /// </summary>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Action<TValue> setterDelegate, Converter<TValue, string> typeToStringConverter,
-      Converter<string, TValue> stringToTypeConverter) :
-      this(value => setterDelegate(stringToTypeConverter(value)), typeToStringConverter, stringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    public AsyncProperty(Action<string> setterDelegate) :
-      this(setterDelegate, DefaultTypeToStringConverter, DefaultStringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    public AsyncProperty(Action<TValue> setterDelegate) :
-      this(value => setterDelegate(DefaultStringToTypeConverter(value)))
-    {
+      SetterDelegate = setterDelegate;
+      CanSet = true;
     }
 
     /// <summary>
@@ -191,83 +131,12 @@ namespace VisaDeviceBuilder
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
     /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Func<string> getterDelegate, Action<string> setterDelegate,
-      Converter<TValue, string> typeToStringConverter, Converter<string, TValue> stringToTypeConverter) :
-      base(getterDelegate, setterDelegate)
+    public AsyncProperty(Func<TValue> getterDelegate, Action<TValue> setterDelegate)
     {
-      TypeToStringConverter = typeToStringConverter;
-      StringToTypeConverter = stringToTypeConverter;
-      GetterValue = typeToStringConverter(default!);
-      SetterValue = typeToStringConverter(default!);
-    }
-
-    /// <summary>
-    ///   Creates a new get/set asynchronous property of type <typeparamref name="TValue" /> with custom type to string
-    ///   and string to type converters.
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    /// <param name="typeToStringConverter">
-    ///   The delegate converting the value of type <typeparamref name="TValue" /> to the string value.
-    /// </param>
-    /// <param name="stringToTypeConverter">
-    ///   The delegate converting the string value to the value of type <typeparamref name="TValue" />.
-    /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate, Action<TValue> setterDelegate,
-      Converter<TValue, string> typeToStringConverter, Converter<string, TValue> stringToTypeConverter) :
-      this(() => typeToStringConverter(getterDelegate()), value => setterDelegate(stringToTypeConverter(value)),
-        typeToStringConverter, stringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new get/set asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    public AsyncProperty(Func<string> getterDelegate, Action<string> setterDelegate) :
-      this(getterDelegate, setterDelegate, DefaultTypeToStringConverter, DefaultStringToTypeConverter)
-    {
-    }
-
-    /// <summary>
-    ///   Creates a new get/set asynchronous property of type <typeparamref name="TValue" />.
-    ///   The default type to string and string to type converters are used
-    ///   (see the <see cref="DefaultTypeToStringConverter" /> and <see cref="DefaultStringToTypeConverter" /> methods).
-    /// </summary>
-    /// <param name="getterDelegate">
-    ///   The getter delegate to be called when the asynchronous property is read.
-    /// </param>
-    /// <param name="setterDelegate">
-    ///   The setter delegate to be called when the asynchronous property is written.
-    /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate, Action<TValue> setterDelegate) :
-      this(() => DefaultTypeToStringConverter(getterDelegate()),
-        value => setterDelegate(DefaultStringToTypeConverter(value)))
-    {
-    }
-
-    /// <inheritdoc />
-    protected override void ProcessSetter(string value)
-    {
-      base.ProcessSetter(value);
-      SetterValue = TypeToStringConverter(default!);
+      GetterDelegate = getterDelegate;
+      SetterDelegate = setterDelegate;
+      CanGet = true;
+      CanSet = true;
     }
 
     /// <summary>
@@ -280,13 +149,19 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   A converted value of type <typeparamref name="TValue" />.
     /// </returns>
-    public static TValue DefaultStringToTypeConverter(string value)
+    private static TValue ConvertValueFromObject(object? value)
     {
+      if (value == null)
+        return default!;
+
+      if (value.GetType() == typeof(TValue))
+        return (TValue) value;
+
       try
       {
         var typeConverter = TypeDescriptor.GetConverter(typeof(TValue));
         return typeConverter.CanConvertFrom(typeof(string))
-          ? (TValue) typeConverter.ConvertFromInvariantString(value)!
+          ? (TValue) typeConverter.ConvertFrom(value)!
           : default!;
       }
       catch
@@ -295,28 +170,113 @@ namespace VisaDeviceBuilder
       }
     }
 
-    /// <summary>
-    ///   Defines the default <typeparamref name="TValue" /> type to string converter.
-    ///   Uses the standard <see cref="object.ToString()" /> method for conversion to string.
-    /// </summary>
-    /// <param name="value">
-    ///   The value of type <typeparamref name="TValue" /> to convert.
-    /// </param>
-    /// <returns>
-    ///   A converted string value.
-    /// </returns>
-    public static string DefaultTypeToStringConverter(TValue value) => value is IConvertible convertible
-      ? convertible.ToString(CultureInfo.InvariantCulture)
-      : value?.ToString() ?? "";
+    /// <inheritdoc />
+    public void RequestGetterUpdate()
+    {
+      if (GetterTask != null)
+        return;
+
+      lock (SynchronizationLock)
+      {
+        GetterTask = Task.Run(() =>
+        {
+          if (!CanGet)
+            return;
+
+          try
+          {
+            Getter = GetterDelegate.Invoke();
+            OnGetterUpdated();
+          }
+          catch (Exception e)
+          {
+            OnGetterException(e);
+          }
+          finally
+          {
+            GetterTask = null;
+          }
+        });
+      }
+    }
+
+    /// <inheritdoc />
+    public Task GetGetterUpdatingTask() => GetterTask ?? Task.CompletedTask;
 
     /// <summary>
-    ///   Implicitly converts the provided asynchronous property instance to its getter value.
+    ///   Processes the new value assigned to the <see cref="Setter" /> property.
+    /// </summary>
+    /// <param name="newValue">
+    ///   The value passed to the <see cref="Setter" /> property.
+    /// </param>
+    private void ProcessSetter(TValue newValue)
+    {
+      lock (SynchronizationLock)
+      {
+        SetterTask = Task.Run(() =>
+        {
+          if (!CanSet)
+            return;
+
+          try
+          {
+            SetterDelegate.Invoke(newValue);
+            OnSetterCompleted();
+
+            if (AutoUpdateGetterAfterSetterCompletes)
+              RequestGetterUpdate();
+          }
+          catch (Exception e)
+          {
+            OnSetterException(e);
+          }
+          finally
+          {
+            SetterTask = null;
+          }
+        });
+      }
+    }
+
+    /// <inheritdoc />
+    public Task GetSetterProcessingTask() => SetterTask ?? Task.CompletedTask;
+
+    /// <summary>
+    ///   Calls the <see cref="GetterUpdated" /> event.
+    /// </summary>
+    private void OnGetterUpdated() => GetterUpdated?.Invoke(this, new EventArgs());
+
+    /// <summary>
+    ///   Calls the <see cref="SetterCompleted" /> event.
+    /// </summary>
+    private void OnSetterCompleted() => SetterCompleted?.Invoke(this, new EventArgs());
+
+    /// <summary>
+    ///   Calls the <see cref="GetterException" /> event.
+    /// </summary>
+    /// <param name="exception">
+    ///   The exception that caused the getter failure.
+    /// </param>
+    private void OnGetterException(Exception exception) =>
+      GetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
+
+    /// <summary>
+    ///   Calls the <see cref="SetterException" /> event.
+    /// </summary>
+    /// <param name="exception">
+    ///   The exception that caused the setter failure.
+    /// </param>
+    private void OnSetterException(Exception exception) =>
+      SetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
+
+    /// <summary>
+    ///   Implicitly converts the asynchronous property instance to its getter value.
     /// </summary>
     /// <param name="property">
     ///   The asynchronous property instance to convert.
     /// </param>
     /// <returns>
-    ///   The getter value string stored in the provided asynchronous property instance.
+    ///   The getter value stored in the asynchronous property instance.
     /// </returns>
     public static implicit operator TValue(AsyncProperty<TValue> property) => property.Getter;
   }

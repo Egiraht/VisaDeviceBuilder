@@ -23,20 +23,9 @@ namespace VisaDeviceBuilder.Abstracts
 
     IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate);
 
-    IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
-      Converter<TValue, string> valueToStringConverter, Converter<string, TValue> stringToValueConverter);
-
     IVisaDeviceBuilder AddProperty<TValue>(string name, Action<TValue> setterDelegate);
 
-    IVisaDeviceBuilder AddProperty<TValue>(string name, Action<TValue> setterDelegate,
-      Converter<TValue, string> valueToStringConverter, Converter<string, TValue> stringToValueConverter);
-
-    IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
-      Action<TValue> setterDelegate);
-
-    IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
-      Action<TValue> setterDelegate, Converter<TValue, string> valueToStringConverter,
-      Converter<string, TValue> stringToValueConverter);
+    IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate, Action<TValue> setterDelegate);
 
     IVisaDeviceBuilder AddProperties(params IAsyncProperty[] asyncProperties);
 

@@ -149,7 +149,6 @@ namespace VisaDeviceBuilder
       {
         var result = (IAsyncProperty) property.GetValue(this)!;
         result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
-        result.LocalizedName = !string.IsNullOrWhiteSpace(result.LocalizedName) ? result.LocalizedName : property.Name;
         return result;
       });
 
@@ -173,8 +172,6 @@ namespace VisaDeviceBuilder
         {
           var result = (IDeviceAction) property.GetValue(this)!;
           result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
-          result.LocalizedName =
-            !string.IsNullOrWhiteSpace(result.LocalizedName) ? result.LocalizedName : property.Name;
           return result;
         })
         .Concat(GetType()
@@ -187,9 +184,6 @@ namespace VisaDeviceBuilder
             return (IDeviceAction) new DeviceAction((Action) method.CreateDelegate(typeof(Action), this))
             {
               Name = !string.IsNullOrWhiteSpace(attribute?.Name) ? attribute.Name : method.Name,
-              LocalizedName = !string.IsNullOrWhiteSpace(attribute?.LocalizedName)
-                ? attribute.LocalizedName
-                : method.Name
             };
           }));
     }

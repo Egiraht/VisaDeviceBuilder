@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -14,19 +15,6 @@ namespace VisaDeviceBuilder.SampleApp.Components
   /// </summary>
   public class KeysightE364xA : KeysightScpiDevice
   {
-    /* The backing fields for the device asynchronous properties. */
-    #region Backing fields
-    private IAsyncProperty<bool>? _isOutputEnabled;
-    private IAsyncProperty<double>? _targetVoltage;
-    private IAsyncProperty<double>? _currentLimit;
-    private IAsyncProperty<double>? _measuredVoltage;
-    private IAsyncProperty<double>? _measuredCurrent;
-    private IAsyncProperty<bool>? _isOverVoltageProtectionEnabled;
-    private IAsyncProperty<double>? _overVoltageLevel;
-    private IAsyncProperty<bool>? _isDisplayEnabled;
-    private IAsyncProperty<string>? _displayedText;
-    #endregion
-
     /// <summary>
     ///   Defines the array of string values that can be interpreted as <c>true</c> boolean values.
     /// </summary>
@@ -39,32 +27,45 @@ namespace VisaDeviceBuilder.SampleApp.Components
     public IAsyncProperty<bool> IsOutputEnabled => _isOutputEnabled ??= new AsyncProperty<bool>(
       () => TrueBooleanStrings.Contains(SendMessage("OUTP?"), StringComparer.InvariantCultureIgnoreCase),
       value => SendMessage($"OUTP {(value ? "ON" : "OFF")}"));
+    private IAsyncProperty<bool>? _isOutputEnabled;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the target output voltage in volts.
     /// </summary>
     public IAsyncProperty<double> TargetVoltage => _targetVoltage ??= new AsyncProperty<double>(
-      () => SendMessage("VOLT?"),
+      () => double.TryParse(SendMessage("VOLT?"), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value)
+        ? value
+        : default,
       value => SendMessage($"VOLT {value}"));
+    private IAsyncProperty<double>? _targetVoltage;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the output current limit in amps.
     /// </summary>
     public IAsyncProperty<double> CurrentLimit => _currentLimit ??= new AsyncProperty<double>(
-      () => SendMessage("CURR?"),
+      () => double.TryParse(SendMessage("CURR?"), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value)
+        ? value
+        : default,
       value => SendMessage($"CURR {value}"));
+    private IAsyncProperty<double>? _currentLimit;
 
     /// <summary>
     ///   Gets the read-only asynchronous property accessing the measured output voltage.
     /// </summary>
     public IAsyncProperty<double> MeasuredVoltage => _measuredVoltage ??= new AsyncProperty<double>(
-      () => SendMessage("MEAS:VOLT?"));
+      () => double.TryParse(SendMessage("MEAS:VOLT?"), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value)
+        ? value
+        : default);
+    private IAsyncProperty<double>? _measuredVoltage;
 
     /// <summary>
     ///   Gets the read-only asynchronous property accessing the measured output current.
     /// </summary>
     public IAsyncProperty<double> MeasuredCurrent => _measuredCurrent ??= new AsyncProperty<double>(
-      () => SendMessage("MEAS:CURR?"));
+      () => double.TryParse(SendMessage("MEAS:CURR?"), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value)
+        ? value
+        : default);
+    private IAsyncProperty<double>? _measuredCurrent;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the output over-voltage protection (OVP) state.
@@ -74,13 +75,17 @@ namespace VisaDeviceBuilder.SampleApp.Components
       new AsyncProperty<bool>(
         () => TrueBooleanStrings.Contains(SendMessage("VOLT:PROT:STAT?"), StringComparer.InvariantCultureIgnoreCase),
         value => SendMessage($"VOLT:PROT:STAT {(value ? "ON" : "OFF")}"));
+    private IAsyncProperty<bool>? _isOverVoltageProtectionEnabled;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the output over-voltage protection level in volts.
     /// </summary>
     public IAsyncProperty<double> OverVoltageLevel => _overVoltageLevel ??= new AsyncProperty<double>(
-      () => SendMessage("VOLT:PROT?"),
+      () => double.TryParse(SendMessage("VOLT:PROT?"), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var value)
+        ? value
+        : default,
       value => SendMessage($"VOLT:PROT {value}"));
+    private IAsyncProperty<double>? _overVoltageLevel;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the power supply TFT display state.
@@ -89,6 +94,7 @@ namespace VisaDeviceBuilder.SampleApp.Components
     public IAsyncProperty<bool> IsDisplayEnabled => _isDisplayEnabled ??= new AsyncProperty<bool>(
       () => TrueBooleanStrings.Contains(SendMessage("DISP?"), StringComparer.InvariantCultureIgnoreCase),
       value => SendMessage($"DISP {(value ? "ON" : "OFF")}"));
+    private IAsyncProperty<bool>? _isDisplayEnabled;
 
     /// <summary>
     ///   Gets the read/write asynchronous property controlling the custom text string displayed on the power supply
@@ -97,6 +103,7 @@ namespace VisaDeviceBuilder.SampleApp.Components
     public IAsyncProperty<string> DisplayedText => _displayedText ??= new AsyncProperty<string>(
       () => SendMessage("DISP:TEXT?").Trim('"'),
       value => SendMessage($"DISP:TEXT \"{value}\""));
+    private IAsyncProperty<string>? _displayedText;
 
     /// <summary>
     ///   Checks if the device's interface is <see cref="HardwareInterfaceType.Gpib" /> or

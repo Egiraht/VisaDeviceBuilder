@@ -60,30 +60,14 @@ namespace VisaDeviceBuilder
     }
 
     public IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate) =>
-      AddProperty(new AsyncProperty<TValue>(getterDelegate) {Name = name, LocalizedName = name});
-
-    public IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
-      Converter<TValue, string> valueToStringConverter, Converter<string, TValue> stringToValueConverter) =>
-      AddProperty(new AsyncProperty<TValue>(getterDelegate, valueToStringConverter, stringToValueConverter)
-        {Name = name, LocalizedName = name});
+      AddProperty(new AsyncProperty<TValue>(getterDelegate) {Name = name});
 
     public IVisaDeviceBuilder AddProperty<TValue>(string name, Action<TValue> setterDelegate) =>
-      AddProperty(new AsyncProperty<TValue>(setterDelegate) {Name = name, LocalizedName = name});
-
-    public IVisaDeviceBuilder AddProperty<TValue>(string name, Action<TValue> setterDelegate,
-      Converter<TValue, string> valueToStringConverter, Converter<string, TValue> stringToValueConverter) =>
-      AddProperty(new AsyncProperty<TValue>(setterDelegate, valueToStringConverter, stringToValueConverter)
-        {Name = name, LocalizedName = name});
+      AddProperty(new AsyncProperty<TValue>(setterDelegate) {Name = name});
 
     public IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
       Action<TValue> setterDelegate) =>
-      AddProperty(new AsyncProperty<TValue>(getterDelegate, setterDelegate) {Name = name, LocalizedName = name});
-
-    public IVisaDeviceBuilder AddProperty<TValue>(string name, Func<TValue> getterDelegate,
-      Action<TValue> setterDelegate, Converter<TValue, string> valueToStringConverter,
-      Converter<string, TValue> stringToValueConverter) =>
-      AddProperty(new AsyncProperty<TValue>(getterDelegate, setterDelegate, valueToStringConverter,
-        stringToValueConverter) {Name = name, LocalizedName = name});
+      AddProperty(new AsyncProperty<TValue>(getterDelegate, setterDelegate) {Name = name});
 
     public IVisaDeviceBuilder AddProperties(params IAsyncProperty[] asyncProperties)
     {
@@ -104,7 +88,7 @@ namespace VisaDeviceBuilder
     }
 
     public IVisaDeviceBuilder AddAction(string name, Action action) =>
-      AddAction(new DeviceAction(action) {Name = name, LocalizedName = name});
+      AddAction(new DeviceAction(action) {Name = name});
 
     public IVisaDeviceBuilder AddActions(params IDeviceAction[] deviceActions)
     {

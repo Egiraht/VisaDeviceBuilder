@@ -358,13 +358,13 @@ namespace VisaDeviceBuilder
 
       foreach (var asyncProperty in Device.AsyncProperties)
       {
-        asyncProperty.LocalizedName = LocalizationResourceManager?.GetString(asyncProperty.Name) ?? asyncProperty.Name;
+        asyncProperty.Name = LocalizationResourceManager?.GetString(asyncProperty.Name) ?? asyncProperty.Name;
         AsyncPropertyEntries.Add(asyncProperty);
       }
 
       foreach (var deviceAction in Device.DeviceActions)
       {
-        deviceAction.LocalizedName = LocalizationResourceManager?.GetString(deviceAction.Name) ?? deviceAction.Name;
+        deviceAction.Name = LocalizationResourceManager?.GetString(deviceAction.Name) ?? deviceAction.Name;
         DeviceActionEntries.Add(deviceAction);
       }
     }

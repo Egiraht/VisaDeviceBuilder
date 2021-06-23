@@ -12,9 +12,6 @@ namespace VisaDeviceBuilder
     public string Name { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public string LocalizedName { get; set; } = string.Empty;
-
-    /// <inheritdoc />
     public Action Action { get; }
 
     /// <summary>

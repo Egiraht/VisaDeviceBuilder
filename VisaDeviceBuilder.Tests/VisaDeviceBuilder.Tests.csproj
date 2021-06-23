@@ -30,11 +30,4 @@
   <ItemGroup>
     <ProjectReference Include="..\VisaDeviceBuilder\VisaDeviceBuilder.csproj" />
   </ItemGroup>
-
-  <!-- File dependencies. -->
-  <ItemGroup>
-    <Compile Update="AsyncPropertyTests.Typed.cs">
-      <DependentUpon>AsyncPropertyTests.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
 </Project>

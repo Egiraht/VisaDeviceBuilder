@@ -90,17 +90,17 @@
                 MinHeight="45">
         <DataGrid.Columns>
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(visaAbs:IAsyncProperty.LocalizedName), Mode=OneWay}"
+                              Binding="{Binding Path=Name, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyName}"
                               Width="Auto" MinWidth="100"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(visaAbs:IAsyncProperty.Getter), Mode=OneWay}"
+                              Binding="{Binding Path=Getter, Mode=OneWay}"
                               Header="{x:Static res:Localization.PropertyActualValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="True" CanUserResize="True" />
           <DataGridTextColumn ElementStyle="{StaticResource AsyncPropertiesGridElementStyle}"
-                              Binding="{Binding Path=(visaAbs:IAsyncProperty.Setter), Mode=TwoWay}"
+                              Binding="{Binding Path=Setter, Mode=TwoWay}"
                               Header="{x:Static res:Localization.PropertyNewValue}"
                               Width="*" MinWidth="60"
                               IsReadOnly="False" CanUserResize="True" />
@@ -120,7 +120,7 @@
                   ItemsSource="{Binding DeviceActions}">
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
-              <Setter Property="Header" Value="{Binding (visaAbs:IDeviceAction.LocalizedName)}" />
+              <Setter Property="Header" Value="{Binding (visaAbs:IDeviceAction.Name)}" />
               <Setter Property="CommandParameter" Value="{Binding (visaAbs:IDeviceAction.Action)}" />
               <Setter Property="Command" Value="{x:Static comp:DeviceActionCommand.Instance}" />
             </Style>

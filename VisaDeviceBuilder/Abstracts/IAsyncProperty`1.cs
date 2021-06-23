@@ -8,16 +8,10 @@ namespace VisaDeviceBuilder.Abstracts
   /// </typeparam>
   public interface IAsyncProperty<TValue> : IAsyncProperty
   {
-    /// <summary>
-    ///   Gets the cached value of the asynchronous property acquired from the last getter update.
-    /// </summary>
+    /// <inheritdoc cref="IAsyncProperty.Getter" />
     new TValue Getter { get; }
 
-    /// <summary>
-    ///   Sets the new value of the asynchronous property.
-    ///   Exceptions thrown during the new value processing can be handled using the
-    ///   <see cref="IAsyncProperty.SetterException" /> event.
-    /// </summary>
-    new TValue Setter { get; set; }
+    /// <inheritdoc cref="IAsyncProperty.Setter" />
+    new TValue Setter { set; }
   }
 }

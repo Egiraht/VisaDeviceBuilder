@@ -44,7 +44,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, device.TestAsyncProperty.Getter);
 
       var cycleCounter = 0;
-      autoUpdater.AutoUpdateCycle += (sender, args) => cycleCounter++;
+      autoUpdater.AutoUpdateCycle += (_, _) => cycleCounter++;
       autoUpdater.Start();
       autoUpdater.Start();
       Assert.True(autoUpdater.IsRunning);
@@ -75,11 +75,11 @@ namespace VisaDeviceBuilder.Tests
     {
       // Testing the exception thrown when updating the asynchronous property getter.
       var exception = (Exception?) null;
-      var testGetAsyncProperty = new AsyncProperty(() => throw new Exception(TestExceptionMessage));
+      var testGetAsyncProperty = new AsyncProperty<string>(() => throw new Exception(TestExceptionMessage));
       await using (var autoUpdater = new AutoUpdater(new[] {testGetAsyncProperty})
         {Delay = AutoUpdateDelay})
       {
-        autoUpdater.AutoUpdateException += (sender, args) => exception = args.Exception;
+        autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
         Assert.Contains(testGetAsyncProperty, autoUpdater.AsyncProperties);
         Assert.Null(exception);
 
@@ -93,12 +93,12 @@ namespace VisaDeviceBuilder.Tests
 
       // Testing the exception thrown when processing the auto-update cycle event callback.
       exception = null;
-      testGetAsyncProperty = new AsyncProperty(() => string.Empty);
+      testGetAsyncProperty = new AsyncProperty<string>(() => string.Empty);
       await using (var autoUpdater = new AutoUpdater(new[] {testGetAsyncProperty})
         {Delay = AutoUpdateDelay})
       {
-        autoUpdater.AutoUpdateException += (sender, args) => exception = args.Exception;
-        autoUpdater.AutoUpdateCycle += (sender, args) => throw new Exception(TestExceptionMessage);
+        autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
+        autoUpdater.AutoUpdateCycle += (_, _) => throw new Exception(TestExceptionMessage);
         Assert.Contains(testGetAsyncProperty, autoUpdater.AsyncProperties);
         Assert.Null(exception);
 
