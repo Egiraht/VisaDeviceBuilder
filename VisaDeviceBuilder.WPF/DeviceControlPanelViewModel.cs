@@ -13,17 +13,6 @@ namespace VisaDeviceBuilder.WPF
   /// </summary>
   public class DeviceControlPanelViewModel : VisaDeviceController
   {
-    /* The private backing fields. */
-    private string _deviceLabel = string.Empty;
-    private bool _isMessageInputPanelEnabled = false;
-    private string _requestMessage = string.Empty;
-    private string _responseMessage = string.Empty;
-    private ICommand? _updateResourcesListCommand;
-    private ICommand? _connectCommand;
-    private ICommand? _disconnectCommand;
-    private ICommand? _updateAsyncPropertiesCommand;
-    private ICommand? _sendMessageCommand;
-
     /// <summary>
     ///   Gets or sets the text label used for device distinguishing among the devices of similar type.
     /// </summary>
@@ -36,6 +25,7 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged();
       }
     }
+    private string _deviceLabel = string.Empty;
 
     /// <summary>
     ///   Gets or sets the flag indicating if the custom message input should be enabled.
@@ -49,6 +39,7 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged();
       }
     }
+    private bool _isMessageInputPanelEnabled = false;
 
     /// <summary>
     ///   Gets or sets the command message string to be sent to the device.
@@ -62,6 +53,7 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged();
       }
     }
+    private string _requestMessage = string.Empty;
 
     /// <summary>
     ///   Gets the command response string received from the device for the last command.
@@ -75,36 +67,42 @@ namespace VisaDeviceBuilder.WPF
         OnPropertyChanged();
       }
     }
+    private string _responseMessage = string.Empty;
 
     /// <summary>
     ///   The command for updating the list of available VISA resources.
     /// </summary>
     public ICommand UpdateResourcesListCommand => _updateResourcesListCommand ??=
       new RelayCommand(_ => UpdateResourcesListAsync());
+    private ICommand? _updateResourcesListCommand;
 
     /// <summary>
     ///   The command for connecting to the device.
     /// </summary>
     public ICommand ConnectCommand => _connectCommand ??=
       new RelayCommand(_ => Connect(), _ => !string.IsNullOrWhiteSpace(ResourceName) && CanConnect);
+    private ICommand? _connectCommand;
 
     /// <summary>
     ///   The command for disconnecting from the device.
     /// </summary>
     public ICommand DisconnectCommand => _disconnectCommand ??=
       new RelayCommand(_ => DisconnectAsync(), _ => !CanConnect && !IsDisconnectionRequested);
+    private ICommand? _disconnectCommand;
 
     /// <summary>
     ///   The command for updating the asynchronous properties of the connected device.
     /// </summary>
     public ICommand UpdateAsyncPropertiesCommand => _updateAsyncPropertiesCommand ??=
       new RelayCommand(_ => UpdateAsyncPropertiesAsync(), _ => !IsUpdatingAsyncProperties);
+    private ICommand? _updateAsyncPropertiesCommand;
 
     /// <summary>
     ///   The command for sending a message to the connected device.
     /// </summary>
     public ICommand SendMessageCommand => _sendMessageCommand ??=
       new RelayCommand(_ => SendMessageAsync(), _ => IsMessageDevice && IsDeviceReady);
+    private ICommand? _sendMessageCommand;
 
     /// <summary>
     ///   Asynchronously sends the message to the connected device.

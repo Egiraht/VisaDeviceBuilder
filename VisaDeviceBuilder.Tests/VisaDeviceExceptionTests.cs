@@ -50,7 +50,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Contains(TestDeviceAlias, exception.Message);
       Assert.Contains(TestMessage, exception.Message);
 
-      exception = new VisaDeviceException(device, innerException, TestMessage);
+      exception = new VisaDeviceException(device, TestMessage, innerException);
       Assert.Equal(device, exception.Device);
       Assert.Equal(innerException, exception.InnerException);
       Assert.Equal(TestMessage, exception.Message);

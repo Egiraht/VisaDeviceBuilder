@@ -1,11 +1,7 @@
-// TODO: Check and rewrite the whole class and its tests.
-
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +11,7 @@ using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder
 {
+  // TODO: Analyze if the class is necessary (can its functions be transferred into VisaDevice or builders?).
   /// <summary>
   ///   The VISA device controller class. This class represents the abstraction layer between the user interface and
   ///   the VISA device control logic.
@@ -27,23 +24,10 @@ namespace VisaDeviceBuilder
     /// <seealso cref="AutoUpdaterDelay" />
     public const int DefaultAutoUpdaterDelay = 10;
 
-    /* The private backing fields. */
+    /// <summary>
+    ///   The flag indicating if the controller has been already disposed.
+    /// </summary>
     private bool _isDisposed = false;
-    private Type _deviceType = typeof(VisaDevice);
-    private Type? _visaResourceManagerType;
-    private bool _canConnect = true;
-    private bool _isDeviceReady = false;
-    private string _resourceName = string.Empty;
-    private bool _isUpdatingVisaResources = false;
-    private bool _isUpdatingAsyncProperties = false;
-    private bool _isDisconnectionRequested = false;
-    private DeviceConnectionState _lastConnectionState = DeviceConnectionState.Disconnected;
-    private string _identifier = string.Empty;
-    private IVisaDevice? _device;
-    private LocalizationResourceManager? _localizationResourceManager;
-    private IAutoUpdater? _autoUpdater;
-    private bool _isAutoUpdaterEnabled = true;
-    private int _autoUpdaterDelay = DefaultAutoUpdaterDelay;
 
     /// <inheritdoc />
     public Type DeviceType
@@ -59,6 +43,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private Type _deviceType = typeof(VisaDevice);
 
     /// <inheritdoc />
     public Type? VisaResourceManagerType
@@ -76,6 +61,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private Type? _visaResourceManagerType;
 
     /// <inheritdoc />
     public string ResourceName
@@ -87,6 +73,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private string _resourceName = string.Empty;
 
     /// <inheritdoc />
     public ObservableCollection<string> AvailableVisaResources { get; } = new();
@@ -101,6 +88,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private bool _canConnect = true;
 
     /// <inheritdoc />
     public bool IsDeviceReady
@@ -112,9 +100,11 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private bool _isDeviceReady = false;
 
     /// <inheritdoc />
     public DeviceConnectionState ConnectionState => Device?.ConnectionState ?? _lastConnectionState;
+    private DeviceConnectionState _lastConnectionState = DeviceConnectionState.Disconnected;
 
     /// <inheritdoc />
     public bool IsUpdatingVisaResources
@@ -126,6 +116,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private bool _isUpdatingVisaResources = false;
 
     /// <inheritdoc />
     public bool IsUpdatingAsyncProperties
@@ -137,6 +128,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private bool _isUpdatingAsyncProperties = false;
 
     /// <inheritdoc />
     public bool IsDisconnectionRequested
@@ -148,6 +140,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private bool _isDisconnectionRequested = false;
 
     /// <inheritdoc />
     public IVisaDevice? Device
@@ -160,6 +153,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged(nameof(IsMessageDevice));
       }
     }
+    private IVisaDevice? _device;
 
     /// <inheritdoc />
     public bool IsMessageDevice => DeviceType.GetInterface(nameof(IMessageDevice)) != null;
@@ -174,6 +168,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private string _identifier = string.Empty;
 
     /// <summary>
     ///   Gets the collection of asynchronous properties and corresponding metadata defined for the device.
@@ -201,6 +196,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private LocalizationResourceManager? _localizationResourceManager;
 
     /// <summary>
     ///   Gets the auto-updater object that allows to automatically update getters of asynchronous properties
@@ -215,6 +211,7 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
+    private IAutoUpdater? _autoUpdater;
 
     /// <inheritdoc />
     public bool IsAutoUpdaterEnabled
@@ -234,6 +231,7 @@ namespace VisaDeviceBuilder
           AutoUpdater.StopAsync();
       }
     }
+    private bool _isAutoUpdaterEnabled = true;
 
     /// <inheritdoc />
     public int AutoUpdaterDelay
@@ -248,6 +246,7 @@ namespace VisaDeviceBuilder
           AutoUpdater.Delay = TimeSpan.FromMilliseconds(_autoUpdaterDelay);
       }
     }
+    private int _autoUpdaterDelay = DefaultAutoUpdaterDelay;
 
     /// <summary>
     ///   Stores the <see cref="Task" /> for the established device connection.
@@ -295,27 +294,9 @@ namespace VisaDeviceBuilder
 
       try
       {
-        // Searching for resources and aliases using the selected VISA resource manager.
-        var resources = await Task.Run(() =>
-        {
-          using var visaResourceManager = VisaResourceManagerType != null
-            ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
-            : null;
-          var resourceNames = visaResourceManager != null
-            ? visaResourceManager.Find("?*::INSTR")
-            : GlobalResourceManager.Find("?*::INSTR");
-          return resourceNames.Aggregate(new List<string>(), (results, resource) =>
-          {
-            var parseResult = visaResourceManager != null
-              ? visaResourceManager.Parse(resource)
-              : GlobalResourceManager.Parse(resource);
-            results.Add(parseResult.OriginalResourceName);
-            if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
-              results.Add(parseResult.AliasIfExists);
-            return results;
-          });
-        });
-
+        var resources = VisaResourceManagerType == null
+          ? await VisaResourceLocator.LocateResourceNamesAsync()
+          : await VisaResourceLocator.LocateResourceNamesAsync(VisaResourceManagerType);
         AvailableVisaResources.Clear();
         foreach (var resource in resources)
           AvailableVisaResources.Add(resource);
@@ -337,15 +318,15 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Creates a new VISA device instance.
     /// </summary>
-    /// <param name="resourceName">
-    ///   The VISA resource name to create a new VISA device instance for.
-    /// </param>
     /// <param name="deviceType">
     ///   The type of the VISA device to create an instance for.
     ///   The specified device type must implement the <see cref="IVisaDevice" /> interface and have a public
     ///   constructor accepting a resource name string and an optional <see cref="IResourceManager" /> instance.
     /// </param>
-    /// <param name="visaResourceManager">
+    /// <param name="resourceName">
+    ///   The VISA resource name to create a new VISA device instance for.
+    /// </param>
+    /// <param name="resourceManager">
     ///   The optional instance of custom VISA resource manager.
     ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used for
     ///   instance creation.
@@ -353,20 +334,12 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   A new <see cref="IVisaDevice" /> instance.
     /// </returns>
-    /// <exception cref="InvalidOperationException">
-    ///   The provided <paramref name="deviceType" /> does not implement the <see cref="IVisaDevice" /> interface.
-    /// </exception>
-    /// <exception cref="NotSupportedException">
-    ///   Cannot create a new VISA device instance of the provided <paramref name="deviceType" /> as it does not
-    ///   have a suitable constructor.
-    /// </exception>
-    protected static IVisaDevice CreateDeviceInstance(string resourceName, Type deviceType,
-      IResourceManager? visaResourceManager)
+    protected static IVisaDevice CreateDeviceInstance(Type deviceType, string resourceName,
+      IResourceManager? resourceManager)
     {
-      if (Activator.CreateInstance(deviceType) is not IVisaDevice device)
-        throw new NotSupportedException($"Cannot create a new VISA device instance of type \"{deviceType.Name}\".");
+      var device = (IVisaDevice) Activator.CreateInstance(deviceType)!;
       device.ResourceName = resourceName;
-      device.ResourceManager = visaResourceManager;
+      device.ResourceManager = resourceManager;
       return device;
     }
 
@@ -436,7 +409,7 @@ namespace VisaDeviceBuilder
           ? (IResourceManager?) Activator.CreateInstance(VisaResourceManagerType)
           : null;
 
-        await using (Device = CreateDeviceInstance(ResourceName, DeviceType, visaResourceManager))
+        await using (Device = CreateDeviceInstance(DeviceType, ResourceName, visaResourceManager))
         await using (AutoUpdater = new AutoUpdater(Device))
         using (DisconnectionTokenSource = new CancellationTokenSource())
         {
@@ -619,7 +592,9 @@ namespace VisaDeviceBuilder
     ///   The exception instance to be provided with the event.
     /// </param>
     protected virtual void OnException(Exception exception) =>
-      OnException(this, new ThreadExceptionEventArgs(exception)); // TODO: Wrap into VisaDeviceException.
+      OnException(this, new ThreadExceptionEventArgs(exception is VisaDeviceException visaDeviceException
+        ? visaDeviceException
+        : new VisaDeviceException(Device, exception)));
 
     /// <summary>
     ///   Invokes the <see cref="Exception" /> event.
