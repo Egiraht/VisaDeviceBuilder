@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Ivi.Visa;
 
 namespace VisaDeviceBuilder.Abstracts
 {
@@ -7,6 +8,15 @@ namespace VisaDeviceBuilder.Abstracts
   /// </summary>
   public interface IMessageDevice : IVisaDevice
   {
+    /// <summary>
+    ///   Gets the current message-based VISA session object.
+    /// </summary>
+    /// <returns>
+    ///   The current message-based VISA session object if the VISA device has been successfully connected,
+    ///   and the connected device supports message-based communication, otherwise <c>null</c>.
+    /// </returns>
+    new IMessageBasedSession? Session { get; }
+
     /// <summary>
     ///   Synchronously sends the message to the connected message-based device.
     /// </summary>

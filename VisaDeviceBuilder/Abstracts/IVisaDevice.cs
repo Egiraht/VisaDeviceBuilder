@@ -26,6 +26,7 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Gets or sets the VISA resource name of the device.
     /// </summary>
+    /// <seealso cref="VisaResourceLocator" />
     string ResourceName { get; set; }
 
     /// <summary>
@@ -58,9 +59,11 @@ namespace VisaDeviceBuilder.Abstracts
     DeviceConnectionState ConnectionState { get; }
 
     /// <summary>
-    ///   Gets the current VISA session object if the connection has been successfully established,
-    ///   or <c>null</c> otherwise.
+    ///   Gets the current VISA session object.
     /// </summary>
+    /// <returns>
+    ///   The current VISA session object if the VISA device has been successfully connected, otherwise <c>null</c>.
+    /// </returns>
     IVisaSession? Session { get; }
 
     /// <summary>

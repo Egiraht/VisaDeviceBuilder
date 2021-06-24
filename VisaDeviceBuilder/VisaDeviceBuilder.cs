@@ -6,14 +6,19 @@ using VisaDeviceBuilder.Abstracts;
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   A builder class that can build message-based VISA devices with custom behavior.
+  ///   A builder class that can build VISA devices with custom behavior.
   /// </summary>
-  public class MessageDeviceBuilder : IMessageDeviceBuilder
+  /// <remarks>
+  ///   This builder class is intended for building VISA devices that require using custom non-message-based VISA
+  ///   session implementations. For the most commonly used case of message-based device communication (e.g. SCPI
+  ///   language-based communication), consider using the <see cref="MessageDeviceBuilder" /> class instead of this one.
+  /// </remarks>
+  public class VisaDeviceBuilder : IVisaDeviceBuilder
   {
     /// <summary>
-    ///   Gets the message-based VISA device object being built by this builder instance.
+    ///   Gets the VISA device object being built by this builder instance.
     /// </summary>
-    private IBuildableMessageDevice Device { get; } = new BuildableMessageDevice();
+    private IBuildableVisaDevice Device { get; } = new BuildableVisaDevice();
 
     /// <summary>
     ///   Instructs the builder to use the <see cref="GlobalResourceManager" /> class as a default VISA resource manager
@@ -22,7 +27,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder UseGlobalVisaResourceManager()
+    public VisaDeviceBuilder UseGlobalVisaResourceManager()
     {
       Device.ResourceManager = null;
       return this;
@@ -34,7 +39,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder UseCustomVisaResourceManager(IResourceManager resourceManager)
+    public VisaDeviceBuilder UseCustomVisaResourceManager(IResourceManager resourceManager)
     {
       Device.ResourceManager = resourceManager;
       return this;
@@ -49,7 +54,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder UseDefaultResourceName(string resourceName)
+    public VisaDeviceBuilder UseDefaultResourceName(string resourceName)
     {
       Device.ResourceName = resourceName;
       return this;
@@ -64,7 +69,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder UseConnectionTimeout(int timeout)
+    public VisaDeviceBuilder UseConnectionTimeout(int timeout)
     {
       Device.ConnectionTimeout = timeout;
       return this;
@@ -75,12 +80,12 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="interfaces">
     ///   An array or parameter sequence of VISA hardware interfaces supported by the device.
-    ///   If an empty array is provided, the default supported message-based hardware interfaces will be used.
+    ///   If an empty array is provided, the default supported hardware interfaces (i.e. all available) will be used.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder DefineSupportedHardwareInterfaces(params HardwareInterfaceType[] interfaces)
+    public VisaDeviceBuilder DefineSupportedHardwareInterfaces(params HardwareInterfaceType[] interfaces)
     {
       Device.CustomSupportedInterfaces.Clear();
       Device.CustomSupportedInterfaces.AddRange(interfaces.Distinct());
@@ -97,19 +102,17 @@ namespace VisaDeviceBuilder
     ///   The name of the asynchronous property.
     /// </param>
     /// <param name="getter">
-    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the
-    ///   message-based device instance provided as a delegate parameter.
+    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
+    ///   instance provided as a delegate parameter.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    /// <seealso cref="AsyncProperty{TValue}" />
-    public MessageDeviceBuilder AddReadOnlyAsyncProperty<TValue>(string name, Func<IMessageDevice, TValue> getter)
+    public VisaDeviceBuilder AddReadOnlyAsyncProperty<TValue>(string name, Func<IVisaDevice, TValue> getter)
     {
       Device.CustomAsyncProperties.Add(new AsyncProperty<TValue>(() => getter.Invoke(Device)) {Name = name});
       return this;
@@ -125,19 +128,17 @@ namespace VisaDeviceBuilder
     ///   The name of the asynchronous property.
     /// </param>
     /// <param name="setter">
-    ///   A setter delegate for the write-only asynchronous property that writes a value to the message-based device
-    ///   instance. Both objects are provided as delegate parameters.
+    ///   A setter delegate for the write-only asynchronous property that writes a value to the device instance. Both
+    ///   objects are provided as delegate parameters.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    /// <seealso cref="AsyncProperty{TValue}" />
-    public MessageDeviceBuilder AddWriteOnlyAsyncProperty<TValue>(string name, Action<IMessageDevice, TValue> setter)
+    public VisaDeviceBuilder AddWriteOnlyAsyncProperty<TValue>(string name, Action<IVisaDevice, TValue> setter)
     {
       Device.CustomAsyncProperties.Add(new AsyncProperty<TValue>(value => setter.Invoke(Device, value)) {Name = name});
       return this;
@@ -153,12 +154,12 @@ namespace VisaDeviceBuilder
     ///   The name of the asynchronous property.
     /// </param>
     /// <param name="getter">
-    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the
-    ///   message-based device instance provided as a delegate parameter.
+    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
+    ///   instance provided as a delegate parameter.
     /// </param>
     /// <param name="setter">
-    ///   A setter delegate for the write-only asynchronous property that writes a value to the message-based device
-    ///   instance. Both objects are provided as delegate parameters.
+    ///   A setter delegate for the write-only asynchronous property that writes a value to the device instance. Both
+    ///   objects are provided as delegate parameters.
     /// </param>
     /// <param name="autoUpdateGetterAfterSetterCompletes">
     ///   Defines if the <paramref name="getter" /> delegate must be automatically called to update the property's value
@@ -168,13 +169,11 @@ namespace VisaDeviceBuilder
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    /// <seealso cref="AsyncProperty{TValue}" />
-    public MessageDeviceBuilder AddReadWriteAsyncProperty<TValue>(string name, Func<IMessageDevice, TValue> getter,
-      Action<IMessageDevice, TValue> setter, bool autoUpdateGetterAfterSetterCompletes = true)
+    public VisaDeviceBuilder AddReadWriteAsyncProperty<TValue>(string name, Func<IVisaDevice, TValue> getter,
+      Action<IVisaDevice, TValue> setter, bool autoUpdateGetterAfterSetterCompletes = true)
     {
       Device.CustomAsyncProperties.Add(
         new AsyncProperty<TValue>(() => getter.Invoke(Device), value => setter.Invoke(Device, value))
@@ -199,12 +198,10 @@ namespace VisaDeviceBuilder
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    /// <seealso cref="DeviceAction" />
-    public MessageDeviceBuilder AddDeviceAction(string name, Action<IMessageDevice> action)
+    public VisaDeviceBuilder AddDeviceAction(string name, Action<IVisaDevice> action)
     {
       Device.CustomDeviceActions.Add(new DeviceAction(() => action.Invoke(Device)) {Name = name});
       return this;
@@ -215,17 +212,16 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="callback">
     ///   A delegate to be used as a device initialization stage callback.
-    ///   As a parameter a message-based VISA device object is provided.
+    ///   As a parameter a VISA device object is provided.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseInitializeCallback(Action<IMessageDevice> callback)
+    public VisaDeviceBuilder UseInitializeCallback(Action<IVisaDevice> callback)
     {
       Device.CustomInitializeCallback = callback;
       return this;
@@ -236,17 +232,16 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="callback">
     ///   A delegate to be used as a device de-initialization stage callback.
-    ///   As a parameter a message-based VISA device object is provided.
+    ///   As a parameter a VISA device object is provided.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseDeInitializeCallback(Action<IMessageDevice> callback)
+    public VisaDeviceBuilder UseDeInitializeCallback(Action<IVisaDevice> callback)
     {
       Device.CustomDeInitializeCallback = callback;
       return this;
@@ -257,18 +252,17 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="callback">
     ///   A delegate to be used for getting the device identifier string.
-    ///   As a parameter a message-based VISA device object is provided.
+    ///   As a parameter a VISA device object is provided.
     ///   The delegate must return the device identifier string.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseGetIdentifierCallback(Func<IMessageDevice, string> callback)
+    public VisaDeviceBuilder UseGetIdentifierCallback(Func<IVisaDevice, string> callback)
     {
       Device.CustomGetIdentifierCallback = callback;
       return this;
@@ -279,43 +273,18 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="callback">
     ///   A delegate to be used to reset the device.
-    ///   As a parameter a message-based VISA device object is provided.
+    ///   As a parameter a VISA device object is provided.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
-    ///   For high-level message communication with the device use the <see cref="IMessageDevice.SendMessage" /> method.
-    ///   Ensure that the necessary message processing delegate is provided using the builder's
-    ///   <see cref="UseMessageProcessor" /> method.
+    ///   For low-level control over the device communication process use the device's underlying
+    ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseResetCallback(Action<IMessageDevice> callback)
+    public VisaDeviceBuilder UseResetCallback(Action<IVisaDevice> callback)
     {
       Device.CustomResetCallback = callback;
-      return this;
-    }
-
-    /// <summary>
-    ///   Instructs the builder to use the specified message processing delegate to handle request and response
-    ///   messages.
-    /// </summary>
-    /// <param name="messageProcessor">
-    ///   A delegate that will handle the common process of message-based communication with the device, and also
-    ///   perform additional message checking and formatting if necessary.
-    ///   The delegate is provided with a message-based VISA device object and a raw request message string as
-    ///   parameters.
-    ///   The function must return a processed response message string.
-    /// </param>
-    /// <returns>
-    ///   This builder instance.
-    /// </returns>
-    /// <remarks>
-    ///   For low-level control over the device communication process use the device's underlying message-based
-    ///   <see cref="IMessageDevice.Session" /> object.
-    /// </remarks>
-    public MessageDeviceBuilder UseMessageProcessor(Func<IMessageDevice, string, string> messageProcessor)
-    {
-      Device.CustomMessageProcessor = messageProcessor;
       return this;
     }
 
@@ -329,7 +298,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder RegisterDisposable(IDisposable disposable)
+    public VisaDeviceBuilder RegisterDisposable(IDisposable disposable)
     {
       Device.CustomDisposables.Add(disposable);
       return this;
@@ -345,17 +314,14 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public MessageDeviceBuilder RegisterDisposables(params IDisposable[] disposables)
+    public VisaDeviceBuilder RegisterDisposables(params IDisposable[] disposables)
     {
       Device.CustomDisposables.AddRange(disposables);
       return this;
     }
 
     /// <inheritdoc />
-    public IMessageDevice BuildVisaDevice() => Device;
-
-    /// <inheritdoc />
-    IVisaDevice IVisaDeviceBuilder.BuildVisaDevice() => BuildVisaDevice();
+    public IVisaDevice BuildVisaDevice() => Device;
 
     /// <inheritdoc />
     public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(Device);

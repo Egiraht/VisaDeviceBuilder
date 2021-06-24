@@ -1,10 +1,13 @@
-using System;
-using Ivi.Visa;
-
 namespace VisaDeviceBuilder.Abstracts
 {
+  /// <summary>
+  ///   The common interface for builders creating VISA message-based devices.
+  /// </summary>
   public interface IMessageDeviceBuilder : IVisaDeviceBuilder
   {
-    IMessageDeviceBuilder SetMessageProcessor(Func<IMessageBasedSession, string, string> processor);
+    /// <summary>
+    ///   Builds a new message-based VISA device instance.
+    /// </summary>
+    new IMessageDevice BuildVisaDevice();
   }
 }

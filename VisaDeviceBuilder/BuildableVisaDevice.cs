@@ -9,7 +9,7 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   A class representing a message-based VISA device that can be created using a VISA device builder class.
   /// </summary>
-  internal class BuildableMessageDevice : MessageDevice, IBuildableMessageDevice
+  internal class BuildableVisaDevice : VisaDevice, IBuildableVisaDevice
   {
     /// <inheritdoc />
     public List<HardwareInterfaceType> CustomSupportedInterfaces { get; } = new();
@@ -21,55 +21,16 @@ namespace VisaDeviceBuilder
     public List<IDeviceAction> CustomDeviceActions { get; } = new();
 
     /// <inheritdoc />
-    public Action<IMessageDevice>? CustomInitializeCallback { get; set; }
+    public Action<IVisaDevice>? CustomInitializeCallback { get; set; }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomInitializeCallback
-    {
-      get => CustomInitializeCallback != null
-        ? session => CustomInitializeCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomInitializeCallback = value;
-    }
+    public Action<IVisaDevice>? CustomDeInitializeCallback { get; set; }
 
     /// <inheritdoc />
-    public Action<IMessageDevice>? CustomDeInitializeCallback { get; set; }
+    public Func<IVisaDevice, string>? CustomGetIdentifierCallback { get; set; }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomDeInitializeCallback
-    {
-      get => CustomDeInitializeCallback != null
-        ? session => CustomDeInitializeCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomDeInitializeCallback = value;
-    }
-
-    /// <inheritdoc />
-    public Func<IMessageDevice, string>? CustomGetIdentifierCallback { get; set; }
-
-    /// <inheritdoc />
-    Func<IVisaDevice, string>? IBuildableVisaDevice.CustomGetIdentifierCallback
-    {
-      get => CustomGetIdentifierCallback != null
-        ? session => CustomGetIdentifierCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomGetIdentifierCallback = value;
-    }
-
-    /// <inheritdoc />
-    public Action<IMessageDevice>? CustomResetCallback { get; set; }
-
-    /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomResetCallback
-    {
-      get => CustomResetCallback != null
-        ? session => CustomResetCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomResetCallback = value;
-    }
-
-    /// <inheritdoc />
-    public Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
+    public Action<IVisaDevice>? CustomResetCallback { get; set; }
 
     /// <inheritdoc />
     public List<IDisposable> CustomDisposables { get; } = new();
@@ -91,8 +52,8 @@ namespace VisaDeviceBuilder
     private void ThrowOnNoSession()
     {
       if (Session == null)
-        throw new VisaDeviceException(this, new InvalidOperationException(
-          $"There is no opened VISA session to perform an operation or the device \"{AliasName}\" does not support message-based sessions."));
+        throw new VisaDeviceException(this,
+          new InvalidOperationException("There is no opened VISA session to perform an operation."));
     }
 
     /// <inheritdoc />
@@ -135,19 +96,6 @@ namespace VisaDeviceBuilder
           CustomResetCallback?.Invoke(this);
         else
           base.Reset();
-      }
-    }
-
-    /// <inheritdoc />
-    public override string SendMessage(string message)
-    {
-      ThrowOnNoSession();
-
-      lock (SessionLock)
-      {
-        return CustomMessageProcessor != null
-          ? CustomMessageProcessor.Invoke(this, message)
-          : base.SendMessage(message);
       }
     }
 

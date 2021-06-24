@@ -13,7 +13,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
     /// </summary>
-    private static readonly HardwareInterfaceType[] SupportedMessageBasedInterfaces =
+    private static readonly HardwareInterfaceType[] DefaultSupportedMessageBasedInterfaces =
     {
       HardwareInterfaceType.Gpib,
       HardwareInterfaceType.Serial,
@@ -24,22 +24,21 @@ namespace VisaDeviceBuilder
     };
 
     /// <inheritdoc cref="Session" />
-    public new IMessageBasedSession? Session => base.Session as IMessageBasedSession;
+    public new IMessageBasedSession? Session => (IMessageBasedSession?) base.Session;
 
     /// <inheritdoc />
-    public override HardwareInterfaceType[] SupportedInterfaces => SupportedMessageBasedInterfaces;
-
-    /// <summary>
-    ///   Gets the shared message locking object used for device message requests synchronization.
-    /// </summary>
-    protected object MessageLock { get; } = new();
+    public override HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedMessageBasedInterfaces;
 
     /// <inheritdoc />
     protected override void Initialize()
     {
-      if (Session == null)
-        throw new VisaDeviceException(this,
-          new NotSupportedException($"The device \"{AliasName}\" does not support message-based sessions."));
+      if (base.Session is not IMessageBasedSession)
+        throw new VisaDeviceException(this, new NotSupportedException(
+          $"The connected device \"{AliasName}\" does not support message-based VISA sessions."));
+
+      lock (SessionLock)
+      {
+      }
     }
 
     /// <inheritdoc />
@@ -52,7 +51,7 @@ namespace VisaDeviceBuilder
         throw new VisaDeviceException(this,
           new InvalidOperationException("Cannot send a message as there is no opened VISA session."));
 
-      lock (MessageLock)
+      lock (SessionLock)
       {
         Session.FormattedIO.WriteLine(message);
         return Session.FormattedIO.ReadLine().TrimEnd('\x0A');

@@ -37,7 +37,7 @@ namespace VisaDeviceBuilder.SampleApp.Components
     /// </exception>
     public override string SendMessage(string message)
     {
-      lock (MessageLock)
+      lock (SessionLock)
       {
         try
         {

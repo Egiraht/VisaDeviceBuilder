@@ -20,18 +20,18 @@ namespace VisaDeviceBuilder
     public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
-    ///   The flag indicating if the object has been already disposed.
-    /// </summary>
-    private bool _isDisposed;
-
-    /// <summary>
     ///   Defines the default collection of supported hardware interface types.
     /// </summary>
     private static readonly HardwareInterfaceType[] DefaultSupportedInterfaces =
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
+    /// <summary>
+    ///   The flag indicating if the object has been already disposed.
+    /// </summary>
+    private bool _isDisposed;
+
     /// <inheritdoc />
-    public virtual IResourceManager? ResourceManager
+    public IResourceManager? ResourceManager
     {
       get => _resourceManager;
       set
@@ -45,7 +45,7 @@ namespace VisaDeviceBuilder
     private IResourceManager? _resourceManager;
 
     /// <inheritdoc />
-    public virtual string ResourceName
+    public string ResourceName
     {
       get => _resourceName;
       set
@@ -98,6 +98,13 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public bool IsSessionOpened => Session != null;
+
+    /// <summary>
+    ///   Gets the shared locking object used for asynchronous device access synchronization.
+    ///   It must be used with <c>lock</c> blocks containing any code where the current opened VISA session can be
+    ///   accessed for atomic operation.
+    /// </summary>
+    protected object SessionLock { get; } = new();
 
     /// <inheritdoc />
     public virtual IEnumerable<IAsyncProperty> AsyncProperties { get; }
@@ -213,7 +220,10 @@ namespace VisaDeviceBuilder
         Session = ResourceManager != null
           ? ResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout)
           : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
-        Initialize();
+
+        lock (SessionLock)
+          Initialize();
+
         ConnectionState = DeviceConnectionState.Connected;
       }
       catch (Exception e)
@@ -235,10 +245,17 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual void Initialize()
     {
+      lock (SessionLock)
+      {
+      }
     }
 
     /// <inheritdoc />
-    public virtual string GetIdentifier() => AliasName;
+    public virtual string GetIdentifier()
+    {
+      lock (SessionLock)
+        return AliasName;
+    }
 
     /// <inheritdoc />
     public virtual Task<string> GetIdentifierAsync() => Task.Run(GetIdentifier);
@@ -247,6 +264,9 @@ namespace VisaDeviceBuilder
     [DeviceAction]
     public virtual void Reset()
     {
+      lock (SessionLock)
+      {
+      }
     }
 
     /// <inheritdoc />
@@ -257,6 +277,9 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual void DeInitialize()
     {
+      lock (SessionLock)
+      {
+      }
     }
 
     /// <inheritdoc />
@@ -271,7 +294,10 @@ namespace VisaDeviceBuilder
       try
       {
         ConnectionState = DeviceConnectionState.DeInitializing;
-        DeInitialize();
+
+        lock (SessionLock)
+          DeInitialize();
+
         Session?.Dispose();
       }
       catch

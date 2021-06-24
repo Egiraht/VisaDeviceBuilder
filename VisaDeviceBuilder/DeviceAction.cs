@@ -1,10 +1,13 @@
 using System;
+using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
 {
   /// <summary>
-  ///   The class representing an action that can be asynchronously executed by a particular VISA device.
+  ///   The class representing an action that can be asynchronously executed by a VISA device.
+  ///   The special <see cref="DeviceActionExecutor" /> static class can help to track execution states of device
+  ///   actions.
   /// </summary>
   public class DeviceAction : IDeviceAction
   {
@@ -21,6 +24,13 @@ namespace VisaDeviceBuilder
     ///   The action delegate representing a device action to be asynchronously executed by a device.
     /// </param>
     public DeviceAction(Action action) => Action = action;
+
+    /// <inheritdoc />
+    public Task ExecuteAsync()
+    {
+      DeviceActionExecutor.Execute(this);
+      return DeviceActionExecutor.GetDeviceActionTask(this);
+    }
 
     /// <summary>
     ///   Implicitly converts the provided device action instance to its action delegate.
