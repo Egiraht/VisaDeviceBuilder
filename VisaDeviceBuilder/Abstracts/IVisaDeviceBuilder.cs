@@ -52,5 +52,7 @@ namespace VisaDeviceBuilder.Abstracts
     IVisaDeviceBuilder RegisterDisposables(params IDisposable[] disposables);
 
     IVisaDevice BuildVisaDevice();
+
+    IVisaDeviceController BuildVisaDeviceController();
   }
 }

@@ -29,7 +29,12 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaResourcesListTest()
     {
-      await using var controller = new VisaDeviceController {VisaResourceManagerType = typeof(TestResourceManager)};
+      await using var device = new TestMessageDevice
+      {
+        ResourceManager = new TestResourceManager(),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      await using var controller = new VisaDeviceController(device);
       Assert.Empty(controller.AvailableVisaResources);
       Assert.False(controller.IsUpdatingVisaResources);
 
@@ -52,56 +57,29 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
-    ///   Testing wrong VISA device and resource manager types detection.
-    /// </summary>
-    [Fact]
-    public void WrongDeviceTypeTest()
-    {
-      Assert.ThrowsAny<Exception>(() =>
-      {
-        using var controller = new VisaDeviceController
-        {
-          DeviceType = typeof(object),
-          VisaResourceManagerType = typeof(TestResourceManager),
-          ResourceName = TestResourceManager.CustomTestDeviceResourceName
-        };
-      });
-      Assert.ThrowsAny<Exception>(() =>
-      {
-        using var controller = new VisaDeviceController
-        {
-          DeviceType = typeof(TestMessageDevice),
-          VisaResourceManagerType = typeof(object),
-          ResourceName = TestResourceManager.CustomTestDeviceResourceName
-        };
-      });
-    }
-
-    /// <summary>
     ///   Testing the VISA message device controller logic.
     /// </summary>
     [Fact]
     public async Task MessageDeviceControllerTest()
     {
-      await using var controller = new VisaDeviceController
+      await using var device = new TestMessageDevice
       {
-        DeviceType = typeof(TestMessageDevice),
-        VisaResourceManagerType = typeof(TestResourceManager),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        ResourceManager = new TestResourceManager(),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      await using var controller = new VisaDeviceController(device)
+      {
         AutoUpdaterDelay = TestAutoUpdaterDelay,
         IsAutoUpdaterEnabled = true,
         LocalizationResourceManager = null
       };
-      Assert.Equal(typeof(TestMessageDevice), controller.DeviceType);
-      Assert.Equal(typeof(TestResourceManager), controller.VisaResourceManagerType);
-      Assert.Equal(typeof(TestResourceManager), controller.VisaResourceManagerType);
+      Assert.Equal(device, controller.Device);
       Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, controller.ResourceName);
       Assert.Equal(TestAutoUpdaterDelay, controller.AutoUpdaterDelay);
       Assert.True(controller.IsAutoUpdaterEnabled);
       Assert.Null(controller.LocalizationResourceManager);
       Assert.True(controller.IsMessageDevice);
       Assert.True(controller.CanConnect);
-      Assert.Equal(DeviceConnectionState.Disconnected, controller.ConnectionState);
       Assert.Empty(controller.Identifier);
       Assert.False(controller.IsDeviceReady);
       Assert.False(controller.IsUpdatingAsyncProperties);
@@ -115,7 +93,6 @@ namespace VisaDeviceBuilder.Tests
       do
         await Task.Delay(StateCheckPeriod);
       while (!controller.IsDeviceReady);
-      Assert.Equal(DeviceConnectionState.Connected, controller.ConnectionState);
       Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, controller.Identifier);
       Assert.NotEmpty(controller.AsyncProperties);
       Assert.Equal(nameof(TestMessageDevice.TestAsyncProperty), controller.AsyncProperties[0].Name);
@@ -130,7 +107,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.True(controller.IsDisconnectionRequested);
       await disconnectionTask;
       Assert.Empty(controller.Identifier);
-      Assert.Equal(DeviceConnectionState.Disconnected, controller.ConnectionState);
       Assert.True(controller.CanConnect);
       Assert.False(controller.IsDeviceReady);
       Assert.False(controller.IsUpdatingAsyncProperties);
@@ -146,10 +122,13 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task ManualAsyncPropertiesUpdateTest()
     {
-      await using var controller = new VisaDeviceController
+      await using var device = new TestMessageDevice
       {
-        DeviceType = typeof(TestMessageDevice),
-        VisaResourceManagerType = typeof(TestResourceManager),
+        ResourceManager = new TestResourceManager(),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      await using var controller = new VisaDeviceController(device)
+      {
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = false
       };
@@ -178,17 +157,21 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceInitializationExceptionTest()
     {
-      var isExceptionCaught = false;
-      object? eventSender = null;
-      Exception? exception = null;
-      await using var controller = new VisaDeviceController
+      await using var device = new TestMessageDevice
       {
-        DeviceType = typeof(TestMessageDevice),
-        VisaResourceManagerType = typeof(TestResourceManager),
+        ResourceManager = new TestResourceManager(),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      await using var controller = new VisaDeviceController(device)
+      {
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
       };
+
+      var isExceptionCaught = false;
+      object? eventSender = null;
+      Exception? exception = null;
       controller.Exception += (sender, args) =>
       {
         isExceptionCaught = true;
@@ -206,7 +189,6 @@ namespace VisaDeviceBuilder.Tests
       while (!isExceptionCaught);
       Assert.Equal(controller, eventSender);
       Assert.NotNull(exception);
-      Assert.Equal(DeviceConnectionState.DisconnectedWithError, ((VisaDeviceController) eventSender!).ConnectionState);
     }
 
     /// <summary>
@@ -215,17 +197,21 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceAutoUpdatingExceptionTest()
     {
-      var isExceptionCaught = false;
-      object? eventSender = null;
-      Exception? exception = null;
-      await using var controller = new VisaDeviceController
+      await using var device = new TestMessageDevice
       {
-        DeviceType = typeof(TestMessageDevice),
-        VisaResourceManagerType = typeof(TestResourceManager),
+        ResourceManager = new TestResourceManager(),
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      await using var controller = new VisaDeviceController(device)
+      {
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
       };
+
+      var isExceptionCaught = false;
+      object? eventSender = null;
+      Exception? exception = null;
       controller.Exception += (sender, args) =>
       {
         isExceptionCaught = true;
@@ -247,7 +233,6 @@ namespace VisaDeviceBuilder.Tests
       while (!isExceptionCaught);
       Assert.Equal(controller, eventSender);
       Assert.NotNull(exception);
-      Assert.Equal(DeviceConnectionState.Connected, ((VisaDeviceController) eventSender!).ConnectionState);
     }
 
     /// <summary>
@@ -256,7 +241,8 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public void RepeatedDisposalTest()
     {
-      using var controller = new VisaDeviceController();
+      using var device = new TestMessageDevice();
+      using var controller = new VisaDeviceController(device);
       controller.Dispose();
     }
 

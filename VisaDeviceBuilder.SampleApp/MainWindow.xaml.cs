@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
+using VisaDeviceBuilder.SampleApp.Components;
 using VisaDeviceBuilder.WPF;
 using Localization = VisaDeviceBuilder.SampleApp.Resources.Localization;
 
@@ -14,9 +15,24 @@ namespace VisaDeviceBuilder.SampleApp
     /// <inheritdoc />
     public MainWindow()
     {
+      Dispatcher.UnhandledException += OnUnhandledException;
+
       InitializeComponent();
 
-      Dispatcher.UnhandledException += OnUnhandledException;
+      // Creating the control panel for KeysightE364xA VISA devices using the default VISA resource manager
+      // (GlobalResourceManager class).
+      // The assembly of the official Keysight VISA implementation library (Keysight.Visa.dll) is directly referenced
+      // by the project, so the GlobalResourceManager can find and use it for device discovery and session management.
+      // The Keysight IO Libraries Suite package must be installed before compilation.
+      var controlPanel = new DeviceControlPanel(new KeysightE364xA())
+      {
+        IsAutoUpdaterEnabled = true,
+        AutoUpdaterDelay = 10,
+        IsMessageInputPanelEnabled = true,
+        LocalizationResourceManager = Localization.ResourceManager
+      };
+      controlPanel.Exception += OnException;
+      Content = controlPanel;
     }
 
     /// <summary>

@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Resources;
 using System.Threading;
 using System.Threading.Tasks;
-using Ivi.Visa;
 
 namespace VisaDeviceBuilder.Abstracts
 {
@@ -14,50 +13,9 @@ namespace VisaDeviceBuilder.Abstracts
   public interface IVisaDeviceController : INotifyPropertyChanged, IDisposable, IAsyncDisposable
   {
     /// <summary>
-    ///   Gets or sets the type of the device.
-    ///   The device class defined by the specified type must implement the <see cref="IVisaDevice" /> interface.
+    ///   Gets the VISA device object this controller instance is created for.
     /// </summary>
-    /// <exception cref="InvalidOperationException">
-    ///   The provided type value does not implement the <see cref="IVisaDevice" /> interface.
-    /// </exception>
-    Type DeviceType { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the type of the VISA resource manager.
-    ///   The resource manager class defined by the specified type must implement the <see cref="IResourceManager" />
-    ///   interface, or the value can be <c>null</c>.
-    ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
-    /// </summary>
-    /// <exception cref="InvalidOperationException">
-    ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
-    /// </exception>
-    Type? VisaResourceManagerType { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the VISA resource name used for VISA device location and connection.
-    /// </summary>
-    string ResourceName { get; set; }
-
-    /// <summary>
-    ///   Gets the collection of available VISA resources. The collection may contain both canonical VISA resource
-    ///   names and corresponding alias names if they are available.
-    /// </summary>
-    ObservableCollection<string> AvailableVisaResources { get; }
-
-    /// <summary>
-    ///   Checks if the <see cref="AvailableVisaResources" /> property is being updated.
-    /// </summary>
-    bool IsUpdatingVisaResources { get; }
-
-    /// <summary>
-    ///   Gets the current VISA device instance with type of the specified <typeparamref cref="DeviceType" /> created
-    ///   for the current connection if it is available.
-    /// </summary>
-    /// <returns>
-    ///   The <see cref="IVisaDevice" /> instance created for the opened device connection or <c>null</c> if no
-    ///   device connection is established at the moment.
-    /// </returns>
-    IVisaDevice? Device { get; }
+    IVisaDevice Device { get; }
 
     /// <summary>
     ///   Checks if the device is a message device (its type implements the <see cref="IMessageDevice" /> interface).
@@ -65,9 +23,30 @@ namespace VisaDeviceBuilder.Abstracts
     bool IsMessageDevice { get; }
 
     /// <summary>
-    ///   Gets the current device connection state.
+    ///   Gets the read-only collection of asynchronous properties defined for the device.
     /// </summary>
-    DeviceConnectionState ConnectionState { get; }
+    ReadOnlyObservableCollection<IAsyncProperty> AsyncProperties { get; }
+
+    /// <summary>
+    ///   Gets the read-only collection of device actions defined for the device.
+    /// </summary>
+    ReadOnlyObservableCollection<IDeviceAction> DeviceActions { get; }
+
+    /// <summary>
+    ///   Gets the collection of available VISA resources. The collection may contain both canonical VISA resource
+    ///   names and corresponding alias names if they are available.
+    /// </summary>
+    ReadOnlyObservableCollection<string> AvailableVisaResources { get; }
+
+    /// <summary>
+    ///   Checks if the <see cref="AvailableVisaResources" /> property is being updated.
+    /// </summary>
+    bool IsUpdatingVisaResources { get; }
+
+    /// <summary>
+    ///   Gets or sets the VISA resource name used for VISA device location and connection.
+    /// </summary>
+    string ResourceName { get; set; }
 
     /// <summary>
     ///   Checks if the device with the specified <see cref="ResourceName" /> can be connected at the moment.
@@ -86,16 +65,6 @@ namespace VisaDeviceBuilder.Abstracts
     string Identifier { get; }
 
     /// <summary>
-    ///   Gets the read-only collection of asynchronous properties defined for the device.
-    /// </summary>
-    ReadOnlyObservableCollection<IAsyncProperty> AsyncProperties { get; }
-
-    /// <summary>
-    ///   Gets the read-only collection of device actions defined for the device.
-    /// </summary>
-    ReadOnlyObservableCollection<IDeviceAction> DeviceActions { get; }
-
-    /// <summary>
     ///   Gets or sets the optional ResX resource manager instance used for localization of the names of available
     ///   asynchronous properties and actions.
     ///   The provided localization resource manager must be able to accept the original names of the asynchronous
@@ -109,6 +78,12 @@ namespace VisaDeviceBuilder.Abstracts
     ///   <see cref="UpdateAsyncPropertiesAsync"/> method.
     /// </summary>
     bool IsUpdatingAsyncProperties { get; }
+
+    /// <summary>
+    ///   Gets the auto-updater object that allows to automatically update getters of asynchronous properties
+    ///   available in the <see cref="AsyncProperties" /> collection.
+    /// </summary>
+    IAutoUpdater AutoUpdater { get; }
 
     /// <summary>
     ///   Gets or sets the flag controlling if the background auto-updater for asynchronous properties should be
@@ -126,16 +101,6 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Checks if the device disconnection has been requested using the <see cref="DisconnectAsync" /> method.
     /// </summary>
     bool IsDisconnectionRequested { get; }
-
-    /// <summary>
-    ///   The event that is called every time the connection state of the device changes.
-    /// </summary>
-    event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
-
-    /// <summary>
-    ///   The event that is called after every single auto-updater cycle elapses.
-    /// </summary>
-    event EventHandler<IVisaDevice>? AutoUpdaterCycle;
 
     /// <summary>
     ///   The event that is called on any device controller exception caught during the connection session.

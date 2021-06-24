@@ -18,7 +18,7 @@ namespace VisaDeviceBuilder.WPF
     /// </summary>
     public string DeviceLabel
     {
-      get => !string.IsNullOrEmpty(_deviceLabel) ? _deviceLabel : DeviceType.Name;
+      get => !string.IsNullOrEmpty(_deviceLabel) ? _deviceLabel : Device.GetType().Name;
       set
       {
         _deviceLabel = value;
@@ -103,6 +103,14 @@ namespace VisaDeviceBuilder.WPF
     public ICommand SendMessageCommand => _sendMessageCommand ??=
       new RelayCommand(_ => SendMessageAsync(), _ => IsMessageDevice && IsDeviceReady);
     private ICommand? _sendMessageCommand;
+
+    /// <summary>
+    ///   Initializes a new view-model instance.
+    /// </summary>
+    /// <inheritdoc />
+    public DeviceControlPanelViewModel(IVisaDevice device) : base(device)
+    {
+    }
 
     /// <summary>
     ///   Asynchronously sends the message to the connected device.

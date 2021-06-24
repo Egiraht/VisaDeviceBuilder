@@ -4,7 +4,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:visaAbs="clr-namespace:VisaDeviceBuilder.Abstracts;assembly=VisaDeviceBuilder"
-             xmlns:local="clr-namespace:VisaDeviceBuilder.WPF"
              xmlns:res="clr-namespace:VisaDeviceBuilder.WPF.Resources"
              xmlns:comp="clr-namespace:VisaDeviceBuilder.WPF.Components"
              mc:Ignorable="d"
@@ -13,10 +12,6 @@
   <UserControl.Resources>
     <ResourceDictionary Source="Styles.xaml" />
   </UserControl.Resources>
-
-  <UserControl.DataContext>
-    <local:DeviceControlPanelViewModel />
-  </UserControl.DataContext>
 
   <Border BorderThickness="1" BorderBrush="Gray" Margin="5">
     <Grid Margin="2">

@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
 using LocalizationResourceManager = System.Resources.ResourceManager;
 
@@ -23,34 +22,6 @@ namespace VisaDeviceBuilder.WPF
       ? viewModel
       : throw new InvalidOperationException(
         $"The control's {nameof(DataContext)} is not a {nameof(DeviceControlPanelViewModel)} class.");
-
-    /// <summary>
-    ///   Gets or sets the type of the device.
-    ///   The device class defined by the specified type must implement the <see cref="IVisaDevice" /> interface.
-    /// </summary>
-    /// <exception cref="InvalidCastException">
-    ///   The provided type value does not implement the <see cref="IVisaDevice" /> interface.
-    /// </exception>
-    public Type DeviceType
-    {
-      get => ViewModel.DeviceType;
-      set => ViewModel.DeviceType = value;
-    }
-
-    /// <summary>
-    ///   Gets or sets the type of the VISA resource manager.
-    ///   The resource manager class defined by the specified type must implement the <see cref="IResourceManager" />
-    ///   interface, or the value can be <c>null</c>.
-    ///   If set to <c>null</c>, the default <see cref="GlobalResourceManager" /> static class will be used.
-    /// </summary>
-    /// <exception cref="InvalidCastException">
-    ///   The provided type does not implement the <see cref="IResourceManager" /> interface.
-    /// </exception>
-    public Type? ResourceManagerType
-    {
-      get => ViewModel.VisaResourceManagerType;
-      set => ViewModel.VisaResourceManagerType = value;
-    }
 
     /// <summary>
     ///   Gets or sets the text label used for device distinguishing among the devices of similar type.
@@ -111,9 +82,11 @@ namespace VisaDeviceBuilder.WPF
     }
 
     /// <inheritdoc />
-    public DeviceControlPanel()
+    public DeviceControlPanel(IVisaDevice device)
     {
       InitializeComponent();
+
+      DataContext = new DeviceControlPanelViewModel(device);
     }
 
     /// <summary>

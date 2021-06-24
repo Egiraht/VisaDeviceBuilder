@@ -139,5 +139,7 @@ namespace VisaDeviceBuilder
     }
 
     public IVisaDevice BuildVisaDevice() => VisaDevice;
+
+    public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(VisaDevice);
   }
 }

@@ -112,35 +112,35 @@
 
     <Style.Triggers>
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.Device.ConnectionState}"
         Value="{x:Static visa:DeviceConnectionState.Disconnected}">
         <Setter Property="Content" Value="{x:Static res:Localization.Disconnected}" />
         <Setter Property="Foreground" Value="Gray" />
       </DataTrigger>
 
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.Device.ConnectionState}"
         Value="{x:Static visa:DeviceConnectionState.Initializing}">
         <Setter Property="Content" Value="{x:Static res:Localization.Initializing}" />
         <Setter Property="Foreground" Value="Blue" />
       </DataTrigger>
 
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.Device.ConnectionState}"
         Value="{x:Static visa:DeviceConnectionState.Connected}">
         <Setter Property="Content" Value="{x:Static res:Localization.Connected}" />
         <Setter Property="Foreground" Value="Green" />
       </DataTrigger>
 
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.Device.ConnectionState}"
         Value="{x:Static visa:DeviceConnectionState.DeInitializing}">
         <Setter Property="Content" Value="{x:Static res:Localization.DeInitializing}" />
         <Setter Property="Foreground" Value="Blue" />
       </DataTrigger>
 
       <DataTrigger
-        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.ConnectionState}"
+        Binding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType=local:DeviceControlPanel}, Path=ViewModel.Device.ConnectionState}"
         Value="{x:Static visa:DeviceConnectionState.DisconnectedWithError}">
         <Setter Property="Content" Value="{x:Static res:Localization.Error}" />
         <Setter Property="Foreground" Value="Red" />

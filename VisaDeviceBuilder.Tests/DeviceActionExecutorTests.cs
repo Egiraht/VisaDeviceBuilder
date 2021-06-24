@@ -86,7 +86,7 @@ namespace VisaDeviceBuilder.Tests
         await Task.Delay(DeviceActionDelay);
         throw new Exception(TestString);
       };
-      ThreadExceptionEventHandler exceptionHandler = (sender, args) => exceptionMessages.Add(args.Exception.Message);
+      ThreadExceptionEventHandler exceptionHandler = (_, args) => exceptionMessages.Add(args.Exception.Message);
 
       try
       {

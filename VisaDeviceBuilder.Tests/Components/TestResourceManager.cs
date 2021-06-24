@@ -104,10 +104,10 @@ namespace VisaDeviceBuilder.Tests.Components
     public Version SpecificationVersion { get; } = GlobalResourceManager.SpecificationVersion;
 
     /// <inheritdoc />
-    public string ManufacturerName { get; } = nameof(VisaDeviceBuilder);
+    public string ManufacturerName => nameof(VisaDeviceBuilder);
 
     /// <inheritdoc />
-    public short ManufacturerId { get; } = 0x1234;
+    public short ManufacturerId => 0x1234;
 
     /// <inheritdoc />
     public IEnumerable<string> Find(string pattern = "") => new[]
