@@ -8,12 +8,39 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   A builder class that can build message-based VISA devices with custom behavior.
   /// </summary>
+  /// <remarks>
+  ///   After a VISA device is built, the current builder instance cannot be reused. Create a new builder if necessary.
+  /// </remarks>
   public class MessageDeviceBuilder : IMessageDeviceBuilder
   {
     /// <summary>
+    ///   The flag indicating if a device has been already built.
+    /// </summary>
+    private bool _isBuilt = false;
+
+    /// <summary>
     ///   Gets the message-based VISA device object being built by this builder instance.
     /// </summary>
-    private IBuildableMessageDevice Device { get; } = new BuildableMessageDevice();
+    private IBuildableMessageDevice Device
+    {
+      get
+      {
+        ThrowWhenBuilderIsReused();
+        return _device;
+      }
+    }
+    private IBuildableMessageDevice _device = new BuildableMessageDevice();
+
+    /// <summary>
+    ///   Throws an <see cref="InvalidOperationException" /> if a device has been already built using this builder
+    ///   instance. This is important because further <see cref="Device" /> instance modification will also influence
+    ///   the built instance.
+    /// </summary>
+    private void ThrowWhenBuilderIsReused()
+    {
+      if (_isBuilt)
+        throw new InvalidOperationException("This builder instance cannot be reused after a device has been built.");
+    }
 
     /// <summary>
     ///   Instructs the builder to use the <see cref="GlobalResourceManager" /> class as a default VISA resource manager
@@ -82,8 +109,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder DefineSupportedHardwareInterfaces(params HardwareInterfaceType[] interfaces)
     {
-      Device.CustomSupportedInterfaces.Clear();
-      Device.CustomSupportedInterfaces.AddRange(interfaces.Distinct());
+      Device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
       return this;
     }
 
@@ -352,12 +378,16 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public IMessageDevice BuildVisaDevice() => Device;
+    public IMessageDevice BuildVisaDevice()
+    {
+      _isBuilt = true;
+      return _device;
+    }
 
     /// <inheritdoc />
     IVisaDevice IVisaDeviceBuilder.BuildVisaDevice() => BuildVisaDevice();
 
     /// <inheritdoc />
-    public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(Device);
+    public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(BuildVisaDevice());
   }
 }

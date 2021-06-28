@@ -10,9 +10,9 @@ namespace VisaDeviceBuilder.Abstracts
   public interface IBuildableVisaDevice : IVisaDevice
   {
     /// <summary>
-    ///   Gets the list of custom hardware interfaces supported by the device.
+    ///   Gets the array of custom hardware interfaces supported by the device.
     /// </summary>
-    List<HardwareInterfaceType> CustomSupportedInterfaces { get; }
+    HardwareInterfaceType[] CustomSupportedInterfaces { get; set; }
 
     /// <summary>
     ///   Gets the list of custom asynchronous properties of the device.

@@ -22,7 +22,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
     /// </summary>
-    private static readonly HardwareInterfaceType[] DefaultSupportedInterfaces =
+    public static readonly HardwareInterfaceType[] DefaultSupportedInterfaces =
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <summary>

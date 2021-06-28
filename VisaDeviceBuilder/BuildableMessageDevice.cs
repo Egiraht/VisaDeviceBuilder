@@ -12,7 +12,7 @@ namespace VisaDeviceBuilder
   internal class BuildableMessageDevice : MessageDevice, IBuildableMessageDevice
   {
     /// <inheritdoc />
-    public List<HardwareInterfaceType> CustomSupportedInterfaces { get; } = new();
+    public HardwareInterfaceType[] CustomSupportedInterfaces { get; set; } = Array.Empty<HardwareInterfaceType>();
 
     /// <inheritdoc />
     public List<IAsyncProperty> CustomAsyncProperties { get; } = new();

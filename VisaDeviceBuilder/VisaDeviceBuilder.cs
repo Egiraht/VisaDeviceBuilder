@@ -9,16 +9,47 @@ namespace VisaDeviceBuilder
   ///   A builder class that can build VISA devices with custom behavior.
   /// </summary>
   /// <remarks>
-  ///   This builder class is intended for building VISA devices that require using custom non-message-based VISA
-  ///   session implementations. For the most commonly used case of message-based device communication (e.g. SCPI
-  ///   language-based communication), consider using the <see cref="MessageDeviceBuilder" /> class instead of this one.
+  ///   <para>
+  ///     This builder class is intended for building VISA devices that require using custom non-message-based VISA
+  ///     session implementations. For the most commonly used case of message-based device communication (e.g. SCPI
+  ///     language-based communication), consider using the <see cref="MessageDeviceBuilder" /> class instead of this
+  ///     one.
+  ///   </para>
+  ///   <para>
+  ///     After a VISA device is built, the current builder instance cannot be reused. Create a new builder if
+  ///     necessary.
+  ///   </para>
   /// </remarks>
   public class VisaDeviceBuilder : IVisaDeviceBuilder
   {
     /// <summary>
+    ///   The flag indicating if a device has been already built.
+    /// </summary>
+    private bool _isBuilt = false;
+
+    /// <summary>
     ///   Gets the VISA device object being built by this builder instance.
     /// </summary>
-    private IBuildableVisaDevice Device { get; } = new BuildableVisaDevice();
+    private IBuildableVisaDevice Device
+    {
+      get
+      {
+        ThrowWhenBuilderIsReused();
+        return _device;
+      }
+    }
+    private readonly IBuildableVisaDevice _device = new BuildableVisaDevice();
+
+    /// <summary>
+    ///   Throws an <see cref="InvalidOperationException" /> if a device has been already built using this builder
+    ///   instance. This is important because further <see cref="Device" /> instance modification will also influence
+    ///   the built instance.
+    /// </summary>
+    private void ThrowWhenBuilderIsReused()
+    {
+      if (_isBuilt)
+        throw new InvalidOperationException("This builder instance cannot be reused after a device has been built.");
+    }
 
     /// <summary>
     ///   Instructs the builder to use the <see cref="GlobalResourceManager" /> class as a default VISA resource manager
@@ -87,8 +118,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public VisaDeviceBuilder DefineSupportedHardwareInterfaces(params HardwareInterfaceType[] interfaces)
     {
-      Device.CustomSupportedInterfaces.Clear();
-      Device.CustomSupportedInterfaces.AddRange(interfaces.Distinct());
+      Device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
       return this;
     }
 
@@ -321,9 +351,13 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public IVisaDevice BuildVisaDevice() => Device;
+    public IVisaDevice BuildVisaDevice()
+    {
+      _isBuilt = true;
+      return _device;
+    }
 
     /// <inheritdoc />
-    public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(Device);
+    public IVisaDeviceController BuildVisaDeviceController() => new VisaDeviceController(BuildVisaDevice());
   }
 }
