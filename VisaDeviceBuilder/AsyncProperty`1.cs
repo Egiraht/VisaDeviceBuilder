@@ -265,6 +265,31 @@ namespace VisaDeviceBuilder
     private void OnSetterException(Exception exception) =>
       SetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
 
+    /// <inheritdoc />
+    public virtual object Clone()
+    {
+      var asyncProperty = this switch
+      {
+        // Read-only asynchronous property:
+        {CanGet: true, CanSet: false} =>
+          (IAsyncProperty) Activator.CreateInstance(GetType(), GetterDelegate)!,
+
+        // Write-only asynchronous property:
+        {CanGet: false, CanSet: true} =>
+          (IAsyncProperty) Activator.CreateInstance(GetType(), SetterDelegate)!,
+
+        // Read-write asynchronous property:
+        {CanGet: true, CanSet: true} =>
+          (IAsyncProperty) Activator.CreateInstance(GetType(), GetterDelegate, SetterDelegate)!,
+
+        // Invalid asynchronous property:
+        _ => throw new InvalidOperationException()
+      };
+      asyncProperty.Name = Name;
+      asyncProperty.AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes;
+      return asyncProperty;
+    }
+
     /// <summary>
     ///   Implicitly converts the asynchronous property instance to its getter value.
     /// </summary>

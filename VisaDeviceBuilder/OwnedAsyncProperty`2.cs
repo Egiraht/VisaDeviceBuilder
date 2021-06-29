@@ -94,5 +94,13 @@ namespace VisaDeviceBuilder
       OwnedGetterDelegate = ownedGetterDelegate;
       OwnedSetterDelegate = ownedSetterDelegate;
     }
+
+    /// <inheritdoc />
+    public override object Clone()
+    {
+      var asyncProperty = (IOwnedAsyncProperty<TOwner>) base.Clone();
+      asyncProperty.Owner = Owner;
+      return asyncProperty;
+    }
   }
 }

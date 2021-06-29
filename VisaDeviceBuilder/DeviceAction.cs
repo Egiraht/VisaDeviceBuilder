@@ -34,6 +34,14 @@ namespace VisaDeviceBuilder
       return DeviceActionExecutor.GetDeviceActionTask(this);
     }
 
+    /// <inheritdoc />
+    public virtual object Clone()
+    {
+      var deviceAction = (IDeviceAction) Activator.CreateInstance(GetType(), Action)!;
+      deviceAction.Name = Name;
+      return deviceAction;
+    }
+
     /// <summary>
     ///   Implicitly converts the provided device action instance to its action delegate.
     /// </summary>

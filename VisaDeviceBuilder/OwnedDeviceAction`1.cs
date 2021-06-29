@@ -30,5 +30,13 @@ namespace VisaDeviceBuilder
     ///   VISA device.
     /// </param>
     public OwnedDeviceAction(Action<TOwner> ownedAction) : base(() => {}) => OwnedAction = ownedAction;
+
+    /// <inheritdoc />
+    public override object Clone()
+    {
+      var deviceAction = (IOwnedDeviceAction<TOwner>) base.Clone();
+      deviceAction.Owner = Owner;
+      return deviceAction;
+    }
   }
 }
