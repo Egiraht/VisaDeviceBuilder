@@ -4,7 +4,7 @@ namespace VisaDeviceBuilder.Abstracts
   ///   The interface for asynchronous properties with values of type <typeparamref name="TValue" />.
   /// </summary>
   /// <typeparam name="TValue">
-  ///   Type of the asynchronous property value.
+  ///   The type of the value this asynchronous property can access.
   /// </typeparam>
   public interface IAsyncProperty<TValue> : IAsyncProperty
   {

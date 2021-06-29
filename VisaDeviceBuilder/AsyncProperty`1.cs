@@ -12,8 +12,7 @@ namespace VisaDeviceBuilder
   ///   </para>
   ///   <para>
   ///     The <see cref="Getter" /> and <see cref="Setter" /> properties represent the corresponding value accessors of
-  ///     the asynchronous property while the actual read and write operations are performed asynchronously according
-  ///     to the callback functions provided to the constructor.
+  ///     the asynchronous property while the actual read and write operations are performed asynchronously.
   ///   </para>
   ///   <para>
   ///     The asynchronous property can be read-only, write-only, or read-write depending on the constructor overload
@@ -21,7 +20,7 @@ namespace VisaDeviceBuilder
   ///   </para>
   /// </summary>
   /// <typeparam name="TValue">
-  ///   Type of the asynchronous property value.
+  ///   The type of the value this asynchronous property can access.
   /// </typeparam>
   public class AsyncProperty<TValue> : IAsyncProperty<TValue>
   {
@@ -37,12 +36,12 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the getter delegate to be called when the asynchronous property is read.
     /// </summary>
-    private Func<TValue> GetterDelegate { get; } = () => default!;
+    protected virtual Func<TValue> GetterDelegate { get; } = () => default!;
 
     /// <summary>
     ///   Gets the setter delegate to be called when the asynchronous property is written.
     /// </summary>
-    private Action<TValue> SetterDelegate { get; } = _ => { };
+    protected virtual Action<TValue> SetterDelegate { get; } = _ => { };
 
     /// <inheritdoc />
     public TValue Getter { get; private set; } = default!;
@@ -96,8 +95,7 @@ namespace VisaDeviceBuilder
     public event ThreadExceptionEventHandler? SetterException;
 
     /// <summary>
-    ///   Creates a new get-only asynchronous property of type <typeparamref name="TValue" /> with a custom type to
-    ///   string value converter.
+    ///   Creates a new read-only asynchronous property of type <typeparamref name="TValue" />.
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
@@ -109,8 +107,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Creates a new set-only asynchronous property of type <typeparamref name="TValue" /> with a custom string to
-    ///   type value converter.
+    ///   Creates a new write-only asynchronous property of type <typeparamref name="TValue" />.
     /// </summary>
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
@@ -122,8 +119,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Creates a new get/set asynchronous property of type <typeparamref name="TValue" /> with custom type to string
-    ///   and string to type converters.
+    ///   Creates a new read-write asynchronous property of type <typeparamref name="TValue" />.
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
@@ -140,11 +136,11 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Defines the default string to <typeparamref name="TValue" /> type converter.
-    ///   Uses the standard collection of type converters for conversion from string.
+    ///   Converts an object to the value of the <typeparamref name="TValue" /> type.
+    ///   The method uses the standard collection of type converters.
     /// </summary>
     /// <param name="value">
-    ///   The string value to convert.
+    ///   An object to convert.
     /// </param>
     /// <returns>
     ///   A converted value of type <typeparamref name="TValue" />.

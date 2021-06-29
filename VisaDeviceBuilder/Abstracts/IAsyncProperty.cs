@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace VisaDeviceBuilder.Abstracts
 {
   /// <summary>
-  ///   The interface for asynchronous properties with string values.
+  ///   The interface for asynchronous properties.
   /// </summary>
   public interface IAsyncProperty
   {

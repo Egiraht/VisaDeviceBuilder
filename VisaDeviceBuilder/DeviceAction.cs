@@ -14,14 +14,16 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public string Name { get; set; } = string.Empty;
 
-    /// <inheritdoc />
-    public Action Action { get; }
+    /// <summary>
+    ///   Gets the delegate representing a device action to be asynchronously executed.
+    /// </summary>
+    protected virtual Action Action { get; }
 
     /// <summary>
     ///   Creates a new device action instance.
     /// </summary>
     /// <param name="action">
-    ///   The action delegate representing a device action to be asynchronously executed by a device.
+    ///   The action delegate representing a device action to be asynchronously executed.
     /// </param>
     public DeviceAction(Action action) => Action = action;
 

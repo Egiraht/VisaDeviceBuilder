@@ -73,7 +73,7 @@ namespace VisaDeviceBuilder.Tests
         ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
       Assert.Contains(device.AsyncProperties, asyncProperty => asyncProperty == device.TestAsyncProperty);
-      Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Action == device.TestDeviceAction);
+      Assert.Contains(device.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.TestDeviceAction);
 
       device.ThrowOnInitialization = true;
       await Assert.ThrowsAnyAsync<Exception>(device.OpenSessionAsync);

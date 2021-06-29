@@ -39,8 +39,9 @@ namespace VisaDeviceBuilder.Tests
 
       // Testing the dictionaries of automatically collected asynchronous properties and device actions.
       Assert.Empty(device.AsyncProperties);
-      Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Action == device.Reset);
-      Assert.DoesNotContain(device.DeviceActions, deviceAction => deviceAction.Action == device.OpenSession);
+      Assert.Contains(device.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.Reset);
+      Assert.DoesNotContain(device.DeviceActions,
+        deviceAction => (DeviceAction) deviceAction == (Action) device.OpenSession);
       // TODO: Check collecting of device actions added as IDeviceAction properties.
       // TODO: Check naming of asynchronous properties and device actions after collecting.
 
