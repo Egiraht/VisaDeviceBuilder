@@ -23,7 +23,7 @@ namespace VisaDeviceBuilder
       HardwareInterfaceType.GpibVxi
     };
 
-    /// <inheritdoc cref="Session" />
+    /// <inheritdoc />
     public new IMessageBasedSession? Session => (IMessageBasedSession?) base.Session;
 
     /// <inheritdoc />

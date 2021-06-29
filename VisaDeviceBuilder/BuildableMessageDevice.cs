@@ -9,70 +9,34 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   A class representing a message-based VISA device that can be created using a VISA device builder class.
   /// </summary>
-  internal class BuildableMessageDevice : MessageDevice, IBuildableMessageDevice
+  public class BuildableMessageDevice : MessageDevice, IBuildableMessageDevice<IMessageDevice>
   {
     /// <inheritdoc />
-    public HardwareInterfaceType[] CustomSupportedInterfaces { get; set; } = Array.Empty<HardwareInterfaceType>();
+    public HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <inheritdoc />
-    public List<IAsyncProperty> CustomAsyncProperties { get; } = new();
+    public List<IOwnedAsyncProperty<IMessageDevice>> CustomAsyncProperties { get; init; } = new();
 
     /// <inheritdoc />
-    public List<IDeviceAction> CustomDeviceActions { get; } = new();
+    public List<IOwnedDeviceAction<IMessageDevice>> CustomDeviceActions { get; init; } = new();
 
     /// <inheritdoc />
     public Action<IMessageDevice>? CustomInitializeCallback { get; set; }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomInitializeCallback
-    {
-      get => CustomInitializeCallback != null
-        ? session => CustomInitializeCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomInitializeCallback = value;
-    }
-
-    /// <inheritdoc />
     public Action<IMessageDevice>? CustomDeInitializeCallback { get; set; }
-
-    /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomDeInitializeCallback
-    {
-      get => CustomDeInitializeCallback != null
-        ? session => CustomDeInitializeCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomDeInitializeCallback = value;
-    }
 
     /// <inheritdoc />
     public Func<IMessageDevice, string>? CustomGetIdentifierCallback { get; set; }
 
     /// <inheritdoc />
-    Func<IVisaDevice, string>? IBuildableVisaDevice.CustomGetIdentifierCallback
-    {
-      get => CustomGetIdentifierCallback != null
-        ? session => CustomGetIdentifierCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomGetIdentifierCallback = value;
-    }
-
-    /// <inheritdoc />
     public Action<IMessageDevice>? CustomResetCallback { get; set; }
-
-    /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice.CustomResetCallback
-    {
-      get => CustomResetCallback != null
-        ? session => CustomResetCallback.Invoke((IMessageDevice) session)
-        : null;
-      set => CustomResetCallback = value;
-    }
 
     /// <inheritdoc />
     public Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
 
     /// <inheritdoc />
-    public List<IDisposable> CustomDisposables { get; } = new();
+    public List<IDisposable> CustomDisposables { get; init; } = new();
 
     /// <inheritdoc />
     public override IEnumerable<IAsyncProperty> AsyncProperties => base.AsyncProperties.Concat(CustomAsyncProperties);
@@ -81,9 +45,8 @@ namespace VisaDeviceBuilder
     public override IEnumerable<IDeviceAction> DeviceActions => base.DeviceActions.Concat(CustomDeviceActions);
 
     /// <inheritdoc />
-    public override HardwareInterfaceType[] SupportedInterfaces => CustomSupportedInterfaces.Any()
-      ? CustomSupportedInterfaces.ToArray()
-      : base.SupportedInterfaces;
+    public override HardwareInterfaceType[] SupportedInterfaces =>
+      CustomSupportedInterfaces ?? base.SupportedInterfaces;
 
     /// <summary>
     ///   Throws a <see cref="VisaDeviceException" /> exception when no VISA session is opened.
@@ -91,8 +54,8 @@ namespace VisaDeviceBuilder
     private void ThrowOnNoSession()
     {
       if (Session == null)
-        throw new VisaDeviceException(this, new InvalidOperationException(
-          $"There is no opened VISA session to perform an operation or the device \"{AliasName}\" does not support message-based sessions."));
+        throw new VisaDeviceException(this,
+          new InvalidOperationException("There is no opened VISA session to perform an operation."));
     }
 
     /// <inheritdoc />

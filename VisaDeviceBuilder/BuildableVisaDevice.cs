@@ -9,16 +9,16 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   A class representing a message-based VISA device that can be created using a VISA device builder class.
   /// </summary>
-  internal class BuildableVisaDevice : VisaDevice, IBuildableVisaDevice
+  public class BuildableVisaDevice : VisaDevice, IBuildableVisaDevice<IVisaDevice>
   {
     /// <inheritdoc />
-    public HardwareInterfaceType[] CustomSupportedInterfaces { get; set; } = Array.Empty<HardwareInterfaceType>();
+    public HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <inheritdoc />
-    public List<IAsyncProperty> CustomAsyncProperties { get; } = new();
+    public List<IOwnedAsyncProperty<IVisaDevice>> CustomAsyncProperties { get; init; } = new();
 
     /// <inheritdoc />
-    public List<IDeviceAction> CustomDeviceActions { get; } = new();
+    public List<IOwnedDeviceAction<IVisaDevice>> CustomDeviceActions { get; init; } = new();
 
     /// <inheritdoc />
     public Action<IVisaDevice>? CustomInitializeCallback { get; set; }
@@ -33,7 +33,7 @@ namespace VisaDeviceBuilder
     public Action<IVisaDevice>? CustomResetCallback { get; set; }
 
     /// <inheritdoc />
-    public List<IDisposable> CustomDisposables { get; } = new();
+    public List<IDisposable> CustomDisposables { get; init; } = new();
 
     /// <inheritdoc />
     public override IEnumerable<IAsyncProperty> AsyncProperties => base.AsyncProperties.Concat(CustomAsyncProperties);
@@ -42,9 +42,8 @@ namespace VisaDeviceBuilder
     public override IEnumerable<IDeviceAction> DeviceActions => base.DeviceActions.Concat(CustomDeviceActions);
 
     /// <inheritdoc />
-    public override HardwareInterfaceType[] SupportedInterfaces => CustomSupportedInterfaces.Any()
-      ? CustomSupportedInterfaces.ToArray()
-      : base.SupportedInterfaces;
+    public override HardwareInterfaceType[] SupportedInterfaces =>
+      CustomSupportedInterfaces ?? base.SupportedInterfaces;
 
     /// <summary>
     ///   Throws a <see cref="VisaDeviceException" /> exception when no VISA session is opened.
