@@ -99,6 +99,32 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    public override object Clone()
+    {
+      var device = (BuildableVisaDevice) base.Clone();
+      device.CustomSupportedInterfaces = (HardwareInterfaceType[]?) CustomSupportedInterfaces?.Clone();
+      device.CustomAsyncProperties.AddRange(CustomAsyncProperties.Select(asyncProperty =>
+      {
+        var clone = (IOwnedAsyncProperty<IVisaDevice>) asyncProperty.Clone();
+        clone.Owner = device;
+        return clone;
+      }));
+      device.CustomDeviceActions.AddRange(CustomDeviceActions.Select(deviceAction =>
+      {
+        var clone = (IOwnedDeviceAction<IVisaDevice>) deviceAction.Clone();
+        clone.Owner = device;
+        return clone;
+      }));
+      device.CustomInitializeCallback = (Action<IVisaDevice>?) CustomInitializeCallback?.Clone();
+      device.CustomDeInitializeCallback = (Action<IVisaDevice>?) CustomDeInitializeCallback?.Clone();
+      device.CustomGetIdentifierCallback = (Func<IVisaDevice, string>?) CustomGetIdentifierCallback?.Clone();
+      device.CustomResetCallback = (Action<IVisaDevice>?) CustomResetCallback?.Clone();
+      if (device.ResourceManager != null)
+        device.CustomDisposables.Add(device.ResourceManager);
+      return device;
+    }
+
+    /// <inheritdoc />
     public override void Dispose()
     {
       CustomDisposables.ForEach(disposable => disposable.Dispose());

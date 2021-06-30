@@ -115,6 +115,33 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    public override object Clone()
+    {
+      var device = (BuildableMessageDevice) base.Clone();
+      device.CustomSupportedInterfaces = (HardwareInterfaceType[]?) CustomSupportedInterfaces?.Clone();
+      device.CustomAsyncProperties.AddRange(CustomAsyncProperties.Select(asyncProperty =>
+      {
+        var clone = (IOwnedAsyncProperty<IMessageDevice>) asyncProperty.Clone();
+        clone.Owner = device;
+        return clone;
+      }));
+      device.CustomDeviceActions.AddRange(CustomDeviceActions.Select(deviceAction =>
+      {
+        var clone = (IOwnedDeviceAction<IMessageDevice>) deviceAction.Clone();
+        clone.Owner = device;
+        return clone;
+      }));
+      device.CustomInitializeCallback = (Action<IMessageDevice>?) CustomInitializeCallback?.Clone();
+      device.CustomDeInitializeCallback = (Action<IMessageDevice>?) CustomDeInitializeCallback?.Clone();
+      device.CustomGetIdentifierCallback = (Func<IMessageDevice, string>?) CustomGetIdentifierCallback?.Clone();
+      device.CustomResetCallback = (Action<IMessageDevice>?) CustomResetCallback?.Clone();
+      device.CustomMessageProcessor = (Func<IMessageDevice, string, string>?) CustomMessageProcessor?.Clone();
+      if (device.ResourceManager != null)
+        device.CustomDisposables.Add(device.ResourceManager);
+      return device;
+    }
+
+    /// <inheritdoc />
     public override void Dispose()
     {
       CustomDisposables.ForEach(disposable => disposable.Dispose());

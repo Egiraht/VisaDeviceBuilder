@@ -324,6 +324,18 @@ namespace VisaDeviceBuilder
       ConnectionStateChanged?.Invoke(this, state);
 
     /// <inheritdoc />
+    public virtual object Clone()
+    {
+      var device = (VisaDevice) Activator.CreateInstance(GetType())!;
+      device.ResourceManager = ResourceManager != null
+        ? (IResourceManager) Activator.CreateInstance(ResourceManager.GetType())!
+        : null;
+      device.ResourceName = ResourceName;
+      device.ConnectionTimeout = ConnectionTimeout;
+      return device;
+    }
+
+    /// <inheritdoc />
     public virtual void Dispose()
     {
       if (_isDisposed)

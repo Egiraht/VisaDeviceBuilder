@@ -370,41 +370,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public TOutputVisaDevice BuildDevice()
-    {
-      // Creating a new VISA device instance by cloning it from the _device instance.
-      var device = new TBuildableVisaDevice
-      {
-        ResourceManager = CustomResourceManagerType != null
-          ? (IResourceManager) Activator.CreateInstance(CustomResourceManagerType)!
-          : null,
-        ResourceName = _device.ResourceName,
-        ConnectionTimeout = _device.ConnectionTimeout,
-        CustomSupportedInterfaces = (HardwareInterfaceType[]?) _device.CustomSupportedInterfaces?.Clone(),
-        CustomAsyncProperties = _device.CustomAsyncProperties
-          .Select(asyncProperty => (IOwnedAsyncProperty<TOutputVisaDevice>) asyncProperty.Clone())
-          .ToList(),
-        CustomDeviceActions = _device.CustomDeviceActions
-          .Select(deviceAction => (IOwnedDeviceAction<TOutputVisaDevice>) deviceAction.Clone())
-          .ToList(),
-        CustomInitializeCallback = (Action<TOutputVisaDevice>?) _device.CustomInitializeCallback?.Clone(),
-        CustomDeInitializeCallback = (Action<TOutputVisaDevice>?) _device.CustomDeInitializeCallback?.Clone(),
-        CustomGetIdentifierCallback = (Func<TOutputVisaDevice, string>?) _device.CustomGetIdentifierCallback?.Clone(),
-        CustomResetCallback = (Action<TOutputVisaDevice>?) _device.CustomResetCallback?.Clone()
-      };
-
-      // Setting the Owner properties to the new device instance.
-      foreach (var asyncProperty in device.CustomAsyncProperties)
-        asyncProperty.Owner = device;
-      foreach (var deviceAction in device.CustomDeviceActions)
-        deviceAction.Owner = device;
-
-      // Adding disposables.
-      if (device.ResourceManager != null)
-        device.CustomDisposables.Add(device.ResourceManager);
-
-      return device;
-    }
+    public TOutputVisaDevice BuildDevice() => (TOutputVisaDevice) _device.Clone();
 
     /// <inheritdoc />
     public IVisaDeviceController BuildDeviceController() => new VisaDeviceController(BuildDevice());

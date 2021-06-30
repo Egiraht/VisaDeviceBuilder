@@ -8,7 +8,7 @@ namespace VisaDeviceBuilder.Abstracts
   /// <summary>
   ///   The interface describing a connectable VISA device.
   /// </summary>
-  public interface IVisaDevice : IDisposable, IAsyncDisposable
+  public interface IVisaDevice : ICloneable, IDisposable, IAsyncDisposable
   {
     /// <summary>
     ///   Gets or sets a custom VISA resource manager for VISA session management.
