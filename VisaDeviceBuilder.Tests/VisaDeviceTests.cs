@@ -37,7 +37,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
 
-      // Testing the dictionaries of automatically collected asynchronous properties and device actions.
+      // Testing the enumerations of automatically collected asynchronous properties and device actions.
       Assert.Empty(device.AsyncProperties);
       Assert.Contains(device.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.Reset);
       Assert.DoesNotContain(device.DeviceActions,

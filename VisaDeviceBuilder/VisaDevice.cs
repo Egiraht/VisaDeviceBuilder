@@ -140,14 +140,12 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Collects all asynchronous properties defined in the current device class into a dictionary.
+    ///   Enumerates all asynchronous properties defined in the current device class.
     ///   Asynchronous properties to be collected must be declared as public properties of types implementing the
     ///   <see cref="IAsyncProperty" /> interface.
     /// </summary>
     /// <returns>
-    ///   The dictionary with the collected device actions.
-    ///   Keys of the dictionary contain the declaring member names while the corresponding device action instances are
-    ///   stored as values.
+    ///   An enumeration of collected device actions.
     /// </returns>
     private IEnumerable<IAsyncProperty> CollectOwnAsyncProperties() => GetType()
       .GetProperties()
@@ -160,19 +158,17 @@ namespace VisaDeviceBuilder
       });
 
     /// <summary>
-    ///   Collects all device actions defined in the current device class into a dictionary.
+    ///   Enumerates all device actions defined in the current device class.
     ///   Device actions to be collected must be declared as public properties of types implementing the
     ///   <see cref="IDeviceAction" /> interface, or as public methods having the <see cref="Action" /> delegate
     ///   signature and decorated with the <see cref="DeviceActionAttribute" />.
     /// </summary>
     /// <returns>
-    ///   The dictionary with the collected device actions.
-    ///   Keys of the dictionary contain the declaring member names while the corresponding device action instances are
-    ///   stored as values.
+    ///   An enumeration the collected device actions.
     /// </returns>
     private IEnumerable<IDeviceAction> CollectOwnDeviceActions()
     {
-      return GetType()
+      var declaredActions = GetType()
         .GetProperties()
         .Where(property => typeof(IDeviceAction).IsAssignableFrom(property.PropertyType) && property.CanRead)
         .Select(property =>
@@ -180,19 +176,22 @@ namespace VisaDeviceBuilder
           var result = (IDeviceAction) property.GetValue(this)!;
           result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
           return result;
-        })
-        .Concat(GetType()
-          .GetMethods()
-          .Where(method => Utilities.ValidateDelegate<Action>(method) &&
-            method.GetCustomAttribute<DeviceActionAttribute>() != null)
-          .Select(method =>
+        });
+
+      var decoratedActions = GetType()
+        .GetMethods()
+        .Where(method => method.ValidateDelegateType<Action>() &&
+          method.GetCustomAttribute<DeviceActionAttribute>() != null)
+        .Select(method =>
+        {
+          var attribute = method.GetCustomAttribute<DeviceActionAttribute>();
+          return (IDeviceAction) new DeviceAction((Action) method.CreateDelegate(typeof(Action), this))
           {
-            var attribute = method.GetCustomAttribute<DeviceActionAttribute>();
-            return (IDeviceAction) new DeviceAction((Action) method.CreateDelegate(typeof(Action), this))
-            {
-              Name = !string.IsNullOrWhiteSpace(attribute?.Name) ? attribute.Name : method.Name,
-            };
-          }));
+            Name = !string.IsNullOrWhiteSpace(attribute?.Name) ? attribute.Name : method.Name,
+          };
+        });
+
+      return declaredActions.Concat(decoratedActions);
     }
 
     /// <inheritdoc />

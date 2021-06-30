@@ -37,7 +37,7 @@ namespace VisaDeviceBuilder.Tests.Components
 
     /// <summary>
     ///   Gets the test asynchronous property of integer type that must be enlisted into the
-    ///   <see cref="IVisaDevice.AsyncProperties" /> dictionary.
+    ///   <see cref="IVisaDevice.AsyncProperties" /> enumeration.
     /// </summary>
     public IAsyncProperty<int> TestAsyncProperty => _testAsyncProperty ??= new AsyncProperty<int>(() =>
     {
@@ -90,7 +90,7 @@ namespace VisaDeviceBuilder.Tests.Components
 
     /// <summary>
     ///   Defines the valid device action that must be enlisted into the <see cref="IVisaDevice.DeviceActions" />
-    ///   dictionary.
+    ///   enumeration.
     /// </summary>
     [DeviceAction, ExcludeFromCodeCoverage]
     public void TestDeviceAction()
@@ -99,7 +99,7 @@ namespace VisaDeviceBuilder.Tests.Components
 
     /// <summary>
     ///   Defines the invalid device action that must not be enlisted into the <see cref="IVisaDevice.DeviceActions" />
-    ///   dictionary because it does not match the <see cref="Action" /> delegate signature.
+    ///   enumeration because it does not match the <see cref="Action" /> delegate signature.
     /// </summary>
     [DeviceAction, ExcludeFromCodeCoverage]
     public string InvalidDeviceAction() => string.Empty;
