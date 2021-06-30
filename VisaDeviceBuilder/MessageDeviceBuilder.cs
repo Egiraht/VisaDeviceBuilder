@@ -11,7 +11,23 @@ namespace VisaDeviceBuilder
   /// </remarks>
   public class MessageDeviceBuilder : VisaDeviceBuilder<BuildableMessageDevice, IMessageDevice>
   {
-    private Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
+    /// <summary>
+    ///   Initializes a new message-based VISA device builder instance.
+    /// </summary>
+    public MessageDeviceBuilder()
+    {
+    }
+
+    /// <summary>
+    ///   Initializes a new message-based VISA device builder instance with building configuration copied from a
+    ///   <paramref name="baseDeviceBuilder" /> instance.
+    /// </summary>
+    /// <param name="baseDeviceBuilder">
+    ///   A <see cref="MessageDeviceBuilder" /> instance to copy configuration from.
+    /// </param>
+    public MessageDeviceBuilder(MessageDeviceBuilder baseDeviceBuilder) : base(baseDeviceBuilder)
+    {
+    }
 
     /// <summary>
     ///   Instructs the builder to use the specified message processing delegate to handle request and response
@@ -33,7 +49,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseMessageProcessor(Func<IMessageDevice, string, string> messageProcessor)
     {
-      CustomMessageProcessor = messageProcessor;
+      Device.CustomMessageProcessor = messageProcessor;
       return this;
     }
   }

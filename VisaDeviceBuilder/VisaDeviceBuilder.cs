@@ -19,5 +19,22 @@ namespace VisaDeviceBuilder
   /// </remarks>
   public class VisaDeviceBuilder : VisaDeviceBuilder<BuildableVisaDevice, IVisaDevice>
   {
+    /// <summary>
+    ///   Initializes a new VISA device builder instance.
+    /// </summary>
+    public VisaDeviceBuilder()
+    {
+    }
+
+    /// <summary>
+    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible
+    ///   VISA device builder instance.
+    /// </summary>
+    /// <param name="baseDeviceBuilder">
+    ///   A <see cref="VisaDeviceBuilder" /> instance to copy configuration from.
+    /// </param>
+    public VisaDeviceBuilder(VisaDeviceBuilder baseDeviceBuilder) : base(baseDeviceBuilder)
+    {
+    }
   }
 }

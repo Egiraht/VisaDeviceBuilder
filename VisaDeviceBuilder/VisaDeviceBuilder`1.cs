@@ -30,16 +30,38 @@ namespace VisaDeviceBuilder
   ///   </para>
   /// </remarks>
   public class VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> : IVisaDeviceBuilder<TOutputVisaDevice>
-    where TBuildableVisaDevice : TOutputVisaDevice, IBuildableVisaDevice<TOutputVisaDevice>, new()
-    where TOutputVisaDevice : IVisaDevice
+    where TBuildableVisaDevice : class, TOutputVisaDevice, IBuildableVisaDevice<TOutputVisaDevice>, new()
+    where TOutputVisaDevice : class, IVisaDevice
   {
-    private TBuildableVisaDevice _device = new();
+    /// <summary>
+    ///   Gets the base buildable device instance that stores the builder configuration and is used for building of new
+    ///   device instances by cloning and casting to the output device type.
+    /// </summary>
+    protected TBuildableVisaDevice Device { get; } = new();
 
     /// <summary>
     ///   Gets or sets a custom VISA resource manager type.
     ///   Setting to <c>null</c> indicates that the <see cref="GlobalResourceManager" /> class should be used.
     /// </summary>
     private Type? CustomResourceManagerType { get; set; }
+
+    /// <summary>
+    ///   Initializes a new VISA device builder instance.
+    /// </summary>
+    public VisaDeviceBuilder()
+    {
+    }
+
+    /// <summary>
+    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible
+    ///   VISA device builder instance.
+    /// </summary>
+    /// <param name="baseDeviceBuilder">
+    ///   A compatible <see cref="VisaDeviceBuilder{TBuildableVisaDevice, TOutputVisaDevice}" /> instance to copy
+    ///   configuration from.
+    /// </param>
+    public VisaDeviceBuilder(VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> baseDeviceBuilder) =>
+      Device = (TBuildableVisaDevice) baseDeviceBuilder.BuildDevice().Clone();
 
     /// <summary>
     ///   Instructs the builder to use the <see cref="GlobalResourceManager" /> class for VISA device session
@@ -98,7 +120,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseDefaultResourceName(string resourceName)
     {
-      _device.ResourceName = resourceName;
+      Device.ResourceName = resourceName;
       return this;
     }
 
@@ -113,7 +135,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseConnectionTimeout(int timeout)
     {
-      _device.ConnectionTimeout = timeout;
+      Device.ConnectionTimeout = timeout;
       return this;
     }
 
@@ -130,7 +152,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> DefineSupportedHardwareInterfaces(
       params HardwareInterfaceType[] interfaces)
     {
-      _device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
+      Device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
       return this;
     }
 
@@ -157,7 +179,12 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> AddReadOnlyAsyncProperty<TValue>(string name,
       Func<TOutputVisaDevice, TValue> getter)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter) {Name = name});
+      Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter)
+      {
+        Owner = null,
+        Name = name,
+        AutoUpdateGetterAfterSetterCompletes = false
+      });
       return this;
     }
 
@@ -184,7 +211,12 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> AddWriteOnlyAsyncProperty<TValue>(string name,
       Action<TOutputVisaDevice, TValue> setter)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(setter) {Name = name});
+      Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(setter)
+      {
+        Owner = null,
+        Name = name,
+        AutoUpdateGetterAfterSetterCompletes = false
+      });
       return this;
     }
 
@@ -219,11 +251,61 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> AddReadWriteAsyncProperty<TValue>(string name,
       Func<TOutputVisaDevice, TValue> getter, Action<TOutputVisaDevice, TValue> setter, bool autoUpdateGetter = true)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter, setter)
+      Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter, setter)
       {
+        Owner = null,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = autoUpdateGetter
       });
+      return this;
+    }
+
+    /// <summary>
+    ///   Copies a compatible owned asynchronous property to the VISA device.
+    /// </summary>
+    /// <param name="ownedAsyncProperty">
+    ///   An owned asynchronous property instance of a compatible device type to copy.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    /// <remarks>
+    ///   Non-owned asynchronous properties declared in classes as <see cref="AsyncProperty{TValue}" /> instances cannot
+    ///   be copied because they reference their device directly in code. These instances can only be inherited in
+    ///   deriving classes.
+    /// </remarks>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyAsyncProperty(
+      IOwnedAsyncProperty<TOutputVisaDevice> ownedAsyncProperty)
+    {
+      var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
+      clone.Owner = null;
+      Device.CustomAsyncProperties.Add(clone);
+      return this;
+    }
+
+    /// <summary>
+    ///   Copies compatible owned asynchronous property to the VISA device.
+    /// </summary>
+    /// <param name="ownedAsyncProperties">
+    ///   An array or a parameter sequence of owned asynchronous property instances of a compatible device type to copy.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    /// <remarks>
+    ///   Non-owned asynchronous properties declared in classes as <see cref="AsyncProperty{TValue}" /> instances cannot
+    ///   be copied because they reference their device directly in code. These instances can only be inherited in
+    ///   deriving classes.
+    /// </remarks>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyAsyncProperties(
+      params IOwnedAsyncProperty<TOutputVisaDevice>[] ownedAsyncProperties)
+    {
+      Device.CustomAsyncProperties.AddRange(ownedAsyncProperties.Select(asyncProperty =>
+      {
+        var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) asyncProperty.Clone();
+        clone.Owner = null;
+        return clone;
+      }));
       return this;
     }
 
@@ -247,7 +329,58 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> AddDeviceAction(string name,
       Action<TOutputVisaDevice> action)
     {
-      _device.CustomDeviceActions.Add(new OwnedDeviceAction<TOutputVisaDevice>(action) {Name = name});
+      Device.CustomDeviceActions.Add(new OwnedDeviceAction<TOutputVisaDevice>(action)
+      {
+        Owner = null,
+        Name = name
+      });
+      return this;
+    }
+
+    /// <summary>
+    ///   Copies a compatible owned device action to the VISA device.
+    /// </summary>
+    /// <param name="ownedDeviceAction">
+    ///   An owned device action instance of a compatible device type to copy.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    /// <remarks>
+    ///   Non-owned device actions declared in classes as <see cref="DeviceAction" /> instances cannot be copied because
+    ///   they reference their device directly in code. These instances can only be inherited in deriving classes.
+    /// </remarks>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyDeviceAction(
+      IOwnedDeviceAction<TOutputVisaDevice> ownedDeviceAction)
+    {
+      var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
+      clone.Owner = null;
+      Device.CustomDeviceActions.Add(clone);
+      return this;
+    }
+
+    /// <summary>
+    ///   Copies compatible owned device actions to the VISA device.
+    /// </summary>
+    /// <param name="ownedDeviceActions">
+    ///   An array or a parameter sequence of owned device action instances of a compatible device type to copy.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    /// <remarks>
+    ///   Non-owned device actions declared in classes as <see cref="DeviceAction" /> instances cannot be copied because
+    ///   they reference their device directly in code. These instances can only be inherited in deriving classes.
+    /// </remarks>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyDeviceActions(
+      params IOwnedDeviceAction<TOutputVisaDevice>[] ownedDeviceActions)
+    {
+      Device.CustomDeviceActions.AddRange(ownedDeviceActions.Select(deviceAction =>
+      {
+        var clone = (IOwnedDeviceAction<TOutputVisaDevice>) deviceAction.Clone();
+        clone.Owner = null;
+        return clone;
+      }));
       return this;
     }
 
@@ -268,7 +401,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseInitializeCallback(
       Action<TOutputVisaDevice> callback)
     {
-      _device.CustomInitializeCallback = callback;
+      Device.CustomInitializeCallback = callback;
       return this;
     }
 
@@ -289,7 +422,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseDeInitializeCallback(
       Action<TOutputVisaDevice> callback)
     {
-      _device.CustomDeInitializeCallback = callback;
+      Device.CustomDeInitializeCallback = callback;
       return this;
     }
 
@@ -311,7 +444,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseGetIdentifierCallback(
       Func<TOutputVisaDevice, string> callback)
     {
-      _device.CustomGetIdentifierCallback = callback;
+      Device.CustomGetIdentifierCallback = callback;
       return this;
     }
 
@@ -332,7 +465,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseResetCallback(
       Action<TOutputVisaDevice> callback)
     {
-      _device.CustomResetCallback = callback;
+      Device.CustomResetCallback = callback;
       return this;
     }
 
@@ -348,7 +481,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RegisterDisposable(IDisposable disposable)
     {
-      _device.CustomDisposables.Add(disposable);
+      Device.CustomDisposables.Add(disposable);
       return this;
     }
 
@@ -365,12 +498,12 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RegisterDisposables(
       params IDisposable[] disposables)
     {
-      _device.CustomDisposables.AddRange(disposables);
+      Device.CustomDisposables.AddRange(disposables);
       return this;
     }
 
     /// <inheritdoc />
-    public TOutputVisaDevice BuildDevice() => (TOutputVisaDevice) _device.Clone();
+    public TOutputVisaDevice BuildDevice() => (TOutputVisaDevice) Device.Clone();
 
     /// <inheritdoc />
     public IVisaDeviceController BuildDeviceController() => new VisaDeviceController(BuildDevice());
