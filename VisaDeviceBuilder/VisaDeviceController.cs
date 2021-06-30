@@ -19,9 +19,14 @@ namespace VisaDeviceBuilder
   public class VisaDeviceController : IVisaDeviceController
   {
     /// <summary>
-    ///   The flag indicating if the controller has been already disposed.
+    ///   The flag indicating if the controller is being disposed of at the moment.
     /// </summary>
-    private bool _isDisposed = false;
+    private bool _isDisposing;
+
+    /// <summary>
+    ///   The flag indicating if the controller has been already disposed of.
+    /// </summary>
+    private bool _isDisposed;
 
     /// <inheritdoc />
     public IVisaDevice Device { get; }
@@ -64,6 +69,17 @@ namespace VisaDeviceBuilder
       }
     }
     private bool _isUpdatingVisaResources = false;
+
+    /// <inheritdoc />
+    public IResourceManager? ResourceManager
+    {
+      get => Device.ResourceManager;
+      set
+      {
+        Device.ResourceManager = value;
+        OnPropertyChanged();
+      }
+    }
 
     /// <inheritdoc />
     public string ResourceName
@@ -112,11 +128,8 @@ namespace VisaDeviceBuilder
     }
     private bool _isUpdatingAsyncProperties = false;
 
-    /// <inheritdoc cref="IVisaDeviceController.AutoUpdater" />
-    private IAutoUpdater AutoUpdater { get; }
-
     /// <inheritdoc />
-    IAutoUpdater IVisaDeviceController.AutoUpdater => AutoUpdater;
+    public IAutoUpdater AutoUpdater { get; }
 
     /// <inheritdoc />
     public bool IsAutoUpdaterEnabled
@@ -262,9 +275,9 @@ namespace VisaDeviceBuilder
 
       try
       {
-        var resources = Device.ResourceManager == null
+        var resources = ResourceManager == null
           ? await VisaResourceLocator.LocateResourceNamesAsync()
-          : await VisaResourceLocator.LocateResourceNamesAsync(Device.ResourceManager);
+          : await VisaResourceLocator.LocateResourceNamesAsync(ResourceManager);
         VisaResourceEntries.Clear();
         foreach (var resource in resources)
           VisaResourceEntries.Add(resource);
@@ -296,17 +309,16 @@ namespace VisaDeviceBuilder
       // Checking the VISA resource name.
       try
       {
-        if (Device.ResourceManager != null)
-          Device.ResourceManager.Parse(ResourceName);
+        if (ResourceManager != null)
+          ResourceManager.Parse(ResourceName);
         else
           GlobalResourceManager.Parse(ResourceName);
       }
       catch
       {
-        OnException(new VisaDeviceException(Device,
-          $"Cannot find a VISA resource with the name {ResourceName} using the VISA resource manager of type \"" +
-          (Device.ResourceManager != null ? Device.ResourceManager.GetType().Name : nameof(GlobalResourceManager)) +
-          "\"."));
+        OnException(new VisaDeviceException(Device, new InvalidOperationException(
+          $"Cannot find a VISA resource with the name {ResourceName} using the VISA resource manager of type " +
+          $"\"{(ResourceManager != null ? ResourceManager.GetType().Name : nameof(GlobalResourceManager))}\".")));
       }
 
       ConnectionTask = CreateDeviceConnectionTask();
@@ -316,6 +328,7 @@ namespace VisaDeviceBuilder
     ///   Creates the asynchronous device connection <see cref="Task" /> that handles the entire device
     ///   connection and disconnection process.
     /// </summary>
+    /// TODO: Split into connection and disconnection operations.
     private async Task CreateDeviceConnectionTask()
     {
       // Catching all connection task exceptions.
@@ -424,17 +437,24 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session to perform an operation.
+    /// </exception>
     public virtual async Task UpdateAsyncPropertiesAsync()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
 
-      if (Device.IsSessionOpened != true || IsUpdatingAsyncProperties)
+      if (IsUpdatingAsyncProperties)
         return;
       IsUpdatingAsyncProperties = true;
 
       try
       {
+        if (!Device.IsSessionOpened)
+          throw new VisaDeviceException(Device,
+            new InvalidOperationException("There is no opened VISA session to perform an operation."));
+
         await Task.Run(() =>
         {
           lock (DisconnectionLock)
@@ -495,16 +515,14 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-      if (_isDisposed)
+      if (_isDisposing || _isDisposed)
         return;
+      _isDisposing = true;
 
       try
       {
         await DisconnectAsync();
-        DeviceActionExecutor.Exception -= OnException;
-
         AutoUpdater.Dispose();
-        Device.Dispose();
       }
       catch
       {
@@ -512,6 +530,7 @@ namespace VisaDeviceBuilder
       }
       finally
       {
+        DeviceActionExecutor.Exception -= OnException;
         GC.SuppressFinalize(this);
         _isDisposed = true;
       }

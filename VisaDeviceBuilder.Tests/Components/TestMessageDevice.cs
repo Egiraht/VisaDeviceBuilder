@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
@@ -16,11 +15,6 @@ namespace VisaDeviceBuilder.Tests.Components
     public const int CommunicationDelay = 1;
 
     /// <summary>
-    ///   Defines the test exception text.
-    /// </summary>
-    public const string TestExceptionText = "Test exception";
-
-    /// <summary>
     ///   The synchronization locking object.
     /// </summary>
     private readonly object _synchronizationLock = new();
@@ -31,20 +25,15 @@ namespace VisaDeviceBuilder.Tests.Components
     private int _value;
 
     /// <summary>
-    ///   The backing field for the <see cref="TestAsyncProperty" /> property.
-    /// </summary>
-    private IAsyncProperty<int>? _testAsyncProperty;
-
-    /// <summary>
-    ///   Gets the test asynchronous property of integer type that must be enlisted into the
-    ///   <see cref="IVisaDevice.AsyncProperties" /> enumeration.
+    ///   Gets the test asynchronous property of integer type that is defined using the <see cref="IAsyncProperty" />
+    ///   type class declaration and must be enlisted into the <see cref="IVisaDevice.AsyncProperties" /> enumeration.
     /// </summary>
     public IAsyncProperty<int> TestAsyncProperty => _testAsyncProperty ??= new AsyncProperty<int>(() =>
     {
       lock (_synchronizationLock)
       {
         if (ThrowOnAsyncPropertyGetter)
-          throw new Exception(TestExceptionText);
+          throw new TestException();
 
         Task.Delay(CommunicationDelay).Wait();
         return _value;
@@ -53,10 +42,22 @@ namespace VisaDeviceBuilder.Tests.Components
     {
       lock (_synchronizationLock)
       {
+        if (ThrowOnAsyncPropertySetter)
+          throw new TestException();
+
         Task.Delay(CommunicationDelay).Wait();
         _value = newValue;
       }
     });
+    private IAsyncProperty<int>? _testAsyncProperty;
+
+    /// <summary>
+    ///   Gets the device action that is defined using the <see cref="IDeviceAction" /> type class declaration and
+    ///   must be enlisted into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    public IDeviceAction DeclaredTestDeviceAction => _testDeclaredDeviceAction ??= new DeviceAction(() => { });
+    private IDeviceAction? _testDeclaredDeviceAction;
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown on the device initialization.
@@ -70,38 +71,37 @@ namespace VisaDeviceBuilder.Tests.Components
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown during <see cref="TestAsyncProperty" />
-    ///   getter processing.
+    ///   getter updating.
     /// </summary>
     public bool ThrowOnAsyncPropertyGetter { get; set; } = false;
+
+    /// <summary>
+    ///   Gets or sets the flag defining if a test exception should be thrown during <see cref="TestAsyncProperty" />
+    ///   setter processing.
+    /// </summary>
+    public bool ThrowOnAsyncPropertySetter { get; set; } = false;
 
     /// <inheritdoc />
     protected override void Initialize()
     {
       if (ThrowOnInitialization)
-        throw new Exception(TestExceptionText);
+        throw new TestException();
     }
 
     /// <inheritdoc />
     protected override void DeInitialize()
     {
       if (ThrowOnDeInitialization)
-        throw new Exception(TestExceptionText);
+        throw new TestException();
     }
 
     /// <summary>
-    ///   Defines the valid device action that must be enlisted into the <see cref="IVisaDevice.DeviceActions" />
-    ///   enumeration.
+    ///   Defines the device action that is defined using the <see cref="DeviceActionAttribute" /> and must be enlisted
+    ///   into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
     /// </summary>
     [DeviceAction, ExcludeFromCodeCoverage]
-    public void TestDeviceAction()
+    public void DecoratedTestDeviceAction()
     {
     }
-
-    /// <summary>
-    ///   Defines the invalid device action that must not be enlisted into the <see cref="IVisaDevice.DeviceActions" />
-    ///   enumeration because it does not match the <see cref="Action" /> delegate signature.
-    /// </summary>
-    [DeviceAction, ExcludeFromCodeCoverage]
-    public string InvalidDeviceAction() => string.Empty;
   }
 }

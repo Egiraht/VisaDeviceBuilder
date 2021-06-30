@@ -26,18 +26,27 @@ namespace VisaDeviceBuilder
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <summary>
-    ///   The flag indicating if the object has been already disposed.
+    ///   The flag indicating if the VISA device is being disposed of at the moment.
+    /// </summary>
+    private bool _isDisposing;
+
+    /// <summary>
+    ///   The flag indicating if the VISA device has been already disposed of.
     /// </summary>
     private bool _isDisposed;
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The resource manager cannot be modified when a session is opened.
+    /// </exception>
     public IResourceManager? ResourceManager
     {
       get => _resourceManager;
       set
       {
         if (IsSessionOpened)
-          throw new VisaDeviceException(this, "The resource manager cannot be modified when a session is opened.");
+          throw new VisaDeviceException(this,
+            new InvalidOperationException("The resource manager cannot be modified when a session is opened."));
 
         _resourceManager = value;
       }
@@ -45,13 +54,17 @@ namespace VisaDeviceBuilder
     private IResourceManager? _resourceManager;
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The resource name cannot be modified when a session is opened.
+    /// </exception>
     public string ResourceName
     {
       get => _resourceName;
       set
       {
         if (IsSessionOpened)
-          throw new VisaDeviceException(this, "The resource name cannot be modified when a session is opened.");
+          throw new VisaDeviceException(this,
+            new InvalidOperationException("The resource name cannot be modified when a session is opened."));
 
         _resourceName = value;
       }
@@ -195,6 +208,12 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The used resource manager cannot parse the provided resource name (inner
+    ///   <see cref="InvalidOperationException" />), or the used hardware interface is not supported by VISA devices of
+    ///   this type (inner <see cref="NotSupportedException" />), or any other device-specific error identified through
+    ///   the inner exception.
+    /// </exception>
     public void OpenSession()
     {
       if (_isDisposed)
@@ -209,7 +228,7 @@ namespace VisaDeviceBuilder
         ConnectionState = DeviceConnectionState.Initializing;
 
         if (ResourceNameInfo == null)
-          throw new VisaDeviceException(this, new NotSupportedException(
+          throw new VisaDeviceException(this, new InvalidOperationException(
             $"Cannot parse the resource name \"{ResourceName}\" using the resource manager \"{ResourceManager?.GetType().Name ?? nameof(GlobalResourceManager)}\"."));
 
         if (!SupportedInterfaces.Contains(ResourceNameInfo.InterfaceType))
@@ -237,6 +256,12 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The used resource manager cannot parse the provided resource name (inner
+    ///   <see cref="InvalidOperationException" />), or the used hardware interface is not supported by VISA devices of
+    ///   this type (inner <see cref="NotSupportedException" />), or any other device-specific error identified through
+    ///   the inner exception.
+    /// </exception>
     public Task OpenSessionAsync() => Task.Run(OpenSession);
 
     /// <summary>
@@ -337,8 +362,9 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual void Dispose()
     {
-      if (_isDisposed)
+      if (_isDisposing || _isDisposed)
         return;
+      _isDisposing = true;
 
       CloseSession();
 

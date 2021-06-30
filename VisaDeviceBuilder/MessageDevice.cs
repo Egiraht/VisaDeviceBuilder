@@ -13,7 +13,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Defines the default collection of supported hardware interface types.
     /// </summary>
-    private static readonly HardwareInterfaceType[] DefaultSupportedMessageBasedInterfaces =
+    public static readonly HardwareInterfaceType[] DefaultSupportedMessageBasedInterfaces =
     {
       HardwareInterfaceType.Gpib,
       HardwareInterfaceType.Serial,
@@ -30,6 +30,9 @@ namespace VisaDeviceBuilder
     public override HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedMessageBasedInterfaces;
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The connected device does not support message-based VISA sessions.
+    /// </exception>
     protected override void Initialize()
     {
       if (base.Session is not IMessageBasedSession)
@@ -43,7 +46,7 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
-    ///   There is no opened VISA session (<see cref="InvalidOperationException" />).
+    ///   Cannot send a message as there is no opened VISA session.
     /// </exception>
     public virtual string SendMessage(string message)
     {
@@ -60,7 +63,7 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
-    ///   There is no opened VISA session (<see cref="InvalidOperationException" />).
+    ///   Cannot send a message as there is no opened VISA session.
     /// </exception>
     public virtual Task<string> SendMessageAsync(string message) => Task.Run(() => SendMessage(message));
   }

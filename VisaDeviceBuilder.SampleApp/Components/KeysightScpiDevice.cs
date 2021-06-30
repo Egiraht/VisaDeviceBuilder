@@ -33,7 +33,7 @@ namespace VisaDeviceBuilder.SampleApp.Components
     ///   The SCPI command response.
     /// </returns>
     /// <exception cref="VisaDeviceException">
-    ///   The message processing failed or the SCPI command response contains one or more errors.
+    ///   Message processing has failed, or the received SCPI command response contains one or more errors.
     /// </exception>
     public override string SendMessage(string message)
     {

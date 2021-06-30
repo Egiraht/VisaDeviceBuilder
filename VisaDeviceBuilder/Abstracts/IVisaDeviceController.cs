@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Resources;
 using System.Threading;
 using System.Threading.Tasks;
+using Ivi.Visa;
 
 namespace VisaDeviceBuilder.Abstracts
 {
@@ -21,6 +22,12 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Checks if the device is a message device (its type implements the <see cref="IMessageDevice" /> interface).
     /// </summary>
     bool IsMessageDevice { get; }
+
+    /// <inheritdoc cref="IVisaDevice.ResourceManager" />
+    public IResourceManager? ResourceManager { get; set; }
+
+    /// <inheritdoc cref="IVisaDevice.ResourceName" />
+    string ResourceName { get; set; }
 
     /// <summary>
     ///   Gets the read-only collection of asynchronous properties defined for the device.
@@ -42,11 +49,6 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Checks if the <see cref="AvailableVisaResources" /> property is being updated.
     /// </summary>
     bool IsUpdatingVisaResources { get; }
-
-    /// <summary>
-    ///   Gets or sets the VISA resource name used for VISA device location and connection.
-    /// </summary>
-    string ResourceName { get; set; }
 
     /// <summary>
     ///   Checks if the device with the specified <see cref="ResourceName" /> can be connected at the moment.

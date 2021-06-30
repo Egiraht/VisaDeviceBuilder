@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using Ivi.Visa;
 using Moq;
 
@@ -9,7 +10,6 @@ namespace VisaDeviceBuilder.Tests.Components
   /// <summary>
   ///   The custom VISA resource manager class used for <see cref="VisaDevice" /> class testing purposes.
   /// </summary>
-  [ExcludeFromCodeCoverage]
   public class TestResourceManager : IResourceManager
   {
     /// <summary>
@@ -21,6 +21,11 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Defines the default connection timeout in milliseconds.
     /// </summary>
     public const int DefaultConnectionTimeout = 1000;
+
+    /// <summary>
+    ///   Defines the session openning delay in milliseconds.
+    /// </summary>
+    public const int SessionOpeningDelay = 50;
 
     /// <summary>
     ///   Defines the custom test VISA device resource name.
@@ -98,16 +103,25 @@ namespace VisaDeviceBuilder.Tests.Components
     public const string VxiTestDeviceResourceClass = "VXI";
 
     /// <inheritdoc />
-    public Version ImplementationVersion { get; } = GlobalResourceManager.ImplementationVersion;
+    [ExcludeFromCodeCoverage]
+    public Version ImplementationVersion => GlobalResourceManager.ImplementationVersion;
 
     /// <inheritdoc />
-    public Version SpecificationVersion { get; } = GlobalResourceManager.SpecificationVersion;
+    [ExcludeFromCodeCoverage]
+    public Version SpecificationVersion => GlobalResourceManager.SpecificationVersion;
 
     /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
     public string ManufacturerName => nameof(VisaDeviceBuilder);
 
     /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
     public short ManufacturerId => 0x1234;
+
+    /// <summary>
+    ///   Gets the last message written in a message-based session.
+    /// </summary>
+    public string Message { get; private set; } = string.Empty;
 
     /// <inheritdoc />
     public IEnumerable<string> Find(string pattern = "") => new[]
@@ -136,6 +150,7 @@ namespace VisaDeviceBuilder.Tests.Components
     }
 
     /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
     public IVisaSession Open(string resourceName) => Open(resourceName, DefaultAccessMode, DefaultConnectionTimeout);
 
     /// <inheritdoc />
@@ -151,29 +166,40 @@ namespace VisaDeviceBuilder.Tests.Components
       {
         case {InterfaceType: SerialTestDeviceInterfaceType}:
         {
-          var mock = new Mock<IMessageBasedSession>();
-          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
+          var mock = new Mock<IMessageBasedSession> {Name = nameof(IMessageBasedSession)};
+          mock.SetupGet(session => session.ResourceName)
+            .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
-          mock.Setup(session => session.FormattedIO.WriteLine(string.Empty));
-          mock.Setup(session => session.FormattedIO.ReadLine()).Returns(string.Empty);
+          mock.Setup(session => session.FormattedIO.WriteLine(It.IsAny<string>()))
+            .Callback((string message) => Message = message);
+          mock.Setup(session => session.FormattedIO.ReadLine())
+            .Returns(() => Message);
+
+          Task.Delay(SessionOpeningDelay).Wait();
           openStatus = ResourceOpenStatus.Success;
           return mock.Object;
         }
 
         case {InterfaceType: VxiTestDeviceInterfaceType}:
         {
-          var mock = new Mock<IRegisterBasedSession>();
-          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
+          var mock = new Mock<IRegisterBasedSession> {Name = nameof(IRegisterBasedSession)};
+          mock.SetupGet(session => session.ResourceName)
+            .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
+
+          Task.Delay(SessionOpeningDelay).Wait();
           openStatus = ResourceOpenStatus.Success;
           return mock.Object;
         }
 
         default:
         {
-          var mock = new Mock<IVisaSession>();
-          mock.SetupGet(session => session.ResourceName).Returns(resourceName);
+          var mock = new Mock<IVisaSession> {Name = nameof(IVisaSession)};
+          mock.SetupGet(session => session.ResourceName)
+            .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
+
+          Task.Delay(SessionOpeningDelay).Wait();
           openStatus = ResourceOpenStatus.Success;
           return mock.Object;
         }

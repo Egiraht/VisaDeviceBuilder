@@ -116,6 +116,9 @@ namespace VisaDeviceBuilder.SampleApp.Components
     };
 
     /// <inheritdoc />
+    /// <exception cref="VisaDeviceException">
+    ///   The specified VISA resource is not a Keysight E364xA device.
+    /// </exception>
     protected override void Initialize()
     {
       base.Initialize();

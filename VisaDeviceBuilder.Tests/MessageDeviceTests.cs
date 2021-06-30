@@ -12,6 +12,42 @@ namespace VisaDeviceBuilder.Tests
   public class MessageDeviceTests
   {
     /// <summary>
+    ///   Defines the test message.
+    /// </summary>
+    private const string TestMessage = "Test message\x0A";
+
+    /// <summary>
+    ///   Testing new message-based VISA device instance creation.
+    /// </summary>
+    [Fact]
+    public async Task MessageDeviceTest()
+    {
+      using var resourceManager = new TestResourceManager();
+      await using var device = new MessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+
+      // Checking device properties.
+      Assert.Equal(resourceManager, device.ResourceManager);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, device.ResourceName);
+      Assert.Equal(MessageDevice.DefaultSupportedMessageBasedInterfaces, device.SupportedInterfaces);
+      var resourceNameInfo = device.ResourceNameInfo;
+      Assert.NotNull(resourceNameInfo);
+      Assert.Equal(TestResourceManager.SerialTestDeviceInterfaceType, resourceNameInfo!.InterfaceType);
+      Assert.Equal(TestResourceManager.SerialTestDeviceInterfaceNumber, resourceNameInfo.InterfaceNumber);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceClass, resourceNameInfo.ResourceClass);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, resourceNameInfo.ExpandedUnaliasedName);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, resourceNameInfo.OriginalResourceName);
+      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, resourceNameInfo.AliasIfExists);
+      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, device.AliasName);
+      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, await device.GetIdentifierAsync());
+      Assert.Null(device.Session);
+      Assert.False(device.IsSessionOpened);
+    }
+
+    /// <summary>
     ///   Testing the VISA message-based session opening and closing.
     /// </summary>
     [Fact]
@@ -23,17 +59,25 @@ namespace VisaDeviceBuilder.Tests
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
-      Assert.Null(device.Session);
 
       // Throw when sending a message with no opened session.
+      Assert.Null(device.Session);
+      Assert.False(device.IsSessionOpened);
       await Assert.ThrowsAnyAsync<VisaDeviceException>(() => device.SendMessageAsync(string.Empty));
 
+      // Session opening.
       await device.OpenSessionAsync();
       Assert.IsAssignableFrom<IMessageBasedSession>(device.Session);
+      Assert.True(device.IsSessionOpened);
 
-      await device.SendMessageAsync(string.Empty);
+      // TestResourceManager must return the sent message back.
+      var responseMessage = await device.SendMessageAsync(TestMessage);
+      Assert.Equal(TestMessage.TrimEnd('\x0A'), responseMessage);
+
+      // Session closing.
       await device.CloseSessionAsync();
       Assert.Null(device.Session);
+      Assert.False(device.IsSessionOpened);
     }
 
     /// <summary>
@@ -42,54 +86,22 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task UnsupportedResourcesTest()
     {
-      // Testing the unsupported interface type.
+      // An unsupported interface type should not pass.
       using var resourceManager = new TestResourceManager();
       await using (var device = new MessageDevice
       {
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.CustomTestDeviceResourceName
       })
-        await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
+        await Assert.ThrowsAsync<VisaDeviceException>(device.OpenSessionAsync);
 
-      // Testing the supported interface type but with the non-message-based session type.
+      // A supported interface type but with a non-message-based session type also should not pass.
       await using (var device = new MessageDevice
       {
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.VxiTestDeviceResourceName
       })
-        await Assert.ThrowsAnyAsync<VisaDeviceException>(device.OpenSessionAsync);
-    }
-
-    /// <summary>
-    ///   Testing the custom test message-based VISA device, derived from the <see cref="MessageDevice" /> class.
-    /// </summary>
-    [Fact]
-    public async Task CustomMessageDeviceTest()
-    {
-      using var resourceManager = new TestResourceManager();
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
-      Assert.Contains(device.AsyncProperties, asyncProperty => asyncProperty == device.TestAsyncProperty);
-      Assert.Contains(device.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.TestDeviceAction);
-
-      device.ThrowOnInitialization = true;
-      await Assert.ThrowsAnyAsync<Exception>(device.OpenSessionAsync);
-
-      device.ThrowOnInitialization = false;
-      await device.OpenSessionAsync();
-
-      device.TestAsyncProperty.Setter = int.MaxValue;
-      await device.TestAsyncProperty.GetSetterProcessingTask();
-      device.TestAsyncProperty.RequestGetterUpdate();
-      await device.TestAsyncProperty.GetGetterUpdatingTask();
-      Assert.Equal(int.MaxValue, device.TestAsyncProperty.Getter);
-
-      // All possible exceptions during the device de-initialization and object disposal must be suppressed.
-      device.ThrowOnDeInitialization = true;
-      await device.CloseSessionAsync();
+        await Assert.ThrowsAsync<VisaDeviceException>(device.OpenSessionAsync);
     }
   }
 }

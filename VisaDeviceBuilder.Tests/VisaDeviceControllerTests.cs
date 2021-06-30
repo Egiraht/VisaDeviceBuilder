@@ -1,10 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
+using Moq;
+using VisaDeviceBuilder.Abstracts;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
+using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder.Tests
 {
@@ -21,132 +21,143 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the test auto-updater delay value in milliseconds.
     /// </summary>
-    public const int TestAutoUpdaterDelay = 5;
+    public const int TestAutoUpdaterDelay = 12;
 
     /// <summary>
-    ///   Testing the available VISA resources discovery logic.
+    ///   Testing new VISA device controller instance creation.
+    /// </summary>
+    [Fact]
+    public async Task VisaDeviceControllerTest()
+    {
+      using var resourceManager = new TestResourceManager();
+      await using var device = new MessageDevice();
+      var localizationResourceManager = new Mock<LocalizationResourceManager>().Object;
+      await using var controller = new VisaDeviceController(device)
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        AutoUpdaterDelay = TestAutoUpdaterDelay,
+        IsAutoUpdaterEnabled = false,
+        LocalizationResourceManager = localizationResourceManager
+      };
+
+      // Checking the controller's properties.
+      Assert.Same(device, controller.Device);
+      Assert.True(controller.IsMessageDevice);
+      Assert.Same(resourceManager, controller.ResourceManager);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, controller.ResourceName);
+      Assert.Equal(TestAutoUpdaterDelay, controller.AutoUpdaterDelay);
+      Assert.NotNull(controller.AutoUpdater);
+      Assert.False(controller.IsAutoUpdaterEnabled);
+      Assert.Same(localizationResourceManager, controller.LocalizationResourceManager);
+      Assert.True(controller.CanConnect);
+      Assert.Empty(controller.Identifier);
+      Assert.False(controller.IsDeviceReady);
+      Assert.Empty(controller.AvailableVisaResources);
+      Assert.False(controller.IsUpdatingVisaResources);
+      Assert.False(controller.IsUpdatingAsyncProperties);
+      Assert.Empty(controller.AsyncProperties);
+      Assert.Contains(controller.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.Reset);
+      Assert.False(controller.IsDisconnectionRequested);
+    }
+
+    /// <summary>
+    ///   Testing discovery of available VISA resources using a controller.
     /// </summary>
     [Fact]
     public async Task VisaResourcesListTest()
     {
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = new TestResourceManager(),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
-      await using var controller = new VisaDeviceController(device);
-      Assert.Empty(controller.AvailableVisaResources);
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice();
+      await using var controller = new VisaDeviceController(device) {ResourceManager = resourceManager};
+      Assert.Empty(controller.AvailableVisaResources); // Available resources should be empty after controller creation.
       Assert.False(controller.IsUpdatingVisaResources);
 
+      // Updating available VISA resources.
       var updateResourcesListTask = controller.UpdateResourcesListAsync();
-      _ = controller.UpdateResourcesListAsync(); // Repeated simultaneous call.
       Assert.True(controller.IsUpdatingVisaResources);
-
-      // Checking the presence of the test resource names and their aliases in the updated VISA resources list.
+      _ = controller.UpdateResourcesListAsync(); // Repeated simultaneous call should pass.
       await updateResourcesListTask;
-      using var resourceManager = new TestResourceManager();
-      var testResourceNames = resourceManager.Find().Reverse().Aggregate(new List<string>(), (results, current) =>
-      {
-        var parseResult = resourceManager.Parse(current);
-        results.Add(parseResult.OriginalResourceName);
-        if (!string.IsNullOrEmpty(parseResult.AliasIfExists))
-          results.Add(parseResult.AliasIfExists);
-        return results;
-      });
-      Assert.Equal(testResourceNames.ToImmutableSortedSet(), controller.AvailableVisaResources.ToImmutableSortedSet());
+      Assert.False(controller.IsUpdatingVisaResources);
+
+      // Resources from the TestResourceManager must be included into the controller's available resources list.
+      var resources = await VisaResourceLocator.LocateResourceNamesAsync<TestResourceManager>();
+      Assert.Equal(resources, controller.AvailableVisaResources);
     }
 
     /// <summary>
-    ///   Testing the VISA message device controller logic.
+    ///   Testing VISA device connection using a controller.
     /// </summary>
     [Fact]
-    public async Task MessageDeviceControllerTest()
+    public async Task DeviceConnectionTest()
     {
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = new TestResourceManager(),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice();
       await using var controller = new VisaDeviceController(device)
       {
-        AutoUpdaterDelay = TestAutoUpdaterDelay,
-        IsAutoUpdaterEnabled = true,
-        LocalizationResourceManager = null
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        IsAutoUpdaterEnabled = false
       };
-      Assert.Equal(device, controller.Device);
-      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, controller.ResourceName);
-      Assert.Equal(TestAutoUpdaterDelay, controller.AutoUpdaterDelay);
-      Assert.True(controller.IsAutoUpdaterEnabled);
-      Assert.Null(controller.LocalizationResourceManager);
-      Assert.True(controller.IsMessageDevice);
       Assert.True(controller.CanConnect);
-      Assert.Empty(controller.Identifier);
       Assert.False(controller.IsDeviceReady);
-      Assert.False(controller.IsUpdatingAsyncProperties);
       Assert.False(controller.IsDisconnectionRequested);
 
       controller.Connect();
-      controller.Connect(); // Repeated call.
+      controller.Connect(); // Repeated call should pass OK.
       Assert.False(controller.CanConnect);
+      Assert.False(controller.IsDeviceReady);
+      Assert.False(controller.IsDisconnectionRequested);
 
-      // Testing the connection session that remains opened until disconnection is requested.
+      // Connecting to the device.
       do
         await Task.Delay(StateCheckPeriod);
       while (!controller.IsDeviceReady);
-      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, controller.Identifier);
-      Assert.NotEmpty(controller.AsyncProperties);
-      Assert.Equal(nameof(TestMessageDevice.TestAsyncProperty), controller.AsyncProperties[0].Name);
-      Assert.NotEmpty(controller.DeviceActions);
-      Assert.Equal(nameof(TestMessageDevice.TestDeviceAction), controller.DeviceActions[0].Name);
+      Assert.False(controller.CanConnect);
       Assert.True(controller.IsDeviceReady);
       Assert.False(controller.IsDisconnectionRequested);
+      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, controller.Identifier);
 
-      // Testing the disconnection request.
+      // Disconnecting from the device.
       var disconnectionTask = controller.DisconnectAsync();
-      _ = controller.DisconnectAsync(); // Repeated simultaneous call.
+      _ = controller.DisconnectAsync(); // Repeated simultaneous call should pass OK.
+      Assert.False(controller.CanConnect);
+      Assert.False(controller.IsDeviceReady);
       Assert.True(controller.IsDisconnectionRequested);
+
       await disconnectionTask;
-      Assert.Empty(controller.Identifier);
       Assert.True(controller.CanConnect);
       Assert.False(controller.IsDeviceReady);
-      Assert.False(controller.IsUpdatingAsyncProperties);
       Assert.False(controller.IsDisconnectionRequested);
-
-      // Testing the connection session that will be closed immediately on the controller disposal.
-      controller.Connect();
     }
 
     /// <summary>
-    ///   Testing the manual asynchronous properties update logic.
+    ///   Testing manual updating of asynchronous properties using a controller.
     /// </summary>
     [Fact]
     public async Task ManualAsyncPropertiesUpdateTest()
     {
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = new TestResourceManager(),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice();
       await using var controller = new VisaDeviceController(device)
       {
+        ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = false
       };
+      controller.Exception += (_, args) => throw args.Exception;
 
-      // The device is disconnected.
-      var updateAsyncPropertiesTask = controller.UpdateAsyncPropertiesAsync();
-      Assert.False(controller.IsUpdatingAsyncProperties);
-      await updateAsyncPropertiesTask;
-      Assert.False(controller.IsUpdatingAsyncProperties);
+      // Throw an exceptions if updating when the device is disconnected.
+      await Assert.ThrowsAsync<VisaDeviceException>(controller.UpdateAsyncPropertiesAsync);
 
       // The device is connected.
       controller.Connect();
       do
         await Task.Delay(StateCheckPeriod);
       while (!controller.IsDeviceReady);
-      updateAsyncPropertiesTask = controller.UpdateAsyncPropertiesAsync();
-      _ = controller.UpdateAsyncPropertiesAsync(); // Repeated simultaneous call.
+      var updateAsyncPropertiesTask = controller.UpdateAsyncPropertiesAsync();
       Assert.True(controller.IsUpdatingAsyncProperties);
+      _ = controller.UpdateAsyncPropertiesAsync(); // Repeated simultaneous call should pass OK.
       await updateAsyncPropertiesTask;
       Assert.False(controller.IsUpdatingAsyncProperties);
     }
@@ -157,13 +168,11 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceInitializationExceptionTest()
     {
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = new TestResourceManager(),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice();
       await using var controller = new VisaDeviceController(device)
       {
+        ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
@@ -197,13 +206,11 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceAutoUpdatingExceptionTest()
     {
-      await using var device = new TestMessageDevice
-      {
-        ResourceManager = new TestResourceManager(),
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName
-      };
+      using var resourceManager = new TestResourceManager();
+      await using var device = new TestMessageDevice();
       await using var controller = new VisaDeviceController(device)
       {
+        ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         IsAutoUpdaterEnabled = true,
         AutoUpdaterDelay = TestAutoUpdaterDelay
@@ -236,14 +243,26 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
-    ///   Testing the repeated controller object disposal.
+    ///   Testing VISA device controller object disposal.
     /// </summary>
     [Fact]
-    public void RepeatedDisposalTest()
+    public async Task VisaDeviceControllerDisposalTest()
     {
-      using var device = new TestMessageDevice();
-      using var controller = new VisaDeviceController(device);
+      IVisaDeviceController? controller;
+      await using var device = new TestMessageDevice();
+      await using (controller = new VisaDeviceController(device))
+        controller.Connect();
+
+      // The controller instance now should be disposed of.
+      Assert.False(controller.IsDeviceReady);
+      Assert.Throws<ObjectDisposedException>(controller.Connect);
+      await Assert.ThrowsAsync<ObjectDisposedException>(controller.UpdateResourcesListAsync);
+      await Assert.ThrowsAsync<ObjectDisposedException>(controller.UpdateAsyncPropertiesAsync);
+      await Assert.ThrowsAsync<ObjectDisposedException>(controller.DisconnectAsync);
+
+      // Repeated device disposals should pass OK.
       controller.Dispose();
+      await controller.DisposeAsync();
     }
 
     // TODO: Add tests for auto-updater control and names localization.
