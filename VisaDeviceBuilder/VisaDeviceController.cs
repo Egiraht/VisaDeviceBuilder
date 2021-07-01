@@ -200,14 +200,19 @@ namespace VisaDeviceBuilder
     private LocalizationResourceManager? _localizationResourceManager;
 
     /// <summary>
-    ///   Stores the <see cref="Task" /> for the established device connection.
+    ///   Gets or sets the VISA device connection process <see cref="Task" />.
     /// </summary>
-    protected Task? ConnectionTask { get; set; }
+    private Task? ConnectionTask { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the VISA device disconnection process <see cref="Task" />.
+    /// </summary>
+    private Task? DisconnectionTask { get; set; }
 
     /// <summary>
     ///   Stores the cancellation token source that allows to stop the device connection task and disconnect the device.
     /// </summary>
-    protected CancellationTokenSource? DisconnectionTokenSource { get; set; }
+    private CancellationTokenSource? DisconnectionTokenSource { get; set; }
 
     /// <summary>
     ///   Gets the shared locking object used for device disconnection synchronization.
@@ -216,6 +221,12 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <inheritdoc />
+    public event EventHandler? Connected;
+
+    /// <inheritdoc />
+    public event EventHandler? Disconnected;
 
     /// <inheritdoc />
     public event ThreadExceptionEventHandler? Exception;
@@ -297,7 +308,7 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public virtual void Connect()
+    public void BeginConnect()
     {
       if (_isDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
@@ -306,84 +317,105 @@ namespace VisaDeviceBuilder
         return;
       CanConnect = false;
 
-      // Checking the VISA resource name.
-      try
-      {
-        if (ResourceManager != null)
-          ResourceManager.Parse(ResourceName);
-        else
-          GlobalResourceManager.Parse(ResourceName);
-      }
-      catch
-      {
-        OnException(new VisaDeviceException(Device, new InvalidOperationException(
-          $"Cannot find a VISA resource with the name {ResourceName} using the VISA resource manager of type " +
-          $"\"{(ResourceManager != null ? ResourceManager.GetType().Name : nameof(GlobalResourceManager))}\".")));
-      }
-
-      ConnectionTask = CreateDeviceConnectionTask();
+      DisconnectionTokenSource = new CancellationTokenSource();
+      ConnectionTask = ConnectDeviceAsync(DisconnectionTokenSource.Token);
     }
 
     /// <summary>
-    ///   Creates the asynchronous device connection <see cref="Task" /> that handles the entire device
-    ///   connection and disconnection process.
+    ///   Creates and asynchronously runs the device connection <see cref="Task" /> that handles the entire VISA device
+    ///   connection process.
     /// </summary>
-    /// TODO: Split into connection and disconnection operations.
-    private async Task CreateDeviceConnectionTask()
+    private async Task ConnectDeviceAsync(CancellationToken cancellationToken)
     {
-      // Catching all connection task exceptions.
       try
       {
-        // Catching the disconnection token.
+        // Trying to open a new VISA session with the device.
+        await Device.OpenSessionAsync();
+
+        // Getting the device identifier string.
+        cancellationToken.ThrowIfCancellationRequested();
+        Identifier = await Device.GetIdentifierAsync();
+
+        // Trying to get the initial getter values of the asynchronous properties.
+        // If any getter exception occurs on this stage, throw it and disconnect from the device.
+        static void ThrowOnGetterException(object _, ThreadExceptionEventArgs args) => throw args.Exception;
+        foreach (var asyncProperty in Device.AsyncProperties)
+        {
+          cancellationToken.ThrowIfCancellationRequested();
+          asyncProperty.GetterException += ThrowOnGetterException;
+          asyncProperty.RequestGetterUpdate();
+          await asyncProperty.GetGetterUpdatingTask();
+          asyncProperty.GetterException -= ThrowOnGetterException;
+        }
+
+        // Resubscribing on further exceptions of asynchronous properties using the OnException handler that does not
+        // cause disconnection.
+        foreach (var asyncProperty in Device.AsyncProperties)
+        {
+          asyncProperty.GetterException += OnException;
+          asyncProperty.SetterException += OnException;
+        }
+
+        // Starting the auto-updater.
+        cancellationToken.ThrowIfCancellationRequested();
+        if (IsAutoUpdaterEnabled)
+          AutoUpdater.Start();
+        IsDeviceReady = true;
+
+        OnConnected();
+      }
+      catch (OperationCanceledException)
+      {
+        // Suppress task cancellation exceptions.
+      }
+      catch (Exception e)
+      {
         try
         {
-          // Trying to connect to the device.
-          DisconnectionTokenSource = new CancellationTokenSource();
-          var disconnectionToken = DisconnectionTokenSource.Token;
-          await Device.OpenSessionAsync();
-
-          // Getting the device identifier string.
-          disconnectionToken.ThrowIfCancellationRequested();
-          Identifier = await Device.GetIdentifierAsync();
-
-          // Trying to get the initial getter values of the asynchronous properties.
-          // If any getter exception occurs on this stage, throw it and disconnect from the device.
-          static void ThrowOnGetterException(object _, ThreadExceptionEventArgs args) => throw args.Exception;
-          foreach (var asyncProperty in Device.AsyncProperties)
-          {
-            disconnectionToken.ThrowIfCancellationRequested();
-
-            // Subscribing on the initial asynchronous property's getter exception to cause disconnection.
-            asyncProperty.GetterException += ThrowOnGetterException;
-            asyncProperty.RequestGetterUpdate();
-            await asyncProperty.GetGetterUpdatingTask();
-            asyncProperty.GetterException -= ThrowOnGetterException;
-
-            // Resubscribing on further asynchronous property's exceptions using the default handler that does not cause
-            // a disconnection.
-            asyncProperty.GetterException += OnException;
-            asyncProperty.SetterException += OnException;
-          }
-
-          // Configuring the auto-updater.
-          disconnectionToken.ThrowIfCancellationRequested();
-          if (IsAutoUpdaterEnabled)
-            AutoUpdater.Start();
-          IsDeviceReady = true;
-
-          // Waiting for the disconnection request.
-          await Task.Delay(-1, disconnectionToken);
-        }
-        catch (OperationCanceledException)
-        {
-          // Suppress task cancellation exceptions.
+          OnException(e);
         }
         finally
         {
-          DisconnectionTokenSource?.Dispose();
-          DisconnectionTokenSource = null;
-          Identifier = string.Empty;
-          IsDeviceReady = false;
+          BeginDisconnect();
+        }
+      }
+    }
+
+    /// <inheritdoc />
+    public Task GetDeviceConnectionTask() => ConnectionTask ?? Task.CompletedTask;
+
+    /// <inheritdoc />
+    public void BeginDisconnect()
+    {
+      if (_isDisposed)
+        throw new ObjectDisposedException(nameof(VisaDeviceController));
+
+      if (IsDisconnectionRequested || ConnectionTask == null || DisconnectionTokenSource == null)
+        return;
+      IsDisconnectionRequested = true;
+
+      IsDeviceReady = false;
+      Identifier = string.Empty;
+      DisconnectionTask = DisconnectDeviceAsync();
+    }
+
+    /// <summary>
+    ///   Creates and asynchronously runs the device disconnection <see cref="Task" /> that handles the entire VISA
+    ///   device disconnection process.
+    /// </summary>
+    private async Task DisconnectDeviceAsync()
+    {
+      try
+      {
+        // Cancelling the connection task if possible.
+        try
+        {
+          DisconnectionTokenSource!.Cancel();
+          await ConnectionTask!;
+        }
+        catch
+        {
+          // Ignore exceptions.
         }
 
         // Waiting for the auto-updater to stop.
@@ -393,8 +425,18 @@ namespace VisaDeviceBuilder
         await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
 
         // Waiting for all asynchronous properties processing to complete.
-        await Task.WhenAll(AsyncProperties.SelectMany(property =>
-          new[] {property.GetGetterUpdatingTask(), property.GetGetterUpdatingTask()}));
+        await Task.WhenAll(AsyncProperties.SelectMany(property => new[]
+        {
+          property.GetGetterUpdatingTask(),
+          property.GetGetterUpdatingTask()
+        }));
+
+        // Unsubscribing from exceptions of asynchronous properties.
+        foreach (var asyncProperty in Device.AsyncProperties)
+        {
+          asyncProperty.GetterException -= OnException;
+          asyncProperty.SetterException -= OnException;
+        }
 
         // Waiting for remaining asynchronous operations to complete before session closing.
         await Task.Run(() =>
@@ -409,32 +451,19 @@ namespace VisaDeviceBuilder
       }
       finally
       {
+        ConnectionTask?.Dispose();
+        ConnectionTask = null;
+        DisconnectionTokenSource?.Dispose();
+        DisconnectionTokenSource = null;
+        IsDisconnectionRequested = false;
         CanConnect = true;
+
+        OnDisconnected();
       }
     }
 
     /// <inheritdoc />
-    public virtual async Task DisconnectAsync()
-    {
-      if (_isDisposed)
-        throw new ObjectDisposedException(nameof(VisaDeviceController));
-
-      if (IsDisconnectionRequested || ConnectionTask == null || DisconnectionTokenSource == null)
-        return;
-      IsDisconnectionRequested = true;
-
-      try
-      {
-        DisconnectionTokenSource.Cancel();
-        await ConnectionTask;
-      }
-      finally
-      {
-        ConnectionTask.Dispose();
-        ConnectionTask = null;
-        IsDisconnectionRequested = false;
-      }
-    }
+    public Task GetDeviceDisconnectionTask() => DisconnectionTask ?? Task.CompletedTask;
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
@@ -491,6 +520,16 @@ namespace VisaDeviceBuilder
       PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
     /// <summary>
+    ///   Invokes the <see cref="Connected" /> event.
+    /// </summary>
+    protected virtual void OnConnected() => Connected?.Invoke(this, new EventArgs());
+
+    /// <summary>
+    ///   Invokes the <see cref="Disconnected" /> event.
+    /// </summary>
+    protected virtual void OnDisconnected() => Disconnected?.Invoke(this, new EventArgs());
+
+    /// <summary>
     ///   Invokes the <see cref="Exception" /> event.
     /// </summary>
     /// <param name="exception">
@@ -521,7 +560,8 @@ namespace VisaDeviceBuilder
 
       try
       {
-        await DisconnectAsync();
+        BeginDisconnect();
+        await GetDeviceDisconnectionTask();
         AutoUpdater.Dispose();
       }
       catch

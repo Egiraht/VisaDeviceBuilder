@@ -80,14 +80,14 @@ namespace VisaDeviceBuilder.WPF
     ///   The command for connecting to the device.
     /// </summary>
     public ICommand ConnectCommand => _connectCommand ??=
-      new RelayCommand(_ => Connect(), _ => !string.IsNullOrWhiteSpace(ResourceName) && CanConnect);
+      new RelayCommand(_ => BeginConnect(), _ => !string.IsNullOrWhiteSpace(ResourceName) && CanConnect);
     private ICommand? _connectCommand;
 
     /// <summary>
     ///   The command for disconnecting from the device.
     /// </summary>
     public ICommand DisconnectCommand => _disconnectCommand ??=
-      new RelayCommand(_ => DisconnectAsync(), _ => !CanConnect && !IsDisconnectionRequested);
+      new RelayCommand(_ => BeginDisconnect(), _ => !CanConnect && !IsDisconnectionRequested);
     private ICommand? _disconnectCommand;
 
     /// <summary>

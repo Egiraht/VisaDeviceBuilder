@@ -100,9 +100,19 @@ namespace VisaDeviceBuilder.Abstracts
     int AutoUpdaterDelay { get; set; }
 
     /// <summary>
-    ///   Checks if the device disconnection has been requested using the <see cref="DisconnectAsync" /> method.
+    ///   Checks if the device disconnection has been requested using the <see cref="BeginDisconnect" /> method.
     /// </summary>
     bool IsDisconnectionRequested { get; }
+
+    /// <summary>
+    ///   The event that is called when a VISA device gets successfully connected to the controller.
+    /// </summary>
+    event EventHandler? Connected;
+
+    /// <summary>
+    ///   The event that is called when a VISA device gets finally disconnected from the controller.
+    /// </summary>
+    event EventHandler? Disconnected;
 
     /// <summary>
     ///   The event that is called on any device controller exception caught during the connection session.
@@ -115,14 +125,44 @@ namespace VisaDeviceBuilder.Abstracts
     Task UpdateResourcesListAsync();
 
     /// <summary>
-    ///   Starts the asynchronous device connection process.
+    ///   Begins the asynchronous device connection process.
     /// </summary>
-    void Connect();
+    /// <remarks>
+    ///   <para>
+    ///     Use the <see cref="GetDeviceConnectionTask" /> method to get the awaitable connection <see cref="Task" />
+    ///     object.
+    ///   </para>
+    ///   <para>
+    ///     Use the <see cref="BeginDisconnect" /> method to interrupt the ongoing connection process as well as to
+    ///     disconnect the previously connected device.
+    ///   </para>
+    /// </remarks>
+    void BeginConnect();
 
     /// <summary>
-    ///   Stops the device connection loop.
+    ///   Gets the awaitable device connection <see cref="Task" /> that encapsulates the entire device connection and
+    ///   initialization process.
     /// </summary>
-    Task DisconnectAsync();
+    /// <returns>
+    ///   The device connection process <see cref="Task" /> object if there is an ongoing connection process, or a
+    ///   <see cref="Task.CompletedTask" /> otherwise.
+    /// </returns>
+    Task GetDeviceConnectionTask();
+
+    /// <summary>
+    ///   Asynchronously interrupts the ongoing connection process or disconnect the previously connected device.
+    /// </summary>
+    void BeginDisconnect();
+
+    /// <summary>
+    ///   Gets the awaitable device disconnection <see cref="Task" /> that encapsulates the entire device
+    ///   de-initialization and final disconnection process.
+    /// </summary>
+    /// <returns>
+    ///   The device disconnection process <see cref="Task" /> object if there is an ongoing disconnection process, or a
+    ///   <see cref="Task.CompletedTask" /> otherwise.
+    /// </returns>
+    Task GetDeviceDisconnectionTask();
 
     /// <summary>
     ///   Asynchronously updates getters of all asynchronous properties registered in the <see cref="AsyncProperties" />

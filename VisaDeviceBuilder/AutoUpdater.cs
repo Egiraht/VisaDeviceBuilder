@@ -142,12 +142,22 @@ namespace VisaDeviceBuilder
       if (AutoUpdaterTask == null || CancellationTokenSource == null)
         return;
 
-      CancellationTokenSource.Cancel();
-      AutoUpdaterTask.Wait();
-      AutoUpdaterTask.Dispose();
-      AutoUpdaterTask = null;
-      CancellationTokenSource.Dispose();
-      CancellationTokenSource = null;
+      try
+      {
+        CancellationTokenSource.Cancel();
+        AutoUpdaterTask.Wait();
+      }
+      catch
+      {
+        // Suppress task cancellation exceptions.
+      }
+      finally
+      {
+        AutoUpdaterTask.Dispose();
+        AutoUpdaterTask = null;
+        CancellationTokenSource.Dispose();
+        CancellationTokenSource = null;
+      }
     }
 
     /// <inheritdoc />
