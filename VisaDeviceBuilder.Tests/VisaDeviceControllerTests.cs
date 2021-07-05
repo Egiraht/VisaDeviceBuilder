@@ -15,14 +15,14 @@ namespace VisaDeviceBuilder.Tests
   public class VisaDeviceControllerTests
   {
     /// <summary>
-    ///   Defines the delay after that the test session state check is performed.
-    /// </summary>
-    public const int StateCheckPeriod = 30;
-
-    /// <summary>
     ///   Defines the test auto-updater delay value in milliseconds.
     /// </summary>
     public const int TestAutoUpdaterDelay = 12;
+
+    /// <summary>
+    ///   Defines the asynchronous operation timeout period.
+    /// </summary>
+    private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(1);
 
     /// <summary>
     ///   Testing new VISA device controller instance creation.
@@ -58,7 +58,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsUpdatingVisaResources);
       Assert.False(controller.IsUpdatingAsyncProperties);
       Assert.Empty(controller.AsyncProperties);
-      Assert.Contains(controller.DeviceActions, deviceAction => (DeviceAction) deviceAction == (Action) device.Reset);
+      Assert.Contains(controller.DeviceActions, deviceAction => deviceAction.DeviceActionDelegate == device.Reset);
       Assert.False(controller.IsDisconnectionRequested);
     }
 
@@ -222,9 +222,9 @@ namespace VisaDeviceBuilder.Tests
       controller.IsAutoUpdaterEnabled = true;
       Assert.True(controller.AutoUpdater.IsRunning);
       controller.IsAutoUpdaterEnabled = false;
-      do
-        await Task.Delay(StateCheckPeriod);
-      while (controller.AutoUpdater.IsRunning);
+      var timer = Task.Delay(Timeout);
+      while (controller.AutoUpdater.IsRunning && !timer.IsCompleted) // The operation should complete before the timer.
+        await Task.Delay(controller.AutoUpdater.Delay);
       Assert.False(controller.AutoUpdater.IsRunning);
 
       // Changing the auto-updater delay value when it is running must be OK.

@@ -21,6 +21,11 @@ namespace VisaDeviceBuilder.Tests
     private const double TestValue = Math.PI;
 
     /// <summary>
+    ///   Defines the test asynchronous property name.
+    /// </summary>
+    private const string TestName = "Test name";
+
+    /// <summary>
     ///   Defines the custom text message for getter exception testing.
     /// </summary>
     private const string GetterExceptionMessage = "Getter exception";
@@ -59,12 +64,20 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task GetOnlyPropertyTest()
     {
-      var property = new AsyncProperty<double>(GetterCallback) {AutoUpdateGetterAfterSetterCompletes = false};
+      var property = new AsyncProperty<double>(GetterCallback)
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       var baseProperty = (IAsyncProperty) property;
       Assert.True(property.CanGet);
       Assert.False(property.CanSet);
+      Assert.Equal(GetterCallback, property.GetterDelegate);
+      property.SetterDelegate.Invoke(default); // The default setter delegate should pass OK.
       Assert.Equal(default, property.Getter);
       Assert.Equal(typeof(double), baseProperty.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return the correct value.
       PropertyValue = TestValue;
@@ -89,12 +102,20 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task SetOnlyPropertyTest()
     {
-      var property = new AsyncProperty<double>(SetterCallback) {AutoUpdateGetterAfterSetterCompletes = false};
+      var property = new AsyncProperty<double>(SetterCallback)
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       var baseProperty = (IAsyncProperty) property;
       Assert.False(property.CanGet);
       Assert.True(property.CanSet);
+      Assert.Equal(default, property.GetterDelegate.Invoke()); // The default getter delegate should pass OK.
+      Assert.Equal(SetterCallback, property.SetterDelegate);
       Assert.Equal(default, property.Getter);
       Assert.Equal(typeof(double), baseProperty.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return a default value.
       PropertyValue = TestValue;
@@ -122,12 +143,19 @@ namespace VisaDeviceBuilder.Tests
     public async Task GetSetPropertyTest()
     {
       var property = new AsyncProperty<double>(GetterCallback, SetterCallback)
-        {AutoUpdateGetterAfterSetterCompletes = false};
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       var baseProperty = (IAsyncProperty) property;
       Assert.True(property.CanGet);
       Assert.True(property.CanSet);
+      Assert.Equal(GetterCallback, property.GetterDelegate);
+      Assert.Equal(SetterCallback, property.SetterDelegate);
       Assert.Equal(default, property.Getter);
       Assert.Equal(typeof(double), baseProperty.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return the correct value.
       PropertyValue = TestValue;
@@ -269,6 +297,108 @@ namespace VisaDeviceBuilder.Tests
       await property.GetSetterProcessingTask();
       Assert.Null(getterException);
       Assert.Equal(SetterExceptionMessage, setterException?.Message);
+    }
+
+    /// <summary>
+    ///   Testing read-only asynchronous property cloning.
+    /// </summary>
+    [Fact]
+    public async Task ReadOnlyPropertyCloningTest()
+    {
+      var property = new AsyncProperty<double>(GetterCallback)
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
+      var clone = (AsyncProperty<double>) property.Clone();
+      Assert.True(clone.CanGet);
+      Assert.False(clone.CanSet);
+      Assert.Equal(GetterCallback, property.GetterDelegate);
+      Assert.Equal(default, property.Getter);
+      Assert.Equal(typeof(double), property.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
+
+      // The clone's getter must return the correct value.
+      PropertyValue = TestValue;
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
+      Assert.Equal(TestValue, property.Getter);
+
+      // The clone's setter must not change the value.
+      PropertyValue = default;
+      property.Setter = TestValue;
+      await property.GetSetterProcessingTask();
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
+      Assert.Equal(default, property.Getter);
+    }
+
+    /// <summary>
+    ///   Testing write-only asynchronous property cloning.
+    /// </summary>
+    [Fact]
+    public async Task WriteOnlyPropertyCloningTest()
+    {
+      var property = new AsyncProperty<double>(SetterCallback)
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
+      var clone = (AsyncProperty<double>) property.Clone();
+      Assert.False(clone.CanGet);
+      Assert.True(clone.CanSet);
+      Assert.Equal(SetterCallback, property.SetterDelegate);
+      Assert.Equal(default, property.Getter);
+      Assert.Equal(typeof(double), property.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
+
+      // The clone's getter must return a default value.
+      PropertyValue = TestValue;
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
+      Assert.Equal(default, property.Getter);
+
+      // The clone's setter must change the value.
+      PropertyValue = default;
+      property.Setter = TestValue;
+      await property.GetSetterProcessingTask();
+      Assert.Equal(TestValue, PropertyValue);
+    }
+
+    /// <summary>
+    ///   Testing read-write asynchronous property cloning.
+    /// </summary>
+    [Fact]
+    public async Task ReadWritePropertyCloningTest()
+    {
+      var property = new AsyncProperty<double>(GetterCallback, SetterCallback)
+      {
+        Name = TestName,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
+      var clone = (AsyncProperty<double>) property.Clone();
+      Assert.True(clone.CanGet);
+      Assert.True(clone.CanSet);
+      Assert.Equal(GetterCallback, property.GetterDelegate);
+      Assert.Equal(SetterCallback, property.SetterDelegate);
+      Assert.Equal(default, property.Getter);
+      Assert.Equal(typeof(double), property.ValueType);
+      Assert.Equal(TestName, property.Name);
+      Assert.False(property.AutoUpdateGetterAfterSetterCompletes);
+
+      // The clone's getter must return the correct value.
+      PropertyValue = TestValue;
+      property.RequestGetterUpdate();
+      await property.GetGetterUpdatingTask();
+      Assert.Equal(TestValue, property.Getter);
+
+      // The clone's setter must change the value.
+      PropertyValue = default;
+      property.Setter = TestValue;
+      await property.GetSetterProcessingTask();
+      Assert.Equal(TestValue, PropertyValue);
     }
   }
 }

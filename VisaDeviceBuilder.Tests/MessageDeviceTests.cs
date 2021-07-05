@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.Tests.Components;

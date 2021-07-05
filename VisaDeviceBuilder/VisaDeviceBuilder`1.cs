@@ -300,9 +300,9 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyAsyncProperties(
       params IOwnedAsyncProperty<TOutputVisaDevice>[] ownedAsyncProperties)
     {
-      Device.CustomAsyncProperties.AddRange(ownedAsyncProperties.Select(asyncProperty =>
+      Device.CustomAsyncProperties.AddRange(ownedAsyncProperties.Select(ownedAsyncProperty =>
       {
-        var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) asyncProperty.Clone();
+        var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
         clone.Owner = null;
         return clone;
       }));
@@ -375,9 +375,9 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyDeviceActions(
       params IOwnedDeviceAction<TOutputVisaDevice>[] ownedDeviceActions)
     {
-      Device.CustomDeviceActions.AddRange(ownedDeviceActions.Select(deviceAction =>
+      Device.CustomDeviceActions.AddRange(ownedDeviceActions.Select(ownedDeviceAction =>
       {
-        var clone = (IOwnedDeviceAction<TOutputVisaDevice>) deviceAction.Clone();
+        var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
         clone.Owner = null;
         return clone;
       }));

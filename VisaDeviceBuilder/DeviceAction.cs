@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
 
@@ -14,33 +16,80 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    ///   Gets the delegate representing a device action to be asynchronously executed.
-    /// </summary>
-    protected virtual Action Action { get; }
+    /// <inheritdoc />
+    public virtual Action DeviceActionDelegate { get; }
+
+    /// <inheritdoc />
+    public bool CanExecute => DeviceActionExecutor.CanExecute(this);
 
     /// <summary>
     ///   Creates a new device action instance.
     /// </summary>
-    /// <param name="action">
-    ///   The action delegate representing a device action to be asynchronously executed.
+    /// <param name="actionDelegate">
+    ///   The action delegate representing a device action.
     /// </param>
-    public DeviceAction(Action action) => Action = action;
-
-    /// <inheritdoc />
-    public Task ExecuteAsync()
+    public DeviceAction(Action actionDelegate)
     {
-      DeviceActionExecutor.Execute(this);
-      return DeviceActionExecutor.GetDeviceActionTask(this);
+      DeviceActionDelegate = actionDelegate;
+
+      DeviceActionExecutor.Exception += OnException;
+      DeviceActionExecutor.DeviceActionCompleted += OnExecutionCompleted;
     }
 
     /// <inheritdoc />
-    public virtual object Clone()
+    /// <remarks>
+    ///   This event handles the
+    ///   <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.Exception"/> global event.
+    /// </remarks>
+    public event ThreadExceptionEventHandler? Exception;
+
+    /// <inheritdoc />
+    /// <remarks>
+    ///   This event handles the
+    ///   <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted"/> global event.
+    /// </remarks>
+    public event EventHandler? ExecutionCompleted;
+
+    /// <inheritdoc />
+    public async Task ExecuteAsync()
     {
-      var deviceAction = (IDeviceAction) Activator.CreateInstance(GetType(), Action)!;
-      deviceAction.Name = Name;
-      return deviceAction;
+      DeviceActionExecutor.BeginExecute(this);
+      await DeviceActionExecutor.GetDeviceActionTask(this);
     }
+
+    /// <summary>
+    ///   Handles the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.Exception"/> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The event sender object.
+    /// </param>
+    /// <param name="args">
+    ///   The event arguments object.
+    /// </param>
+    private void OnException(object sender, ThreadExceptionEventArgs args)
+    {
+      if (sender == this)
+        Exception?.Invoke(sender, args);
+    }
+
+    /// <summary>
+    ///   Handles the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted"/>
+    ///   event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The event sender object.
+    /// </param>
+    /// <param name="args">
+    ///   The event arguments object.
+    /// </param>
+    private void OnExecutionCompleted(object? sender, EventArgs args)
+    {
+      if (sender == this)
+        ExecutionCompleted?.Invoke(sender, EventArgs.Empty);
+    }
+
+    /// <inheritdoc />
+    public virtual object Clone() => new DeviceAction(DeviceActionDelegate) {Name = Name};
 
     /// <summary>
     ///   Implicitly converts the provided device action instance to its action delegate.
@@ -51,6 +100,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   The getter value string stored in the provided asynchronous property instance.
     /// </returns>
-    public static implicit operator Action(DeviceAction action) => action.Action;
+    [ExcludeFromCodeCoverage]
+    public static implicit operator Action(DeviceAction action) => action.DeviceActionDelegate;
   }
 }

@@ -118,7 +118,7 @@ namespace VisaDeviceBuilder
     public override object Clone()
     {
       var device = (BuildableMessageDevice) base.Clone();
-      device.CustomSupportedInterfaces = (HardwareInterfaceType[]?) CustomSupportedInterfaces?.Clone();
+      device.CustomSupportedInterfaces = CustomSupportedInterfaces;
       device.CustomAsyncProperties.AddRange(CustomAsyncProperties.Select(asyncProperty =>
       {
         var clone = (IOwnedAsyncProperty<IMessageDevice>) asyncProperty.Clone();
@@ -131,11 +131,11 @@ namespace VisaDeviceBuilder
         clone.Owner = device;
         return clone;
       }));
-      device.CustomInitializeCallback = (Action<IMessageDevice>?) CustomInitializeCallback?.Clone();
-      device.CustomDeInitializeCallback = (Action<IMessageDevice>?) CustomDeInitializeCallback?.Clone();
-      device.CustomGetIdentifierCallback = (Func<IMessageDevice, string>?) CustomGetIdentifierCallback?.Clone();
-      device.CustomResetCallback = (Action<IMessageDevice>?) CustomResetCallback?.Clone();
-      device.CustomMessageProcessor = (Func<IMessageDevice, string, string>?) CustomMessageProcessor?.Clone();
+      device.CustomInitializeCallback = CustomInitializeCallback;
+      device.CustomDeInitializeCallback = CustomDeInitializeCallback;
+      device.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
+      device.CustomResetCallback = CustomResetCallback;
+      device.CustomMessageProcessor = CustomMessageProcessor;
       if (device.ResourceManager != null)
         device.CustomDisposables.Add(device.ResourceManager);
       return device;

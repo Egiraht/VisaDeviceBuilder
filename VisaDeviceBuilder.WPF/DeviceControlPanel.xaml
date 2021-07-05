@@ -116,7 +116,7 @@
           <MenuItem.ItemContainerStyle>
             <Style TargetType="MenuItem">
               <Setter Property="Header" Value="{Binding (visaAbs:IDeviceAction.Name)}" />
-              <Setter Property="CommandParameter" Value="{Binding (visaAbs:IDeviceAction.Action)}" />
+              <Setter Property="CommandParameter" Value="{Binding}" />
               <Setter Property="Command" Value="{x:Static comp:DeviceActionCommand.Instance}" />
             </Style>
           </MenuItem.ItemContainerStyle>

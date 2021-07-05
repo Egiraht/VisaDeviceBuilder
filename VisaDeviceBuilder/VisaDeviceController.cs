@@ -293,10 +293,6 @@ namespace VisaDeviceBuilder
         foreach (var resource in resources)
           VisaResourceEntries.Add(resource);
       }
-      catch (VisaException)
-      {
-        VisaResourceEntries.Clear();
-      }
       catch (Exception e)
       {
         OnException(e);
@@ -322,6 +318,13 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
+    ///   Handles the <see cref="IAsyncProperty.GetterException" /> event and throws the exception provided in the event
+    ///   arguments.
+    /// </summary>
+    [ExcludeFromCodeCoverage]
+    private static void ThrowOnGetterException(object sender, ThreadExceptionEventArgs args) => throw args.Exception;
+
+    /// <summary>
     ///   Creates and asynchronously runs the device connection <see cref="Task" /> that handles the entire VISA device
     ///   connection process.
     /// </summary>
@@ -338,7 +341,6 @@ namespace VisaDeviceBuilder
 
         // Trying to get the initial getter values of the asynchronous properties.
         // If any getter exception occurs on this stage, throw it and disconnect from the device.
-        static void ThrowOnGetterException(object _, ThreadExceptionEventArgs args) => throw args.Exception;
         foreach (var asyncProperty in Device.AsyncProperties)
         {
           cancellationToken.ThrowIfCancellationRequested();

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
@@ -36,12 +37,12 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the getter delegate to be called when the asynchronous property is read.
     /// </summary>
-    protected virtual Func<TValue> GetterDelegate { get; } = () => default!;
+    public virtual Func<TValue> GetterDelegate { get; } = () => default!;
 
     /// <summary>
     ///   Gets the setter delegate to be called when the asynchronous property is written.
     /// </summary>
-    protected virtual Action<TValue> SetterDelegate { get; } = _ => { };
+    public virtual Action<TValue> SetterDelegate { get; } = _ => { };
 
     /// <inheritdoc />
     public TValue Getter { get; private set; } = default!;
@@ -266,29 +267,32 @@ namespace VisaDeviceBuilder
       SetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
 
     /// <inheritdoc />
-    public virtual object Clone()
+    public virtual object Clone() => this switch
     {
-      var asyncProperty = this switch
+      // Read-only asynchronous property:
+      {CanGet: true, CanSet: false} => new AsyncProperty<TValue>(GetterDelegate)
       {
-        // Read-only asynchronous property:
-        {CanGet: true, CanSet: false} =>
-          (IAsyncProperty) Activator.CreateInstance(GetType(), GetterDelegate)!,
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
 
-        // Write-only asynchronous property:
-        {CanGet: false, CanSet: true} =>
-          (IAsyncProperty) Activator.CreateInstance(GetType(), SetterDelegate)!,
+      // Write-only asynchronous property:
+      {CanGet: false, CanSet: true} => new AsyncProperty<TValue>(SetterDelegate)
+      {
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
 
-        // Read-write asynchronous property:
-        {CanGet: true, CanSet: true} =>
-          (IAsyncProperty) Activator.CreateInstance(GetType(), GetterDelegate, SetterDelegate)!,
+      // Read-write asynchronous property:
+      {CanGet: true, CanSet: true} => new AsyncProperty<TValue>(GetterDelegate, SetterDelegate)
+      {
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
 
-        // Invalid asynchronous property:
-        _ => throw new InvalidOperationException()
-      };
-      asyncProperty.Name = Name;
-      asyncProperty.AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes;
-      return asyncProperty;
-    }
+      // Invalid asynchronous property:
+      _ => throw new InvalidOperationException()
+    };
 
     /// <summary>
     ///   Implicitly converts the asynchronous property instance to its getter value.
@@ -299,6 +303,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   The getter value stored in the asynchronous property instance.
     /// </returns>
+    [ExcludeFromCodeCoverage]
     public static implicit operator TValue(AsyncProperty<TValue> property) => property.Getter;
   }
 }

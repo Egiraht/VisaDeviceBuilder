@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
 {
@@ -14,7 +15,7 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the common dictionary that tracks the states of all started device action tasks.
     /// </summary>
-    private static Dictionary<Delegate, Task> DeviceActionTaskTracker { get; } = new();
+    private static Dictionary<IDeviceAction, Task> DeviceActionTaskTracker { get; } = new();
 
     /// <summary>
     ///   Checks if no device actions are running at the moment.
@@ -24,46 +25,49 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   The event called when an exception is thrown during device action processing.
-    ///   The event sender object contains the device action delegate that has raised the event.
+    ///   The event sender object contains the device action object that has raised the event.
     ///   The event arguments object contains the exception instance that has raised the event.
     /// </summary>
     public static event ThreadExceptionEventHandler? Exception;
 
     /// <summary>
     ///   The event called when any of running device actions completes.
-    ///   The event sender object contains the device action delegate that has raised the event.
+    ///   The event sender object contains the device action object that has raised the event.
     /// </summary>
     public static event EventHandler? DeviceActionCompleted;
 
     /// <summary>
-    ///   Checks if the provided device action can be executed at the moment.
+    ///   Gets an awaitable <see cref="Task" /> for the provided device action object being executed.
     /// </summary>
     /// <param name="deviceAction">
-    ///   The device action delegate to check.
+    ///   The device action object to get a <see cref="Task" /> for.
     /// </param>
     /// <returns>
-    ///   <c>true</c> if the provided device action can be executed at the moment, otherwise <c>false</c>.
+    ///   A <see cref="Task" /> object for the provided <paramref name="deviceAction" /> if it is being executed at the
+    ///   moment, or a <see cref="Task.CompletedTask" /> otherwise.
     /// </returns>
-    public static bool CanExecute(Action deviceAction) => GetDeviceActionTask(deviceAction).IsCompleted;
+    public static Task GetDeviceActionTask(IDeviceAction deviceAction) =>
+      DeviceActionTaskTracker.TryGetValue(deviceAction, out var task) ? task : Task.CompletedTask;
 
     /// <summary>
     ///   Checks if the provided device action can be executed at the moment.
     /// </summary>
     /// <param name="deviceAction">
-    ///   The asynchronous device action delegate to check.
+    ///   An <see cref="IDeviceAction" /> object to check.
     /// </param>
     /// <returns>
     ///   <c>true</c> if the provided device action can be executed at the moment, otherwise <c>false</c>.
     /// </returns>
-    public static bool CanExecute(Func<Task> deviceAction) => GetDeviceActionTask(deviceAction).IsCompleted;
+    public static bool CanExecute(IDeviceAction deviceAction) => GetDeviceActionTask(deviceAction).IsCompleted;
 
     /// <summary>
-    ///   Starts asynchronous execution of the provided device action if it can be executed at the moment.
+    ///   Starts asynchronous execution of the provided asynchronous device action delegate if it is not already being
+    ///   executed.
     /// </summary>
     /// <param name="deviceAction">
-    ///   The device action delegate to execute.
+    ///   The <see cref="IDeviceAction" /> object to execute.
     /// </param>
-    public static void Execute(Action deviceAction)
+    public static void BeginExecute(IDeviceAction deviceAction)
     {
       if (!CanExecute(deviceAction))
         return;
@@ -72,79 +76,44 @@ namespace VisaDeviceBuilder
       {
         try
         {
-          deviceAction();
+          deviceAction.DeviceActionDelegate.Invoke();
         }
         catch (Exception e)
         {
-          Exception?.Invoke(deviceAction, new ThreadExceptionEventArgs(e));
+          OnException(deviceAction, e);
         }
         finally
         {
           DeviceActionTaskTracker.Remove(deviceAction);
-          DeviceActionCompleted?.Invoke(deviceAction, EventArgs.Empty);
+          OnDeviceActionCompleted(deviceAction);
         }
       });
     }
-
-    /// <summary>
-    ///   Starts asynchronous execution of the provided device action if it can be executed at the moment.
-    /// </summary>
-    /// <param name="asyncDeviceAction">
-    ///   The asynchronous device action delegate to execute.
-    /// </param>
-    public static void Execute(Func<Task> asyncDeviceAction)
-    {
-      if (!CanExecute(asyncDeviceAction))
-        return;
-
-      DeviceActionTaskTracker[asyncDeviceAction] = Task.Run(async () =>
-      {
-        try
-        {
-          await asyncDeviceAction();
-        }
-        catch (Exception e)
-        {
-          Exception?.Invoke(asyncDeviceAction, new ThreadExceptionEventArgs(e));
-        }
-        finally
-        {
-          DeviceActionTaskTracker.Remove(asyncDeviceAction);
-          DeviceActionCompleted?.Invoke(asyncDeviceAction, EventArgs.Empty);
-        }
-      });
-    }
-
-    /// <summary>
-    ///   Gets the <see cref="Task" /> for the device action asynchronously being executed at the moment.
-    /// </summary>
-    /// <param name="deviceAction">
-    ///   The device action to get the <see cref="Task" /> for.
-    /// </param>
-    /// <returns>
-    ///   A <see cref="Task" /> object for the running device action or a <see cref="Task.CompletedTask" /> if the
-    ///   specified device action is not being executed at the moment.
-    /// </returns>
-    public static Task GetDeviceActionTask(Action deviceAction) =>
-      DeviceActionTaskTracker.TryGetValue(deviceAction, out var task) ? task : Task.CompletedTask;
-
-    /// <summary>
-    ///   Gets the <see cref="Task" /> for the device action asynchronously being executed at the moment.
-    /// </summary>
-    /// <param name="asyncDeviceAction">
-    ///   The asynchronous device action to get the <see cref="Task" /> for.
-    /// </param>
-    /// <returns>
-    ///   A <see cref="Task" /> object for the running device action or a <see cref="Task.CompletedTask" /> if the
-    ///   specified device action is not being executed at the moment.
-    /// </returns>
-    public static Task GetDeviceActionTask(Func<Task> asyncDeviceAction) =>
-      DeviceActionTaskTracker.TryGetValue(asyncDeviceAction, out var task) ? task : Task.CompletedTask;
 
     /// <summary>
     ///   Waits for all running device actions to complete.
     /// </summary>
-    public static async Task WaitForAllActionsToCompleteAsync() =>
-      await Task.WhenAll(DeviceActionTaskTracker.Values.ToArray());
+    public static async Task WaitForAllActionsToCompleteAsync() => await Task.WhenAll(DeviceActionTaskTracker.Values);
+
+    /// <summary>
+    ///   Invokes the <see cref="Exception" /> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The <see cref="IDeviceAction" /> object that has thrown an exception.
+    /// </param>
+    /// <param name="exception">
+    ///   The exception thrown during device action execution.
+    /// </param>
+    private static void OnException(IDeviceAction sender, Exception exception) =>
+      Exception?.Invoke(sender, new ThreadExceptionEventArgs(exception));
+
+    /// <summary>
+    ///   Invokes the <see cref="DeviceActionCompleted" /> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The <see cref="IDeviceAction" /> object that has completed its execution.
+    /// </param>
+    private static void OnDeviceActionCompleted(IDeviceAction sender) =>
+      DeviceActionCompleted?.Invoke(sender, EventArgs.Empty);
   }
 }

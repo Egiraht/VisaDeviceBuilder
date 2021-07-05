@@ -125,7 +125,7 @@ namespace VisaDeviceBuilder.WPF
         ResponseMessage = await Task.Run(() =>
         {
           lock (DisconnectionLock)
-            return ((IMessageDevice) Device!).SendMessage(RequestMessage);
+            return ((IMessageDevice) Device).SendMessage(RequestMessage);
         });
       }
       catch (Exception exception)

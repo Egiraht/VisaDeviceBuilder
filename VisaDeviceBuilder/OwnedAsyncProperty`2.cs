@@ -45,12 +45,12 @@ namespace VisaDeviceBuilder
     private Action<TOwner, TValue> OwnedSetterDelegate { get; } = (_, _) => { };
 
     /// <inheritdoc />
-    protected override Func<TValue> GetterDelegate => _getterDelegate ??= () =>
+    public override Func<TValue> GetterDelegate => _getterDelegate ??= () =>
       Owner != null ? OwnedGetterDelegate.Invoke(Owner) : default!;
     private Func<TValue>? _getterDelegate;
 
     /// <inheritdoc />
-    protected override Action<TValue> SetterDelegate => _setterDelegate ??= value =>
+    public override Action<TValue> SetterDelegate => _setterDelegate ??= value =>
     {
       if (Owner != null)
         OwnedSetterDelegate.Invoke(Owner, value);
@@ -96,11 +96,34 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public override object Clone()
+    public override object Clone() => this switch
     {
-      var asyncProperty = (IOwnedAsyncProperty<TOwner>) base.Clone();
-      asyncProperty.Owner = Owner;
-      return asyncProperty;
-    }
+      // Read-only owned asynchronous property:
+      {CanGet: true, CanSet: false} => new OwnedAsyncProperty<TOwner, TValue>(OwnedGetterDelegate)
+      {
+        Owner = Owner,
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
+
+      // Write-only owned asynchronous property:
+      {CanGet: false, CanSet: true} => new OwnedAsyncProperty<TOwner, TValue>(OwnedSetterDelegate)
+      {
+        Owner = Owner,
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
+
+      // Read-write owned asynchronous property:
+      {CanGet: true, CanSet: true} => new OwnedAsyncProperty<TOwner, TValue>(OwnedGetterDelegate, OwnedSetterDelegate)
+      {
+        Owner = Owner,
+        Name = Name,
+        AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
+      },
+
+      // Invalid owned asynchronous property:
+      _ => throw new InvalidOperationException()
+    };
   }
 }

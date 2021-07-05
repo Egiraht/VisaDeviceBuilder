@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -22,88 +21,107 @@ namespace VisaDeviceBuilder.Tests
     private const string TestString = "Test string";
 
     /// <summary>
-    ///   Testing device actions execution.
+    ///   Gets or sets the value of the test device action.
     /// </summary>
-    [Fact]
-    public async Task DeviceActionsTest()
-    {
-      // Synchronous device action.
-      var value = string.Empty;
-      Action deviceAction = () =>
-      {
-        Task.Delay(DeviceActionDelay).Wait();
-        value = TestString;
-      };
-      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
-      Assert.Empty(value);
-      DeviceActionExecutor.Execute(deviceAction);
-      DeviceActionExecutor.Execute(deviceAction);
-      Assert.False(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.False(DeviceActionExecutor.CanExecute(deviceAction));
-      Assert.Empty(value);
-      await DeviceActionExecutor.GetDeviceActionTask(deviceAction);
-      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
-      Assert.Equal(TestString, value);
+    private string TestValue { get; set; } = string.Empty;
 
-      // Asynchronous device action.
-      value = string.Empty;
-      Func<Task> asyncDeviceAction = async () =>
-      {
-        Assert.False(DeviceActionExecutor.NoDeviceActionsAreRunning);
-        await Task.Delay(DeviceActionDelay);
-        value = TestString;
-      };
-      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.True(DeviceActionExecutor.CanExecute(asyncDeviceAction));
-      Assert.Empty(value);
-      DeviceActionExecutor.Execute(asyncDeviceAction);
-      DeviceActionExecutor.Execute(asyncDeviceAction);
-      Assert.False(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.False(DeviceActionExecutor.CanExecute(asyncDeviceAction));
-      Assert.Empty(value);
-      await DeviceActionExecutor.GetDeviceActionTask(asyncDeviceAction);
-      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
-      Assert.True(DeviceActionExecutor.CanExecute(asyncDeviceAction));
-      Assert.Equal(TestString, value);
+    /// <summary>
+    ///   Defines the test device action delegate.
+    /// </summary>
+    private void TestDeviceActionDelegate()
+    {
+      Task.Delay(DeviceActionDelay).Wait();
+      TestValue = TestString;
     }
 
     /// <summary>
-    ///   Testing handling of device action exceptions.
+    ///   Testing device action execution.
     /// </summary>
     [Fact]
-    public async Task ExceptionsTest()
+    public async Task DeviceActionExecutionTest()
     {
-      var exceptionMessages = new List<string>();
-      Action deviceActionWithException = () =>
-      {
-        Task.Delay(DeviceActionDelay).Wait();
-        throw new Exception(TestString);
-      };
-      Func<Task> asyncDeviceActionWithException = async () =>
-      {
-        await Task.Delay(DeviceActionDelay);
-        throw new Exception(TestString);
-      };
-      ThreadExceptionEventHandler exceptionHandler = (_, args) => exceptionMessages.Add(args.Exception.Message);
+      var deviceAction = new DeviceAction(TestDeviceActionDelegate);
+      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
+      Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
+      Assert.Empty(TestValue);
+
+      DeviceActionExecutor.BeginExecute(deviceAction);
+      DeviceActionExecutor.BeginExecute(deviceAction); // Repeated call should pass OK.
+      Assert.False(DeviceActionExecutor.NoDeviceActionsAreRunning);
+      Assert.False(DeviceActionExecutor.CanExecute(deviceAction));
+      Assert.Empty(TestValue);
+
+      await DeviceActionExecutor.GetDeviceActionTask(deviceAction);
+      Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
+      Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
+      Assert.Equal(TestString, TestValue);
+    }
+
+    /// <summary>
+    ///   Testing device action completion event handling.
+    /// </summary>
+    [Fact]
+    public async Task DeviceActionCompletionTest()
+    {
+      var completed = false;
+      var deviceAction = new DeviceAction(TestDeviceActionDelegate);
+
+      void CompletionHandler(object? sender, EventArgs args) => completed = true;
 
       try
       {
-        DeviceActionExecutor.Exception += exceptionHandler;
-        DeviceActionExecutor.Execute(deviceActionWithException);
-        DeviceActionExecutor.Execute(asyncDeviceActionWithException);
-        Assert.Empty(exceptionMessages);
+        DeviceActionExecutor.DeviceActionCompleted += CompletionHandler;
+        DeviceActionExecutor.BeginExecute(deviceAction);
+        Assert.False(DeviceActionExecutor.CanExecute(deviceAction));
+        Assert.False(completed);
 
-        await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
-        Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
-        Assert.Equal(2, exceptionMessages.Count);
-        Assert.Equal(TestString, exceptionMessages[0]);
-        Assert.Equal(TestString, exceptionMessages[1]);
+        await DeviceActionExecutor.GetDeviceActionTask(deviceAction);
+        Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
+        Assert.True(completed);
       }
       finally
       {
-        DeviceActionExecutor.Exception -= exceptionHandler;
+        DeviceActionExecutor.DeviceActionCompleted -= CompletionHandler;
+      }
+    }
+
+    /// <summary>
+    ///   Testing device action exception event handling.
+    /// </summary>
+    [Fact]
+    public async Task DeviceActionExceptionTest()
+    {
+      object? source = null;
+      Exception? exception = null;
+      var deviceAction = new DeviceAction(() =>
+      {
+        Task.Delay(DeviceActionDelay).Wait();
+        throw new Exception(TestString);
+      });
+
+      void ExceptionHandler(object sender, ThreadExceptionEventArgs args)
+      {
+        source = sender;
+        exception = args.Exception;
+      }
+
+      try
+      {
+        DeviceActionExecutor.Exception += ExceptionHandler;
+        DeviceActionExecutor.BeginExecute(deviceAction);
+        Assert.False(DeviceActionExecutor.CanExecute(deviceAction));
+        Assert.Null(source);
+        Assert.Null(exception);
+
+        await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
+        Assert.True(DeviceActionExecutor.NoDeviceActionsAreRunning);
+        Assert.True(DeviceActionExecutor.CanExecute(deviceAction));
+        Assert.Same(deviceAction, source);
+        Assert.Equal(TestString, exception!.Message);
+      }
+      finally
+      {
+        DeviceActionExecutor.Exception -= ExceptionHandler;
       }
     }
   }

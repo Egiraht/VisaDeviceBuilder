@@ -76,18 +76,6 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Invokes the <see cref="AutoUpdateException" /> event.
-    /// </summary>
-    /// <param name="sender">
-    ///   The event sender object.
-    /// </param>
-    /// <param name="args">
-    ///   The event arguments object containing the thrown exception.
-    /// </param>
-    protected void OnAutoUpdateException(object sender, ThreadExceptionEventArgs args) =>
-      AutoUpdateException?.Invoke(sender, args);
-
-    /// <summary>
     ///   The callback action representing the asynchronous auto-update loop.
     /// </summary>
     /// <param name="cancellationToken">
@@ -105,7 +93,8 @@ namespace VisaDeviceBuilder
             await property.GetGetterUpdatingTask();
             cancellationToken.ThrowIfCancellationRequested();
           }
-          AutoUpdateCycle?.Invoke(this, EventArgs.Empty);
+
+          OnAutoUpdateCycle();
           await Task.Delay(Delay, cancellationToken);
         }
         catch (OperationCanceledException)
@@ -114,7 +103,7 @@ namespace VisaDeviceBuilder
         }
         catch (Exception e)
         {
-          AutoUpdateException?.Invoke(this, new ThreadExceptionEventArgs(e));
+          OnAutoUpdateException(e);
         }
       }
     }
@@ -162,6 +151,32 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public Task StopAsync() => Task.Run(Stop);
+
+    /// <summary>
+    ///   Invokes the <see cref="AutoUpdateCycle" /> event.
+    /// </summary>
+    protected virtual void OnAutoUpdateCycle() => AutoUpdateCycle?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    ///   Invokes the <see cref="AutoUpdateException" /> event.
+    /// </summary>
+    /// <param name="sender">
+    ///   The event sender object.
+    /// </param>
+    /// <param name="args">
+    ///   The event arguments object containing the thrown exception.
+    /// </param>
+    protected virtual void OnAutoUpdateException(object sender, ThreadExceptionEventArgs args) =>
+      AutoUpdateException?.Invoke(sender, args);
+
+    /// <summary>
+    ///   Invokes the <see cref="AutoUpdateException" /> event.
+    /// </summary>
+    /// <param name="exception">
+    ///   The exception instance.
+    /// </param>
+    protected virtual void OnAutoUpdateException(Exception exception) =>
+      OnAutoUpdateException(this, new ThreadExceptionEventArgs(exception));
 
     /// <inheritdoc />
     public void Dispose()

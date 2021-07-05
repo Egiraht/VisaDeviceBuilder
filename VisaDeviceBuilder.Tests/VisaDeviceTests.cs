@@ -133,18 +133,18 @@ namespace VisaDeviceBuilder.Tests
       using (var visaDevice = new VisaDevice())
       {
         Assert.Contains(visaDevice.DeviceActions,
-          deviceAction => (DeviceAction) deviceAction == (Action) visaDevice.Reset);
+          deviceAction => deviceAction.DeviceActionDelegate == visaDevice.Reset);
         Assert.DoesNotContain(visaDevice.DeviceActions,
-          deviceAction => (DeviceAction) deviceAction == (Action) visaDevice.OpenSession);
+          deviceAction => deviceAction.DeviceActionDelegate == visaDevice.OpenSession);
       }
 
       // TestMessageDevice must contain both the Reset and DecoratedTestDeviceAction device actions.
       using (var messageDevice = new TestMessageDevice())
       {
         Assert.Contains(messageDevice.DeviceActions,
-          deviceAction => (DeviceAction) deviceAction == (Action) messageDevice.Reset);
+          deviceAction => deviceAction.DeviceActionDelegate == messageDevice.Reset);
         Assert.Contains(messageDevice.DeviceActions,
-          deviceAction => (DeviceAction) deviceAction == (Action) messageDevice.DecoratedTestDeviceAction);
+          deviceAction => deviceAction.DeviceActionDelegate == messageDevice.DecoratedTestDeviceAction);
         Assert.Contains(messageDevice.DeviceActions,
           deviceAction => deviceAction == messageDevice.DeclaredTestDeviceAction);
       }

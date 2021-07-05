@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder.WPF.Components
 {
@@ -58,14 +59,8 @@ namespace VisaDeviceBuilder.WPF.Components
     ///   device action is already being executed at the moment and cannot be executed repeatedly until it finishes,
     ///   or the provided <paramref name="parameter" /> value is not a valid device action type.
     /// </returns>
-    public bool CanExecute(object? parameter)
-    {
-      if (parameter is Action deviceAction)
-        return DeviceActionExecutor.CanExecute(deviceAction);
-      if (parameter is Func<Task> asyncDeviceAction)
-        return DeviceActionExecutor.CanExecute(asyncDeviceAction);
-      return false;
-    }
+    public bool CanExecute(object? parameter) =>
+      parameter is IDeviceAction deviceAction && DeviceActionExecutor.CanExecute(deviceAction);
 
     /// <summary>
     ///   Starts asynchronous execution of the device action provided as a <paramref name="parameter" /> if it is
@@ -77,18 +72,21 @@ namespace VisaDeviceBuilder.WPF.Components
     /// </param>
     public void Execute(object? parameter)
     {
-      if (parameter is Action deviceAction)
-        DeviceActionExecutor.Execute(deviceAction);
-      else if (parameter is Func<Task> asyncDeviceAction)
-        DeviceActionExecutor.Execute(asyncDeviceAction);
+      if (parameter is not IDeviceAction deviceAction)
+        return;
 
-      CanExecuteChanged?.Invoke(parameter, EventArgs.Empty);
+      DeviceActionExecutor.BeginExecute(deviceAction);
+      OnCanExecuteChanged();
     }
 
     /// <summary>
-    ///   Calls the <see cref="CanExecuteChanged" /> event for the current <see cref="SynchronizationContext" /> when
-    ///   the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted" /> event is
-    ///   raised.
+    ///   Invokes the <see cref="CanExecuteChanged" /> event.
+    /// </summary>
+    protected virtual void OnCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>
+    ///   Handles the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted" />
+    ///   event.
     /// </summary>
     /// <param name="sender">
     ///   The device action delegate that has raised the event.
@@ -100,9 +98,9 @@ namespace VisaDeviceBuilder.WPF.Components
     protected virtual void OnDeviceActionCompleted(object? sender, EventArgs e)
     {
       if (SynchronizationContext != null)
-        SynchronizationContext.Post(__ => CanExecuteChanged?.Invoke(this, EventArgs.Empty), null);
+        SynchronizationContext.Post(_ => OnCanExecuteChanged(), null);
       else
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        OnCanExecuteChanged();
     }
   }
 }

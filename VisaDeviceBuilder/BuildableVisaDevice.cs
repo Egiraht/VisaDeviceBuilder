@@ -102,7 +102,7 @@ namespace VisaDeviceBuilder
     public override object Clone()
     {
       var device = (BuildableVisaDevice) base.Clone();
-      device.CustomSupportedInterfaces = (HardwareInterfaceType[]?) CustomSupportedInterfaces?.Clone();
+      device.CustomSupportedInterfaces = CustomSupportedInterfaces;
       device.CustomAsyncProperties.AddRange(CustomAsyncProperties.Select(asyncProperty =>
       {
         var clone = (IOwnedAsyncProperty<IVisaDevice>) asyncProperty.Clone();
@@ -115,10 +115,10 @@ namespace VisaDeviceBuilder
         clone.Owner = device;
         return clone;
       }));
-      device.CustomInitializeCallback = (Action<IVisaDevice>?) CustomInitializeCallback?.Clone();
-      device.CustomDeInitializeCallback = (Action<IVisaDevice>?) CustomDeInitializeCallback?.Clone();
-      device.CustomGetIdentifierCallback = (Func<IVisaDevice, string>?) CustomGetIdentifierCallback?.Clone();
-      device.CustomResetCallback = (Action<IVisaDevice>?) CustomResetCallback?.Clone();
+      device.CustomInitializeCallback = CustomInitializeCallback;
+      device.CustomDeInitializeCallback = CustomDeInitializeCallback;
+      device.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
+      device.CustomResetCallback = CustomResetCallback;
       if (device.ResourceManager != null)
         device.CustomDisposables.Add(device.ResourceManager);
       return device;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
@@ -26,18 +27,29 @@ namespace VisaDeviceBuilder
     ///   implementations are referenced in the project and can be resolved by the .NET reflection system. Otherwise
     ///   these resources may not be included into the result.
     /// </remarks>
-    public static Task<IEnumerable<string>> LocateResourceNamesAsync(string pattern = "?*::INSTR") =>
-      Task.Run(() => GlobalResourceManager
-        .Find(pattern)
-        .Aggregate(new List<string>(), (results, resourceName) =>
-        {
-          var parseResult = GlobalResourceManager.Parse(resourceName);
-          results.Add(parseResult.OriginalResourceName);
-          if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
-            results.Add(parseResult.AliasIfExists);
-          return results;
-        })
-        .AsEnumerable());
+    [ExcludeFromCodeCoverage(Justification = "When using the GlobalResourceManager for VISA resource discovery, " +
+      "the returned results may differ significantly in different systems. So the coverage differs as well.")]
+    public static Task<IEnumerable<string>> LocateResourceNamesAsync(string pattern = "?*::INSTR") => Task.Run(() =>
+    {
+      try
+      {
+        return GlobalResourceManager
+          .Find(pattern)
+          .Aggregate(new List<string>(), (results, resourceName) =>
+          {
+            var parseResult = GlobalResourceManager.Parse(resourceName);
+            results.Add(parseResult.OriginalResourceName);
+            if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
+              results.Add(parseResult.AliasIfExists);
+            return results;
+          })
+          .AsEnumerable();
+      }
+      catch (VisaException)
+      {
+        return Array.Empty<string>();
+      }
+    });
 
     /// <summary>
     ///   Locates available VISA resources using the provided VISA resource manager instance.
@@ -53,18 +65,27 @@ namespace VisaDeviceBuilder
     ///   An enumeration of strings containing VISA resource names found by the <see cref="GlobalResourceManager" />.
     /// </returns>
     public static Task<IEnumerable<string>> LocateResourceNamesAsync(IResourceManager resourceManager,
-      string pattern = "?*::INSTR") =>
-      Task.Run(() => resourceManager
-        .Find("?*::INSTR")
-        .Aggregate(new List<string>(), (results, resourceName) =>
-        {
-          var parseResult = resourceManager.Parse(resourceName);
-          results.Add(parseResult.OriginalResourceName);
-          if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
-            results.Add(parseResult.AliasIfExists);
-          return results;
-        })
-        .AsEnumerable());
+      string pattern = "?*::INSTR") => Task.Run(() =>
+    {
+      try
+      {
+        return resourceManager
+          .Find(pattern)
+          .Aggregate(new List<string>(), (results, resourceName) =>
+          {
+            var parseResult = resourceManager.Parse(resourceName);
+            results.Add(parseResult.OriginalResourceName);
+            if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
+              results.Add(parseResult.AliasIfExists);
+            return results;
+          })
+          .AsEnumerable();
+      }
+      catch (VisaException)
+      {
+        return Array.Empty<string>();
+      }
+    });
 
     /// <summary>
     ///   Locates available VISA resources using the provided VISA resource manager type.
@@ -83,27 +104,15 @@ namespace VisaDeviceBuilder
     ///   The <paramref name="resourceManagerType" /> value is not a valid VISA resource manager class type.
     /// </exception>
     public static Task<IEnumerable<string>> LocateResourceNamesAsync(Type resourceManagerType,
-      string pattern = "?*::INSTR") =>
-      Task.Run(() =>
-      {
-        if (!resourceManagerType.IsAssignableTo(typeof(IResourceManager)))
-          throw new InvalidOperationException(
-            $"\"{resourceManagerType.Name}\" is not a valid VISA resource manager class type.");
+      string pattern = "?*::INSTR") => Task.Run(() =>
+    {
+      if (!resourceManagerType.IsAssignableTo(typeof(IResourceManager)))
+        throw new InvalidOperationException(
+          $"\"{resourceManagerType.Name}\" is not a valid VISA resource manager class type.");
 
-        using var resourceManager = (IResourceManager) Activator.CreateInstance(resourceManagerType)!;
-        return resourceManager
-          .Find(pattern)
-          .Aggregate(new List<string>(), (results, resourceName) =>
-          {
-            // ReSharper disable once AccessToDisposedClosure
-            var parseResult = resourceManager.Parse(resourceName);
-            results.Add(parseResult.OriginalResourceName);
-            if (!string.IsNullOrWhiteSpace(parseResult.AliasIfExists))
-              results.Add(parseResult.AliasIfExists);
-            return results;
-          })
-          .AsEnumerable();
-      });
+      using var resourceManager = (IResourceManager) Activator.CreateInstance(resourceManagerType)!;
+      return LocateResourceNamesAsync(resourceManager, pattern);
+    });
 
     /// <summary>
     ///   Locates available VISA resources using the provided VISA resource manager type.
