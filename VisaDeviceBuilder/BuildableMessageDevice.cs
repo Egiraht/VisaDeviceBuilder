@@ -136,8 +136,6 @@ namespace VisaDeviceBuilder
       device.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
       device.CustomResetCallback = CustomResetCallback;
       device.CustomMessageProcessor = CustomMessageProcessor;
-      if (device.ResourceManager != null)
-        device.CustomDisposables.Add(device.ResourceManager);
       return device;
     }
 

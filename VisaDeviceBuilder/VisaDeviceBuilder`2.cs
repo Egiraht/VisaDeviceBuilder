@@ -40,12 +40,6 @@ namespace VisaDeviceBuilder
     protected TBuildableVisaDevice Device { get; } = new();
 
     /// <summary>
-    ///   Gets or sets a custom VISA resource manager type.
-    ///   Setting to <c>null</c> indicates that the <see cref="GlobalResourceManager" /> class should be used.
-    /// </summary>
-    private Type? CustomResourceManagerType { get; set; }
-
-    /// <summary>
     ///   Initializes a new VISA device builder instance.
     /// </summary>
     public VisaDeviceBuilder()
@@ -72,7 +66,8 @@ namespace VisaDeviceBuilder
     /// </returns>
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseGlobalVisaResourceManager()
     {
-      CustomResourceManagerType = null;
+      Device.ResourceManager?.Dispose();
+      Device.ResourceManager = null;
       return this;
     }
 
@@ -92,7 +87,8 @@ namespace VisaDeviceBuilder
         throw new InvalidOperationException(
           $"\"{resourceManagerType.Name}\" is not a valid VISA resource manager type.");
 
-      CustomResourceManagerType = resourceManagerType;
+      Device.ResourceManager?.Dispose();
+      Device.ResourceManager = (IResourceManager) Activator.CreateInstance(resourceManagerType)!;
       return this;
     }
 
@@ -106,7 +102,7 @@ namespace VisaDeviceBuilder
     ///   This builder instance.
     /// </returns>
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice>
-      UseCustomVisaResourceManagerType<TResourceManager>() =>
+      UseCustomVisaResourceManagerType<TResourceManager>() where TResourceManager : IResourceManager =>
       UseCustomVisaResourceManagerType(typeof(TResourceManager));
 
     /// <summary>

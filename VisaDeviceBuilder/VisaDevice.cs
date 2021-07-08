@@ -35,6 +35,11 @@ namespace VisaDeviceBuilder
     /// </summary>
     private bool _isDisposed;
 
+    /// <summary>
+    ///   The flag indicating if this VISA device instance has been cloned from another instance.
+    /// </summary>
+    private bool _isClone;
+
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
     ///   The resource manager cannot be modified when a session is opened.
@@ -351,6 +356,7 @@ namespace VisaDeviceBuilder
     public virtual object Clone()
     {
       var device = (VisaDevice) Activator.CreateInstance(GetType())!;
+      device._isClone = true;
       device.ResourceManager = ResourceManager != null
         ? (IResourceManager) Activator.CreateInstance(ResourceManager.GetType())!
         : null;
@@ -367,6 +373,10 @@ namespace VisaDeviceBuilder
       _isDisposing = true;
 
       CloseSession();
+
+      // If the device has been cloned, dispose of the VISA resource manager object created during the cloning process.
+      if (_isClone)
+        ResourceManager?.Dispose();
 
       GC.SuppressFinalize(this);
       _isDisposed = true;
