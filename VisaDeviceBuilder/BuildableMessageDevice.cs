@@ -14,11 +14,13 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
+    // TODO: Automatically take ownership of provided owned asynchronous properties.
     /// <inheritdoc />
-    public List<IOwnedAsyncProperty<IMessageDevice>> CustomAsyncProperties { get; init; } = new();
+    public List<IOwnedAsyncProperty<IMessageDevice>> CustomAsyncProperties { get; } = new();
 
+    // TODO: Automatically take ownership of provided owned device actions.
     /// <inheritdoc />
-    public List<IOwnedDeviceAction<IMessageDevice>> CustomDeviceActions { get; init; } = new();
+    public List<IOwnedDeviceAction<IMessageDevice>> CustomDeviceActions { get; } = new();
 
     /// <inheritdoc />
     public Action<IMessageDevice>? CustomInitializeCallback { get; set; }
@@ -36,7 +38,7 @@ namespace VisaDeviceBuilder
     public Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
 
     /// <inheritdoc />
-    public List<IDisposable> CustomDisposables { get; init; } = new();
+    public List<IDisposable> CustomDisposables { get; } = new();
 
     /// <inheritdoc />
     public override IEnumerable<IAsyncProperty> AsyncProperties => base.AsyncProperties.Concat(CustomAsyncProperties);

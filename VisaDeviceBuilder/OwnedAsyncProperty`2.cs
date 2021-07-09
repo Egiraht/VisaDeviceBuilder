@@ -45,15 +45,24 @@ namespace VisaDeviceBuilder
     private Action<TOwner, TValue> OwnedSetterDelegate { get; } = (_, _) => { };
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">
+    ///   No owning VISA device is specified for this owned asynchronous property.
+    /// </exception>
     public override Func<TValue> GetterDelegate => _getterDelegate ??= () =>
-      Owner != null ? OwnedGetterDelegate.Invoke(Owner) : default!;
+    {
+      ThrowIfNoOwnerSpecified();
+      return OwnedGetterDelegate.Invoke(Owner!);
+    };
     private Func<TValue>? _getterDelegate;
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">
+    ///   No owning VISA device is specified for this owned asynchronous property.
+    /// </exception>
     public override Action<TValue> SetterDelegate => _setterDelegate ??= value =>
     {
-      if (Owner != null)
-        OwnedSetterDelegate.Invoke(Owner, value);
+      ThrowIfNoOwnerSpecified();
+      OwnedSetterDelegate.Invoke(Owner!, value);
     };
     private Action<TValue>? _setterDelegate;
 
@@ -93,6 +102,16 @@ namespace VisaDeviceBuilder
     {
       OwnedGetterDelegate = ownedGetterDelegate;
       OwnedSetterDelegate = ownedSetterDelegate;
+    }
+
+    /// <summary>
+    ///   Throws an <see cref="InvalidOperationException" /> if <see cref="Owner" /> is <c>null</c>.
+    /// </summary>
+    private void ThrowIfNoOwnerSpecified()
+    {
+      if (Owner == null)
+        throw new InvalidOperationException(
+          $"No owning VISA device is specified for the owned asynchronous property \"{Name}\".");
     }
 
     /// <inheritdoc />

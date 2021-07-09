@@ -15,10 +15,13 @@ namespace VisaDeviceBuilder
     private Action<TOwner> OwnedDeviceActionDelegate { get; }
 
     /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">
+    ///   No owning VISA device is specified for this owned device action.
+    /// </exception>
     public override Action DeviceActionDelegate => _deviceActionDelegate ??= () =>
     {
-      if (Owner != null)
-        OwnedDeviceActionDelegate.Invoke(Owner);
+      ThrowIfNoOwnerSpecified();
+      OwnedDeviceActionDelegate.Invoke(Owner!);
     };
     private Action? _deviceActionDelegate;
 
@@ -31,6 +34,16 @@ namespace VisaDeviceBuilder
     /// </param>
     public OwnedDeviceAction(Action<TOwner> ownedActionDelegate) : base(() => { }) =>
       OwnedDeviceActionDelegate = ownedActionDelegate;
+
+    /// <summary>
+    ///   Throws an <see cref="InvalidOperationException" /> if <see cref="Owner" /> is <c>null</c>.
+    /// </summary>
+    private void ThrowIfNoOwnerSpecified()
+    {
+      if (Owner == null)
+        throw new InvalidOperationException(
+          $"No owning VISA device is specified for the owned device action \"{Name}\".");
+    }
 
     /// <inheritdoc />
     public override object Clone() => new OwnedDeviceAction<TOwner>(OwnedDeviceActionDelegate)

@@ -20,12 +20,12 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Gets the list of custom owned asynchronous properties of the device.
     /// </summary>
-    List<IOwnedAsyncProperty<TVisaDevice>> CustomAsyncProperties { get; init; }
+    List<IOwnedAsyncProperty<TVisaDevice>> CustomAsyncProperties { get; }
 
     /// <summary>
     ///   Gets the list of custom owned device actions of the device.
     /// </summary>
-    List<IOwnedDeviceAction<TVisaDevice>> CustomDeviceActions { get; init; }
+    List<IOwnedDeviceAction<TVisaDevice>> CustomDeviceActions { get; }
 
     /// <summary>
     ///   Gets or sets the custom device initialization stage callback delegate.
@@ -50,6 +50,6 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Gets the list of custom disposable objects.
     /// </summary>
-    List<IDisposable> CustomDisposables { get; init; }
+    List<IDisposable> CustomDisposables { get; }
   }
 }

@@ -36,6 +36,12 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
       Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
       Assert.Equal(VisaDevice.DefaultSupportedInterfaces, device.SupportedInterfaces);
+      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
+      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
+      Assert.Null(device.Session);
+      Assert.False(device.IsSessionOpened);
+
+      // Checking resource name parsing.
       var resourceNameInfo = device.ResourceNameInfo;
       Assert.NotNull(resourceNameInfo);
       Assert.Equal(TestResourceManager.CustomTestDeviceInterfaceType, resourceNameInfo!.InterfaceType);
@@ -44,10 +50,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, resourceNameInfo.ExpandedUnaliasedName);
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, resourceNameInfo.OriginalResourceName);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, resourceNameInfo.AliasIfExists);
-      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
-      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
-      Assert.Null(device.Session);
-      Assert.False(device.IsSessionOpened);
     }
 
     /// <summary>
@@ -56,10 +58,10 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaSessionTest()
     {
-      bool initializingStatePassed = false;
-      bool connectedStatePassed = false;
-      bool deInitializingStatePassed = false;
-      bool disconnectedStatePassed = false;
+      var isInitializingStatePassed = false;
+      var isConnectedStatePassed = false;
+      var isDeInitializingStatePassed = false;
+      var isDisconnectedStatePassed = false;
       using var resourceManager = new TestResourceManager();
       await using var device = new VisaDevice
       {
@@ -69,21 +71,21 @@ namespace VisaDeviceBuilder.Tests
       device.ConnectionStateChanged += (_, state) =>
       {
         if (state == DeviceConnectionState.Initializing)
-          initializingStatePassed = true;
+          isInitializingStatePassed = true;
         else if (state == DeviceConnectionState.Connected)
-          connectedStatePassed = true;
+          isConnectedStatePassed = true;
         else if (state == DeviceConnectionState.DeInitializing)
-          deInitializingStatePassed = true;
+          isDeInitializingStatePassed = true;
         else if (state == DeviceConnectionState.Disconnected)
-          disconnectedStatePassed = true;
+          isDisconnectedStatePassed = true;
       };
       Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
       Assert.False(device.IsSessionOpened);
 
       // Session opening.
       await device.OpenSessionAsync();
-      Assert.True(initializingStatePassed);
-      Assert.True(connectedStatePassed);
+      Assert.True(isInitializingStatePassed);
+      Assert.True(isConnectedStatePassed);
       Assert.Equal(DeviceConnectionState.Connected, device.ConnectionState);
       Assert.NotNull(device.Session);
       Assert.True(device.IsSessionOpened);
@@ -99,8 +101,8 @@ namespace VisaDeviceBuilder.Tests
 
       // Session closing.
       await device.CloseSessionAsync();
-      Assert.True(deInitializingStatePassed);
-      Assert.True(disconnectedStatePassed);
+      Assert.True(isDeInitializingStatePassed);
+      Assert.True(isDisconnectedStatePassed);
       Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
       Assert.Null(device.Session);
       Assert.False(device.IsSessionOpened);
@@ -217,6 +219,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public void VisaDeviceCloningTest()
     {
+      IVisaDevice? clone;
       using var resourceManager = new TestResourceManager();
       using var device = new VisaDevice
       {
@@ -224,19 +227,31 @@ namespace VisaDeviceBuilder.Tests
         ResourceName = TestResourceManager.CustomTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout
       };
-      var clone = (IVisaDevice) device.Clone();
 
       // The cloned device should contain the same data but must not reference objects from the original device.
-      Assert.NotSame(device, clone);
-      Assert.IsType<VisaDevice>(clone);
-      Assert.NotSame(device.ResourceManager, clone.ResourceManager);
-      Assert.IsType(device.ResourceManager.GetType(), clone.ResourceManager);
-      Assert.Equal(device.ResourceName, clone.ResourceName);
-      Assert.Equal(device.AliasName, clone.AliasName);
-      Assert.Equal(TestConnectionTimeout, clone.ConnectionTimeout);
-      Assert.Equal(device.SupportedInterfaces.AsEnumerable(), clone.SupportedInterfaces.AsEnumerable());
-      Assert.Equal(device.AsyncProperties.Count(), clone.AsyncProperties.Count());
-      Assert.Equal(device.DeviceActions.Count(), clone.DeviceActions.Count());
+      using (clone = (IVisaDevice) device.Clone())
+      {
+        Assert.NotSame(device, clone);
+        Assert.IsType<VisaDevice>(clone);
+        Assert.NotSame(device.ResourceManager, clone.ResourceManager);
+        Assert.IsType<TestResourceManager>(clone.ResourceManager);
+        Assert.Equal(device.ResourceName, clone.ResourceName);
+        Assert.Equal(device.AliasName, clone.AliasName);
+        Assert.Equal(TestConnectionTimeout, clone.ConnectionTimeout);
+        Assert.Equal(device.SupportedInterfaces.AsEnumerable(), clone.SupportedInterfaces.AsEnumerable());
+        Assert.Equal(device.AsyncProperties.Count(), clone.AsyncProperties.Count());
+        Assert.Equal(device.DeviceActions.Count(), clone.DeviceActions.Count());
+
+        // The cloned resource manager instance should be intact here.
+        Assert.False(((TestResourceManager) clone.ResourceManager!).IsDisposed);
+      }
+
+      // The cloned instance now should be disposed of. Its cloned resource manager instance should also be disposed of.
+      Assert.Throws<ObjectDisposedException>(clone.OpenSession);
+      Assert.True(((TestResourceManager) clone.ResourceManager!).IsDisposed);
+
+      // The original resource manager instance should still remain intact.
+      Assert.False(((TestResourceManager) device.ResourceManager!).IsDisposed);
     }
 
     /// <summary>

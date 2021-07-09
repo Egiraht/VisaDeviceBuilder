@@ -123,6 +123,11 @@ namespace VisaDeviceBuilder.Tests.Components
     /// </summary>
     public string Message { get; private set; } = string.Empty;
 
+    /// <summary>
+    ///   Checks if this resource manager instance has been already disposed of.
+    /// </summary>
+    public bool IsDisposed { get; private set; }
+
     /// <inheritdoc />
     public IEnumerable<string> Find(string pattern = "") => new[]
     {
@@ -207,8 +212,6 @@ namespace VisaDeviceBuilder.Tests.Components
     }
 
     /// <inheritdoc />
-    public void Dispose()
-    {
-    }
+    public void Dispose() => IsDisposed = true;
   }
 }

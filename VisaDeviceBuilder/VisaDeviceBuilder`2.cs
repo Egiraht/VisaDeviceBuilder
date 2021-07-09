@@ -177,7 +177,7 @@ namespace VisaDeviceBuilder
     {
       Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter)
       {
-        Owner = null,
+        Owner = Device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = false
       });
@@ -209,7 +209,7 @@ namespace VisaDeviceBuilder
     {
       Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(setter)
       {
-        Owner = null,
+        Owner = Device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = false
       });
@@ -249,7 +249,7 @@ namespace VisaDeviceBuilder
     {
       Device.CustomAsyncProperties.Add(new OwnedAsyncProperty<TOutputVisaDevice, TValue>(getter, setter)
       {
-        Owner = null,
+        Owner = Device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = autoUpdateGetter
       });
@@ -274,7 +274,7 @@ namespace VisaDeviceBuilder
       IOwnedAsyncProperty<TOutputVisaDevice> ownedAsyncProperty)
     {
       var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
-      clone.Owner = null;
+      clone.Owner = Device;
       Device.CustomAsyncProperties.Add(clone);
       return this;
     }
@@ -299,7 +299,7 @@ namespace VisaDeviceBuilder
       Device.CustomAsyncProperties.AddRange(ownedAsyncProperties.Select(ownedAsyncProperty =>
       {
         var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
-        clone.Owner = null;
+        clone.Owner = Device;
         return clone;
       }));
       return this;
@@ -327,7 +327,7 @@ namespace VisaDeviceBuilder
     {
       Device.CustomDeviceActions.Add(new OwnedDeviceAction<TOutputVisaDevice>(action)
       {
-        Owner = null,
+        Owner = Device,
         Name = name
       });
       return this;
@@ -350,7 +350,7 @@ namespace VisaDeviceBuilder
       IOwnedDeviceAction<TOutputVisaDevice> ownedDeviceAction)
     {
       var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
-      clone.Owner = null;
+      clone.Owner = Device;
       Device.CustomDeviceActions.Add(clone);
       return this;
     }
@@ -374,7 +374,7 @@ namespace VisaDeviceBuilder
       Device.CustomDeviceActions.AddRange(ownedDeviceActions.Select(ownedDeviceAction =>
       {
         var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
-        clone.Owner = null;
+        clone.Owner = Device;
         return clone;
       }));
       return this;
