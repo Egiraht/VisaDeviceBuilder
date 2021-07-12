@@ -36,13 +36,13 @@ namespace VisaDeviceBuilder
     ///   Gets the owned getter delegate to be called for the <see cref="Owner" /> VISA device when the asynchronous
     ///   property is read.
     /// </summary>
-    private Func<TOwner, TValue> OwnedGetterDelegate { get; } = _ => default!;
+    public Func<TOwner, TValue> OwnedGetterDelegate { get; } = _ => default!;
 
     /// <summary>
     ///   Gets the owned setter delegate to be called for the <see cref="Owner" /> VISA device when the asynchronous
     ///   property is written.
     /// </summary>
-    private Action<TOwner, TValue> OwnedSetterDelegate { get; } = (_, _) => { };
+    public Action<TOwner, TValue> OwnedSetterDelegate { get; } = (_, _) => { };
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">

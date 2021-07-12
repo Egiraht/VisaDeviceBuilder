@@ -20,9 +20,9 @@ namespace VisaDeviceBuilder.Tests.Components
     private readonly object _synchronizationLock = new();
 
     /// <summary>
-    ///   The actual value accessed by the <see cref="TestAsyncProperty" /> property.
+    ///   Gets or sets the actual value accessed by the <see cref="TestAsyncProperty" /> property.
     /// </summary>
-    private int _value;
+    public int TestValue { get; set; }
 
     /// <summary>
     ///   Gets the test asynchronous property of integer type that is defined using the <see cref="IAsyncProperty" />
@@ -36,7 +36,7 @@ namespace VisaDeviceBuilder.Tests.Components
           throw new TestException();
 
         Task.Delay(CommunicationDelay).Wait();
-        return _value;
+        return TestValue;
       }
     }, newValue =>
     {
@@ -46,7 +46,7 @@ namespace VisaDeviceBuilder.Tests.Components
           throw new TestException();
 
         Task.Delay(CommunicationDelay).Wait();
-        _value = newValue;
+        TestValue = newValue;
       }
     });
     private IAsyncProperty<int>? _testAsyncProperty;
