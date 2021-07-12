@@ -25,7 +25,7 @@ namespace VisaDeviceBuilder.Tests.Components
     /// <summary>
     ///   Defines the session opening delay in milliseconds.
     /// </summary>
-    public const int SessionOpeningDelay = 50;
+    public const int SessionOpeningDelay = 1;
 
     /// <summary>
     ///   Defines the custom test VISA device resource name.

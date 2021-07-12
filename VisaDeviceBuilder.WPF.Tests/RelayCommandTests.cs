@@ -13,7 +13,7 @@ namespace VisaDeviceBuilder.WPF.Tests
     /// <summary>
     ///   Defines the asynchronous device action delay to simulate long operations.
     /// </summary>
-    private const int AsyncActionDelay = 10;
+    private const int AsyncActionDelay = 1;
 
     /// <summary>
     ///   Defines the test string value.
@@ -28,7 +28,7 @@ namespace VisaDeviceBuilder.WPF.Tests
     /// <summary>
     ///   Gets ort sets the flag defining if the test relay command can be executed.
     /// </summary>
-    private bool CanExecute { get; set; } = false;
+    private bool CanExecute { get; set; }
 
     /// <summary>
     ///   Testing synchronous command actions execution.

@@ -13,7 +13,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the asynchronous device action delay to simulate long operations.
     /// </summary>
-    private const int DeviceActionDelay = 10;
+    private const int DeviceActionDelay = 1;
 
     /// <summary>
     ///   Defines the test string value.

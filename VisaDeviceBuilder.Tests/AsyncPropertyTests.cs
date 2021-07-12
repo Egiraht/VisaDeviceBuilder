@@ -15,7 +15,7 @@ namespace VisaDeviceBuilder.Tests
     ///   Defines the delay in milliseconds for imitation of time-consuming asynchronous operations.
     ///   Must be greater than zero.
     /// </summary>
-    private const int OperationDelay = 50;
+    private const int OperationDelay = 1;
 
     /// <summary>
     ///   Defines the custom double value for typed getter/setter value testing.

@@ -17,7 +17,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the test auto-updater delay value in milliseconds.
     /// </summary>
-    public const int TestAutoUpdaterDelay = 12;
+    private const int TestAutoUpdaterDelay = 1;
 
     /// <summary>
     ///   Defines the asynchronous operation timeout period.

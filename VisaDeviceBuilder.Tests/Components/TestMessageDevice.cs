@@ -79,24 +79,24 @@ namespace VisaDeviceBuilder.Tests.Components
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown on the device initialization.
     /// </summary>
-    public bool ThrowOnInitialization { get; set; } = false;
+    public bool ThrowOnInitialization { get; set; }
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown on the device de-initialization.
     /// </summary>
-    public bool ThrowOnDeInitialization { get; set; } = false;
+    public bool ThrowOnDeInitialization { get; set; }
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown during <see cref="TestAsyncProperty" />
     ///   getter updating.
     /// </summary>
-    public bool ThrowOnAsyncPropertyGetter { get; set; } = false;
+    public bool ThrowOnAsyncPropertyGetter { get; set; }
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown during <see cref="TestAsyncProperty" />
     ///   setter processing.
     /// </summary>
-    public bool ThrowOnAsyncPropertySetter { get; set; } = false;
+    public bool ThrowOnAsyncPropertySetter { get; set; }
 
     /// <inheritdoc />
     protected override void Initialize()
