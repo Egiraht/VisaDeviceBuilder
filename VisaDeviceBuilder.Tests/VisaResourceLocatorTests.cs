@@ -40,6 +40,17 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
+    ///   Testing no VISA resources processing.
+    /// </summary>
+    [Fact]
+    public async Task NoResourcesTest()
+    {
+      // When no matching resources are found, the method must return an empty enumeration without any exceptions.
+      Assert.Empty(await VisaResourceLocator.LocateResourceNamesAsync<TestResourceManager>(
+        TestResourceManager.NoResourcesPattern));
+    }
+
+    /// <summary>
     ///   Testing an invalid VISA resource manager class.
     /// </summary>
     [Fact]

@@ -102,6 +102,12 @@ namespace VisaDeviceBuilder.Tests.Components
     /// </summary>
     public const string VxiTestDeviceResourceClass = "VXI";
 
+    /// <summary>
+    ///   Defines the pattern string that instructs the test resource manager to throw an exception that no suitable
+    ///   VISA resources were found.
+    /// </summary>
+    public const string NoResourcesPattern = "EMPTY";
+
     /// <inheritdoc />
     [ExcludeFromCodeCoverage]
     public Version ImplementationVersion => GlobalResourceManager.ImplementationVersion;
@@ -129,12 +135,18 @@ namespace VisaDeviceBuilder.Tests.Components
     public bool IsDisposed { get; private set; }
 
     /// <inheritdoc />
-    public IEnumerable<string> Find(string pattern = "") => new[]
+    public IEnumerable<string> Find(string pattern = "")
     {
-      CustomTestDeviceResourceName,
-      SerialTestDeviceResourceName,
-      VxiTestDeviceResourceName
-    };
+      if (pattern == NoResourcesPattern)
+        throw new VisaException("Failed to find any resources matching the pattern \"{pattern}\".");
+
+      return new[]
+      {
+        CustomTestDeviceResourceName,
+        SerialTestDeviceResourceName,
+        VxiTestDeviceResourceName
+      };
+    }
 
     /// <inheritdoc />
     public ParseResult Parse(string resourceName)
