@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
@@ -14,13 +15,11 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
-    // TODO: Automatically take ownership of provided owned asynchronous properties.
     /// <inheritdoc />
-    public List<IOwnedAsyncProperty<IVisaDevice>> CustomAsyncProperties { get; } = new();
+    public ObservableCollection<IOwnedAsyncProperty<IVisaDevice>> CustomAsyncProperties { get; } = new();
 
-    // TODO: Automatically take ownership of provided owned device actions.
     /// <inheritdoc />
-    public List<IOwnedDeviceAction<IVisaDevice>> CustomDeviceActions { get; } = new();
+    public ObservableCollection<IOwnedDeviceAction<IVisaDevice>> CustomDeviceActions { get; } = new();
 
     /// <inheritdoc />
     public Action<IVisaDevice>? CustomInitializeCallback { get; set; }
@@ -46,6 +45,23 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public override HardwareInterfaceType[] SupportedInterfaces =>
       CustomSupportedInterfaces ?? base.SupportedInterfaces;
+
+    /// <summary>
+    ///   Initializes a new buildable VISA device instance.
+    /// </summary>
+    public BuildableVisaDevice()
+    {
+      // Automatically take ownership of owned asynchronous properties and device actions when adding them into the
+      // corresponding observable collections.
+      CustomAsyncProperties.CollectionChanged += (_, args) => args.NewItems?
+        .Cast<IOwnedAsyncProperty<IVisaDevice>>()
+        .ToList()
+        .ForEach(ownedAsyncProperty => ownedAsyncProperty.Owner = this);
+      CustomDeviceActions.CollectionChanged += (_, args) => args.NewItems?
+        .Cast<IOwnedDeviceAction<IVisaDevice>>()
+        .ToList()
+        .ForEach(ownedDeviceAction => ownedDeviceAction.Owner = this);
+    }
 
     /// <inheritdoc />
     protected override void Initialize()
@@ -93,25 +109,21 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public override object Clone()
     {
-      var device = (BuildableVisaDevice) base.Clone();
-      device.CustomSupportedInterfaces = CustomSupportedInterfaces;
-      device.CustomAsyncProperties.AddRange(CustomAsyncProperties.Select(asyncProperty =>
-      {
-        var clone = (IOwnedAsyncProperty<IVisaDevice>) asyncProperty.Clone();
-        clone.Owner = device;
-        return clone;
-      }));
-      device.CustomDeviceActions.AddRange(CustomDeviceActions.Select(deviceAction =>
-      {
-        var clone = (IOwnedDeviceAction<IVisaDevice>) deviceAction.Clone();
-        clone.Owner = device;
-        return clone;
-      }));
-      device.CustomInitializeCallback = CustomInitializeCallback;
-      device.CustomDeInitializeCallback = CustomDeInitializeCallback;
-      device.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
-      device.CustomResetCallback = CustomResetCallback;
-      return device;
+      var clone = (BuildableVisaDevice) base.Clone();
+      clone.CustomSupportedInterfaces = CustomSupportedInterfaces;
+      CustomAsyncProperties
+        .Select(ownedAsyncProperty => (IOwnedAsyncProperty<IVisaDevice>) ownedAsyncProperty.Clone())
+        .ToList()
+        .ForEach(ownedAsyncPropertyClone => clone.CustomAsyncProperties.Add(ownedAsyncPropertyClone));
+      CustomDeviceActions
+        .Select(ownedDeviceAction => (IOwnedDeviceAction<IVisaDevice>) ownedDeviceAction.Clone())
+        .ToList()
+        .ForEach(ownedDeviceActionClone => clone.CustomDeviceActions.Add(ownedDeviceActionClone));
+      clone.CustomInitializeCallback = CustomInitializeCallback;
+      clone.CustomDeInitializeCallback = CustomDeInitializeCallback;
+      clone.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
+      clone.CustomResetCallback = CustomResetCallback;
+      return clone;
     }
 
     /// <inheritdoc />

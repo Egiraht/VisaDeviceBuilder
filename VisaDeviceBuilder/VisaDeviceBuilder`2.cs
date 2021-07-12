@@ -273,9 +273,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyAsyncProperty(
       IOwnedAsyncProperty<TOutputVisaDevice> ownedAsyncProperty)
     {
-      var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
-      clone.Owner = Device;
-      Device.CustomAsyncProperties.Add(clone);
+      Device.CustomAsyncProperties.Add((IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone());
       return this;
     }
 
@@ -296,12 +294,10 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyAsyncProperties(
       params IOwnedAsyncProperty<TOutputVisaDevice>[] ownedAsyncProperties)
     {
-      Device.CustomAsyncProperties.AddRange(ownedAsyncProperties.Select(ownedAsyncProperty =>
-      {
-        var clone = (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone();
-        clone.Owner = Device;
-        return clone;
-      }));
+      ownedAsyncProperties
+        .Select(ownedAsyncProperty => (IOwnedAsyncProperty<TOutputVisaDevice>) ownedAsyncProperty.Clone())
+        .ToList()
+        .ForEach(ownedAsyncPropertyClone => Device.CustomAsyncProperties.Add(ownedAsyncPropertyClone));
       return this;
     }
 
@@ -349,9 +345,7 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyDeviceAction(
       IOwnedDeviceAction<TOutputVisaDevice> ownedDeviceAction)
     {
-      var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
-      clone.Owner = Device;
-      Device.CustomDeviceActions.Add(clone);
+      Device.CustomDeviceActions.Add((IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone());
       return this;
     }
 
@@ -371,12 +365,10 @@ namespace VisaDeviceBuilder
     public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> CopyDeviceActions(
       params IOwnedDeviceAction<TOutputVisaDevice>[] ownedDeviceActions)
     {
-      Device.CustomDeviceActions.AddRange(ownedDeviceActions.Select(ownedDeviceAction =>
-      {
-        var clone = (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone();
-        clone.Owner = Device;
-        return clone;
-      }));
+      ownedDeviceActions
+        .Select(ownedDeviceAction => (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone())
+        .ToList()
+        .ForEach(ownedDeviceActionClone => Device.CustomDeviceActions.Add(ownedDeviceActionClone));
       return this;
     }
 

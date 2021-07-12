@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Ivi.Visa;
 
 namespace VisaDeviceBuilder.Abstracts
@@ -18,14 +19,17 @@ namespace VisaDeviceBuilder.Abstracts
     HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <summary>
-    ///   Gets the list of custom owned asynchronous properties of the device.
+    ///   Gets the observable collection of custom owned asynchronous properties.
+    ///   The buildable device instance automatically takes ownership of owned asynchronous properties added to the
+    ///   collection.
     /// </summary>
-    List<IOwnedAsyncProperty<TVisaDevice>> CustomAsyncProperties { get; }
+    ObservableCollection<IOwnedAsyncProperty<TVisaDevice>> CustomAsyncProperties { get; }
 
     /// <summary>
-    ///   Gets the list of custom owned device actions of the device.
+    ///   Gets the observable collection of custom owned device actions.
+    ///   The buildable device instance automatically takes ownership of owned device actions added to the collection.
     /// </summary>
-    List<IOwnedDeviceAction<TVisaDevice>> CustomDeviceActions { get; }
+    ObservableCollection<IOwnedDeviceAction<TVisaDevice>> CustomDeviceActions { get; }
 
     /// <summary>
     ///   Gets or sets the custom device initialization stage callback delegate.

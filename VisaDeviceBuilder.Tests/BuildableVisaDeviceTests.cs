@@ -269,9 +269,8 @@ namespace VisaDeviceBuilder.Tests
         ConnectionTimeout = TestConnectionTimeout,
         CustomAsyncProperties = {TestOwnedAsyncProperty} // TestOwnedAsyncProperty accesses the TestValue property.
       };
-      TestOwnedAsyncProperty.Owner = device;
 
-      // The test owned asynchronous property must be enumerated by the device.
+      // The test owned asynchronous property must be enumerated and owned by the device.
       var ownedAsyncProperty = device.AsyncProperties
         .First(asyncProperty => asyncProperty.Name == nameof(TestOwnedAsyncProperty));
       Assert.Equal(TestOwnedAsyncProperty, ownedAsyncProperty);
@@ -309,9 +308,8 @@ namespace VisaDeviceBuilder.Tests
           isResetCallbackCalled = true;
         }
       };
-      TestOwnedDeviceAction.Owner = device;
 
-      // The test owned device action must be enumerated by the device.
+      // The test owned device action must be enumerated and owned by the device.
       var ownedDeviceAction = device.DeviceActions
         .First(deviceAction => deviceAction.Name == nameof(TestOwnedDeviceAction));
       Assert.Equal(TestOwnedDeviceAction, ownedDeviceAction);
@@ -366,8 +364,6 @@ namespace VisaDeviceBuilder.Tests
         CustomResetCallback = TestResetCallback,
         CustomDisposables = {resourceManager}
       };
-      TestOwnedAsyncProperty.Owner = device;
-      TestOwnedDeviceAction.Owner = device;
 
       // The cloned device should contain the same data but must not reference objects from the original device.
       using (clone = (IBuildableVisaDevice<IVisaDevice>) device.Clone())
