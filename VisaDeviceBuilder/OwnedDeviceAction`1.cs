@@ -12,7 +12,7 @@ namespace VisaDeviceBuilder
     ///   Gets the delegate representing a device action to be asynchronously executed for the <see cref="Owner" />
     ///   VISA device.
     /// </summary>
-    private Action<TOwner> OwnedDeviceActionDelegate { get; }
+    public Action<TOwner> OwnedDeviceActionDelegate { get; }
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">

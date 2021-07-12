@@ -134,28 +134,31 @@ namespace VisaDeviceBuilder.Tests
     ///   Testing the VISA device's device actions.
     /// </summary>
     [Fact]
-    public void VisaDeviceActionsTest()
+    public async Task VisaDeviceActionsTest()
     {
-      // VisaDevice instance must contain a predefined Reset device action and must not contain any other methods with
-      // the Action delegate signature.
-      using (var visaDevice = new VisaDevice())
-      {
-        Assert.Contains(visaDevice.DeviceActions,
-          deviceAction => deviceAction.DeviceActionDelegate == visaDevice.Reset);
-        Assert.DoesNotContain(visaDevice.DeviceActions,
-          deviceAction => deviceAction.DeviceActionDelegate == visaDevice.OpenSession);
-      }
+      // TestMessageDevice must contain the Reset (as inherited from VisaDevice), DecoratedTestDeviceAction, and
+      // DeclaredTestDeviceAction device actions.
+      // It must not contain any other methods with the Action delegate signature but without DeviceActionAttribute,
+      // like OpenSession method.
+      await using var messageDevice = new TestMessageDevice();
+      Assert.Contains(messageDevice.DeviceActions,
+        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.Reset);
+      Assert.Contains(messageDevice.DeviceActions,
+        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.DecoratedTestDeviceAction);
+      Assert.Contains(messageDevice.DeviceActions,
+        deviceAction => deviceAction == messageDevice.DeclaredTestDeviceAction);
+      Assert.DoesNotContain(messageDevice.DeviceActions,
+        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.OpenSession);
 
-      // TestMessageDevice must contain both the Reset and DecoratedTestDeviceAction device actions.
-      using (var messageDevice = new TestMessageDevice())
-      {
-        Assert.Contains(messageDevice.DeviceActions,
-          deviceAction => deviceAction.DeviceActionDelegate == messageDevice.Reset);
-        Assert.Contains(messageDevice.DeviceActions,
-          deviceAction => deviceAction.DeviceActionDelegate == messageDevice.DecoratedTestDeviceAction);
-        Assert.Contains(messageDevice.DeviceActions,
-          deviceAction => deviceAction == messageDevice.DeclaredTestDeviceAction);
-      }
+      // Testing device actions execution.
+      Assert.False(messageDevice.IsResetCalled);
+      Assert.False(messageDevice.IsDecoratedTestDeviceActionCalled);
+      Assert.False(messageDevice.IsDeclaredTestDeviceActionCalled);
+      foreach (var deviceAction in messageDevice.DeviceActions)
+        await deviceAction.ExecuteAsync();
+      Assert.True(messageDevice.IsResetCalled);
+      Assert.True(messageDevice.IsDecoratedTestDeviceActionCalled);
+      Assert.True(messageDevice.IsDeclaredTestDeviceActionCalled);
     }
 
     /// <summary>

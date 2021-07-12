@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
 
@@ -23,6 +22,21 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets or sets the actual value accessed by the <see cref="TestAsyncProperty" /> property.
     /// </summary>
     public int TestValue { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the flag indicating if the <see cref="DeclaredTestDeviceAction" /> has been called.
+    /// </summary>
+    public bool IsDeclaredTestDeviceActionCalled { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the flag indicating if the <see cref="DecoratedTestDeviceAction" /> has been called.
+    /// </summary>
+    public bool IsDecoratedTestDeviceActionCalled { get; set; }
+
+    /// <summary>
+    ///   Gets or sets the flag indicating if the <see cref="IVisaDevice.Reset" /> device action has been called.
+    /// </summary>
+    public bool IsResetCalled { get; set; }
 
     /// <summary>
     ///   Gets the test asynchronous property of integer type that is defined using the <see cref="IAsyncProperty" />
@@ -55,8 +69,11 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets the device action that is defined using the <see cref="IDeviceAction" /> type class declaration and
     ///   must be enlisted into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
     /// </summary>
-    [ExcludeFromCodeCoverage]
-    public IDeviceAction DeclaredTestDeviceAction => _testDeclaredDeviceAction ??= new DeviceAction(() => { });
+    public IDeviceAction DeclaredTestDeviceAction => _testDeclaredDeviceAction ??= new DeviceAction(() =>
+    {
+      Task.Delay(CommunicationDelay).Wait();
+      IsDeclaredTestDeviceActionCalled = true;
+    });
     private IDeviceAction? _testDeclaredDeviceAction;
 
     /// <summary>
@@ -95,13 +112,22 @@ namespace VisaDeviceBuilder.Tests.Components
         throw new TestException();
     }
 
+    /// <inheritdoc />
+    public override void Reset()
+    {
+      Task.Delay(CommunicationDelay).Wait();
+      IsResetCalled = true;
+    }
+
     /// <summary>
     ///   Defines the device action that is defined using the <see cref="DeviceActionAttribute" /> and must be enlisted
     ///   into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
     /// </summary>
-    [DeviceAction, ExcludeFromCodeCoverage]
+    [DeviceAction]
     public void DecoratedTestDeviceAction()
     {
+      Task.Delay(CommunicationDelay).Wait();
+      IsDecoratedTestDeviceActionCalled = true;
     }
   }
 }
