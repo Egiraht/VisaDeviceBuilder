@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
@@ -10,9 +11,9 @@ using Xunit;
 namespace VisaDeviceBuilder.Tests
 {
   /// <summary>
-  ///   The unit tests class covering the <see cref="BuildableVisaDevice" /> class.
+  ///   The unit tests class covering the <see cref="BuildableMessageDevice" /> class.
   /// </summary>
-  public class BuildableVisaDeviceTests
+  public class BuildableMessageDeviceTests
   {
     /// <summary>
     ///   Defines the delay in milliseconds for imitation of time-consuming asynchronous operations.
@@ -29,6 +30,11 @@ namespace VisaDeviceBuilder.Tests
     ///   Defines the test double value.
     /// </summary>
     private const double TestDoubleValue = 4321.1234;
+
+    /// <summary>
+    ///   Defines the test message string.
+    /// </summary>
+    private const string TestMessage = "Test message";
 
     /// <summary>
     ///   Defines the custom supported hardware interfaces for the test device.
@@ -48,25 +54,25 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Gets the test owned asynchronous property.
     /// </summary>
-    private IOwnedAsyncProperty<IVisaDevice, double> TestOwnedAsyncProperty => _testOwnedAsyncProperty ??=
-      new OwnedAsyncProperty<IVisaDevice, double>(TestOwnedAsyncPropertyGetter, TestOwnedAsyncPropertySetter)
+    private IOwnedAsyncProperty<IMessageDevice, double> TestOwnedAsyncProperty => _testOwnedAsyncProperty ??=
+      new OwnedAsyncProperty<IMessageDevice, double>(TestOwnedAsyncPropertyGetter, TestOwnedAsyncPropertySetter)
       {
         Name = nameof(TestOwnedAsyncProperty),
         AutoUpdateGetterAfterSetterCompletes = true
       };
-    private IOwnedAsyncProperty<IVisaDevice, double>? _testOwnedAsyncProperty;
+    private IOwnedAsyncProperty<IMessageDevice, double>? _testOwnedAsyncProperty;
 
     /// <summary>
     ///   Gets the test owned device action.
     /// </summary>
-    private IOwnedDeviceAction<IVisaDevice> TestOwnedDeviceAction => _testOwnedDeviceAction ??=
-      new OwnedDeviceAction<IVisaDevice>(TestOwnedDeviceActionCallback) {Name = nameof(TestOwnedDeviceAction)};
-    private IOwnedDeviceAction<IVisaDevice>? _testOwnedDeviceAction;
+    private IOwnedDeviceAction<IMessageDevice> TestOwnedDeviceAction => _testOwnedDeviceAction ??=
+      new OwnedDeviceAction<IMessageDevice>(TestOwnedDeviceActionCallback) {Name = nameof(TestOwnedDeviceAction)};
+    private IOwnedDeviceAction<IMessageDevice>? _testOwnedDeviceAction;
 
     /// <summary>
     ///   The test owned asynchronous property getter callback.
     /// </summary>
-    private double TestOwnedAsyncPropertyGetter(IVisaDevice visaDevice)
+    private double TestOwnedAsyncPropertyGetter(IMessageDevice visaDevice)
     {
       Task.Delay(OperationDelay).Wait();
       return TestValue - visaDevice.ConnectionTimeout; // Adding dependency on the owning device instance.
@@ -75,7 +81,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test owned asynchronous property setter callback.
     /// </summary>
-    private void TestOwnedAsyncPropertySetter(IVisaDevice visaDevice, double value)
+    private void TestOwnedAsyncPropertySetter(IMessageDevice visaDevice, double value)
     {
       Task.Delay(OperationDelay).Wait();
       TestValue = value + visaDevice.ConnectionTimeout; // Adding dependency on the owning device instance.
@@ -84,25 +90,25 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test owned device action callback.
     /// </summary>
-    private void TestOwnedDeviceActionCallback(IVisaDevice device) => device.Reset();
+    private void TestOwnedDeviceActionCallback(IMessageDevice device) => device.Reset();
 
     /// <summary>
     ///   The test device initialization callback.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    private void TestInitializeCallback(IVisaDevice device) => Task.Delay(OperationDelay).Wait();
+    private void TestInitializeCallback(IMessageDevice device) => Task.Delay(OperationDelay).Wait();
 
     /// <summary>
     ///   The test device de-initialization callback.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    private void TestDeInitializeCallback(IVisaDevice device) => Task.Delay(OperationDelay).Wait();
+    private void TestDeInitializeCallback(IMessageDevice device) => Task.Delay(OperationDelay).Wait();
 
     /// <summary>
     ///   The test callback that gets the device's identifier.
     /// </summary>
     [ExcludeFromCodeCoverage]
-    private string TestGetIdentifierCallback(IVisaDevice device)
+    private string TestGetIdentifierCallback(IMessageDevice device)
     {
       Task.Delay(OperationDelay).Wait();
       return device.AliasName;
@@ -111,19 +117,30 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test device reset callback.
     /// </summary>
-    private void TestResetCallback(IVisaDevice device) => Task.Delay(OperationDelay).Wait();
+    private void TestResetCallback(IMessageDevice device) => Task.Delay(OperationDelay).Wait();
 
     /// <summary>
-    ///   Testing new buildable VISA device instance creation with its custom properties being initialized.
+    ///   The test message processor method.
+    /// </summary>
+    /// <returns>
+    ///   A reversed request string.
+    /// </returns>
+    private string TestMessageProcessor(IMessageDevice device, string request) => request
+      .EnumerateRunes()
+      .Reverse()
+      .Aggregate(new StringBuilder(), (builder, rune) => builder.Append(rune), builder => builder.ToString());
+
+    /// <summary>
+    ///   Testing new buildable message-based VISA device instance creation with its custom properties being initialized.
     /// </summary>
     [Fact]
-    public void BuildableVisaDeviceTest()
+    public void BuildableMessageDeviceTest()
     {
       using var resourceManager = new TestResourceManager();
-      using var device = new BuildableVisaDevice
+      using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout,
         CustomSupportedInterfaces = CustomSupportedInterfaces,
         CustomAsyncProperties = {TestOwnedAsyncProperty},
@@ -132,9 +149,10 @@ namespace VisaDeviceBuilder.Tests
         CustomDeInitializeCallback = TestDeInitializeCallback,
         CustomGetIdentifierCallback = TestGetIdentifierCallback,
         CustomResetCallback = TestResetCallback,
+        CustomMessageProcessor = TestMessageProcessor,
         CustomDisposables = {resourceManager}
       };
-      var baseDevice = (IVisaDevice) device;
+      var baseDevice = (IMessageDevice) device;
 
       // Checking custom device properties.
       Assert.Equal(CustomSupportedInterfaces, device.CustomSupportedInterfaces);
@@ -144,11 +162,12 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestDeInitializeCallback, device.CustomDeInitializeCallback);
       Assert.Equal(TestGetIdentifierCallback, device.CustomGetIdentifierCallback);
       Assert.Equal(TestResetCallback, device.CustomResetCallback);
+      Assert.Equal(TestMessageProcessor, device.CustomMessageProcessor);
       Assert.Contains(resourceManager, device.CustomDisposables);
 
       // Checking base device properties.
       Assert.Same(resourceManager, baseDevice.ResourceManager);
-      Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, baseDevice.ResourceName);
+      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, baseDevice.ResourceName);
       Assert.Equal(TestConnectionTimeout, baseDevice.ConnectionTimeout);
       Assert.Equal(CustomSupportedInterfaces, baseDevice.SupportedInterfaces);
       Assert.Contains(TestOwnedAsyncProperty, baseDevice.AsyncProperties);
@@ -159,83 +178,97 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
-    ///   Testing new buildable VISA device instance creation with its custom properties having default values.
+    ///   Testing new buildable message-based VISA device instance creation with its custom properties having default values.
     /// </summary>
     [Fact]
-    public async Task DefaultBuildableVisaDeviceTest()
+    public async Task DefaultBuildableMessageDeviceTest()
     {
       using var resourceManager = new TestResourceManager();
-      await using var device = new BuildableVisaDevice
+      await using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
-      var baseDevice = (IVisaDevice) device;
+      var baseDevice = (IMessageDevice) device;
 
-      // Buildable device's properties must fallback to the corresponding base default values when no custom properties
-      // are set.
+      // Buildable message-based device's properties must fallback to the corresponding base default values when no
+      // custom properties are set.
       Assert.Equal(VisaDevice.DefaultConnectionTimeout, baseDevice.ConnectionTimeout);
-      Assert.Equal(VisaDevice.DefaultSupportedInterfaces, baseDevice.SupportedInterfaces);
+      Assert.Equal(MessageDevice.DefaultSupportedMessageBasedInterfaces, baseDevice.SupportedInterfaces);
       Assert.Empty(baseDevice.AsyncProperties);
       Assert.Contains(baseDevice.DeviceActions, action => action.DeviceActionDelegate == baseDevice.Reset);
 
-      // A buildable device should work like a basic VisaDevice in its default configuration.
+      // A buildable message-based device should work like a basic MessageDevice in its default configuration.
       await device.OpenSessionAsync();
       await device.ResetAsync();
       Assert.Equal(device.AliasName, await device.GetIdentifierAsync());
+
+      // According to the TestResourceManager's implementation of IMessageBasedSession, the default SendMessage method
+      // must return the same request message.
+      Assert.Equal(TestMessage, await device.SendMessageAsync(TestMessage));
     }
 
     /// <summary>
-    ///   Testing buildable VISA device custom callbacks.
+    ///   Testing buildable message-based VISA device custom callbacks.
     /// </summary>
     [Fact]
-    public async Task BuildableVisaDeviceCallbacksTest()
+    public async Task BuildableMessageDeviceCallbacksTest()
     {
       var isInitializeCallbackCalled = false;
       var isDeInitializeCallbackCalled = false;
       var isGetIdentifierCallbackCalled = false;
       var isResetCallbackCalled = false;
+      var isMessageProcessorCalled = false;
       using var resourceManager = new TestResourceManager();
-      await using var device = new BuildableVisaDevice
+      await using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout,
-        CustomSupportedInterfaces = new[] {TestResourceManager.CustomTestDeviceInterfaceType},
+        CustomSupportedInterfaces = new[] {TestResourceManager.SerialTestDeviceInterfaceType},
         CustomInitializeCallback = visaDevice =>
         {
           Assert.Equal(DeviceConnectionState.Initializing, visaDevice.ConnectionState);
-          Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, visaDevice.AliasName);
+          Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, visaDevice.AliasName);
           Task.Delay(OperationDelay).Wait();
           isInitializeCallbackCalled = true;
         },
         CustomDeInitializeCallback = visaDevice =>
         {
           Assert.Equal(DeviceConnectionState.DeInitializing, visaDevice.ConnectionState);
-          Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, visaDevice.AliasName);
+          Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, visaDevice.AliasName);
           Task.Delay(OperationDelay).Wait();
           isDeInitializeCallbackCalled = true;
         },
         CustomGetIdentifierCallback = visaDevice =>
         {
           Assert.Equal(DeviceConnectionState.Connected, visaDevice.ConnectionState);
-          Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, visaDevice.AliasName);
+          Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, visaDevice.AliasName);
           Task.Delay(OperationDelay).Wait();
           isGetIdentifierCallbackCalled = true;
-          return TestResourceManager.CustomTestDeviceAliasName.ToUpper();
+          return TestResourceManager.SerialTestDeviceAliasName.ToUpper();
         },
         CustomResetCallback = visaDevice =>
         {
           Assert.Equal(DeviceConnectionState.Connected, visaDevice.ConnectionState);
-          Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, visaDevice.AliasName);
+          Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, visaDevice.AliasName);
           Task.Delay(OperationDelay).Wait();
           isResetCallbackCalled = true;
+        },
+        CustomMessageProcessor = (visaDevice, request) =>
+        {
+          Assert.Equal(DeviceConnectionState.Connected, visaDevice.ConnectionState);
+          Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, visaDevice.AliasName);
+          Task.Delay(OperationDelay).Wait();
+          isMessageProcessorCalled = true;
+          return TestMessageProcessor(visaDevice, request);
         }
       };
       Assert.False(isInitializeCallbackCalled);
       Assert.False(isDeInitializeCallbackCalled);
       Assert.False(isGetIdentifierCallbackCalled);
       Assert.False(isResetCallbackCalled);
+      Assert.False(isMessageProcessorCalled);
 
       // Testing device initialization.
       await device.OpenSessionAsync();
@@ -244,11 +277,15 @@ namespace VisaDeviceBuilder.Tests
       // Getting the device identifier.
       var identifier = await device.GetIdentifierAsync();
       Assert.True(isGetIdentifierCallbackCalled);
-      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName.ToUpper(), identifier);
+      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName.ToUpper(), identifier);
 
       // Testing device resetting.
       await device.ResetAsync();
       Assert.True(isResetCallbackCalled);
+
+      // Testing device message processing.
+      Assert.Equal(TestMessageProcessor(device, TestMessage), await device.SendMessageAsync(TestMessage));
+      Assert.True(isMessageProcessorCalled);
 
       // Testing device de-initialization.
       await device.CloseSessionAsync();
@@ -262,10 +299,10 @@ namespace VisaDeviceBuilder.Tests
     public async Task CustomAsyncPropertiesTest()
     {
       using var resourceManager = new TestResourceManager();
-      await using var device = new BuildableVisaDevice
+      await using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout,
         CustomAsyncProperties = {TestOwnedAsyncProperty} // TestOwnedAsyncProperty accesses the TestValue property.
       };
@@ -275,7 +312,7 @@ namespace VisaDeviceBuilder.Tests
       var ownedAsyncProperty = device.AsyncProperties
         .First(asyncProperty => asyncProperty.Name == nameof(TestOwnedAsyncProperty));
       Assert.Equal(TestOwnedAsyncProperty, ownedAsyncProperty);
-      Assert.Same(device, ((IOwnedAsyncProperty<IVisaDevice>) ownedAsyncProperty).Owner);
+      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) ownedAsyncProperty).Owner);
 
       // The TestValue should be modified through the TestOwnedAsyncProperty.
       // The owning device's ConnectionTimeout value is added to the setter value according to the
@@ -290,17 +327,17 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
-    ///   Testing custom device actions of a buildable VISA device.
+    ///   Testing custom device actions of a buildable message-based VISA device.
     /// </summary>
     [Fact]
     public async Task CustomDeviceActionsTest()
     {
       var isResetCallbackCalled = false;
       using var resourceManager = new TestResourceManager();
-      await using var device = new BuildableVisaDevice
+      await using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout,
         CustomDeviceActions = {TestOwnedDeviceAction}, // TestOwnedDeviceAction calls the device's Reset method.
         CustomResetCallback = visaDevice =>
@@ -315,7 +352,7 @@ namespace VisaDeviceBuilder.Tests
       var ownedDeviceAction = device.DeviceActions
         .First(deviceAction => deviceAction.Name == nameof(TestOwnedDeviceAction));
       Assert.Equal(TestOwnedDeviceAction, ownedDeviceAction);
-      Assert.Same(device, ((IOwnedDeviceAction<IVisaDevice>) ownedDeviceAction).Owner);
+      Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) ownedDeviceAction).Owner);
 
       // The device's Reset method and the corresponding CustomResetCallback should be called according to the
       // TestOwnedDeviceAction callback.
@@ -331,31 +368,33 @@ namespace VisaDeviceBuilder.Tests
     public async Task NoOpenedSessionTest()
     {
       using var resourceManager = new TestResourceManager();
-      await using var device = new BuildableVisaDevice
+      await using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
 
       // No VISA session is opened.
       Assert.Throws<VisaDeviceException>(device.Reset);
       Assert.Throws<VisaDeviceException>(device.GetIdentifier);
+      Assert.Throws<VisaDeviceException>(() => device.SendMessage(string.Empty));
       await Assert.ThrowsAsync<VisaDeviceException>(device.ResetAsync);
       await Assert.ThrowsAsync<VisaDeviceException>(device.GetIdentifierAsync);
+      await Assert.ThrowsAsync<VisaDeviceException>(() => device.SendMessageAsync(string.Empty));
     }
 
     /// <summary>
     ///   Testing VISA device cloning.
     /// </summary>
     [Fact]
-    public void BuildableVisaDeviceCloningTest()
+    public void BuildableMessageDeviceCloningTest()
     {
-      IBuildableVisaDevice<IVisaDevice>? clone;
+      IBuildableMessageDevice<IMessageDevice>? clone;
       using var resourceManager = new TestResourceManager();
-      using var device = new BuildableVisaDevice
+      using var device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         ConnectionTimeout = TestConnectionTimeout,
         CustomSupportedInterfaces = CustomSupportedInterfaces,
         CustomAsyncProperties = {TestOwnedAsyncProperty},
@@ -364,17 +403,18 @@ namespace VisaDeviceBuilder.Tests
         CustomDeInitializeCallback = TestDeInitializeCallback,
         CustomGetIdentifierCallback = TestGetIdentifierCallback,
         CustomResetCallback = TestResetCallback,
+        CustomMessageProcessor = TestMessageProcessor,
         CustomDisposables = {resourceManager}
       };
       TestOwnedAsyncProperty.Owner = device;
       TestOwnedDeviceAction.Owner = device;
 
       // The cloned device should contain the same data but must not reference objects from the original device.
-      using (clone = (IBuildableVisaDevice<IVisaDevice>) device.Clone())
+      using (clone = (IBuildableMessageDevice<IMessageDevice>) device.Clone())
       {
         // Checking cloned base device properties.
         Assert.NotSame(device, clone);
-        Assert.IsType<BuildableVisaDevice>(clone);
+        Assert.IsType<BuildableMessageDevice>(clone);
         Assert.NotSame(device.ResourceManager, clone.ResourceManager);
         Assert.IsType(device.ResourceManager.GetType(), clone.ResourceManager);
         Assert.Equal(device.ResourceName, clone.ResourceName);
@@ -394,6 +434,7 @@ namespace VisaDeviceBuilder.Tests
         Assert.Equal(TestDeInitializeCallback, clone.CustomDeInitializeCallback);
         Assert.Equal(TestGetIdentifierCallback, clone.CustomGetIdentifierCallback);
         Assert.Equal(TestResetCallback, clone.CustomResetCallback);
+        Assert.Equal(TestMessageProcessor, clone.CustomMessageProcessor);
         Assert.Empty(clone.CustomDisposables);
 
         // The cloned resource manager instance should be intact here.
@@ -412,14 +453,14 @@ namespace VisaDeviceBuilder.Tests
     ///   Testing buildable VISA device object disposal.
     /// </summary>
     [Fact]
-    public async Task BuildableVisaDeviceDisposalTest()
+    public async Task BuildableMessageDeviceDisposalTest()
     {
-      IVisaDevice? device;
+      IMessageDevice? device;
       var resourceManager = new TestResourceManager();
-      await using (device = new BuildableVisaDevice
+      await using (device = new BuildableMessageDevice
       {
         ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.CustomTestDeviceResourceName,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
         CustomDisposables = {resourceManager}
       })
       {

@@ -37,7 +37,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
       Assert.Equal(VisaDevice.DefaultSupportedInterfaces, device.SupportedInterfaces);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
-      Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, await device.GetIdentifierAsync());
       Assert.Null(device.Session);
       Assert.False(device.IsSessionOpened);
 
@@ -81,6 +80,13 @@ namespace VisaDeviceBuilder.Tests
       };
       Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
       Assert.False(device.IsSessionOpened);
+
+      // Checking exceptions thrown when no VISA session is opened.
+      // Though these methods do nothing by default, these exceptions are required by them intrinsically.
+      Assert.Throws<VisaDeviceException>(device.Reset);
+      Assert.Throws<VisaDeviceException>(device.GetIdentifier);
+      await Assert.ThrowsAsync<VisaDeviceException>(device.ResetAsync);
+      await Assert.ThrowsAsync<VisaDeviceException>(device.GetIdentifierAsync);
 
       // Session opening.
       await device.OpenSessionAsync();

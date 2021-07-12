@@ -26,19 +26,19 @@ namespace VisaDeviceBuilder
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <summary>
-    ///   The flag indicating if the VISA device is being disposed of at the moment.
+    ///   Gets or sets the flag indicating if the VISA device is being disposed of at the moment.
     /// </summary>
-    private bool _isDisposing;
+    protected bool IsDisposing { get; set; }
 
     /// <summary>
-    ///   The flag indicating if the VISA device has been already disposed of.
+    ///   Gets or sets the flag indicating if the VISA device has been already disposed of.
     /// </summary>
-    private bool _isDisposed;
+    protected bool IsDisposed { get; set; }
 
     /// <summary>
-    ///   The flag indicating if this VISA device instance has been cloned from another instance.
+    ///   Gets or sets the flag indicating if this VISA device instance has been cloned from another instance.
     /// </summary>
-    private bool _isClone;
+    protected bool IsClone { get; set; }
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
@@ -212,6 +212,32 @@ namespace VisaDeviceBuilder
       return declaredActions.Concat(decoratedActions);
     }
 
+    /// <summary>
+    ///   Throws an <see cref="ObjectDisposedException" /> exception when this VISA device instance has been already
+    ///   disposed of. Must be used in any public methods that use device's disposable resources, like
+    ///   <see cref="OpenSession" /> and <see cref="CloseSession" />.
+    /// </summary>
+    protected void ThrowWhenDeviceIsDisposed()
+    {
+      if (IsDisposed)
+        throw new ObjectDisposedException(
+          $"The device instance of type \"{GetType().Name}\" has been already disposed of.");
+    }
+
+    /// <summary>
+    ///   Throws a <see cref="VisaDeviceException" /> exception when no VISA session is opened.
+    ///   Must be used in any public methods that require an opened VISA session for functioning, like
+    ///   <see cref="Reset" /> and <see cref="GetIdentifier" />.
+    ///   This method also logically implicates the <see cref="ThrowWhenDeviceIsDisposed" /> method as no VISA session
+    ///   can be opened when a device is disposed of.
+    /// </summary>
+    protected void ThrowWhenNoVisaSessionIsOpened()
+    {
+      if (Session == null)
+        throw new VisaDeviceException(this,
+          new InvalidOperationException("There is no opened VISA session to perform an operation."));
+    }
+
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
     ///   The used resource manager cannot parse the provided resource name (inner
@@ -221,8 +247,7 @@ namespace VisaDeviceBuilder
     /// </exception>
     public void OpenSession()
     {
-      if (_isDisposed)
-        throw new ObjectDisposedException(GetType().Name);
+      ThrowWhenDeviceIsDisposed();
 
       if (ConnectionState != DeviceConnectionState.Disconnected &&
         ConnectionState != DeviceConnectionState.DisconnectedWithError)
@@ -274,6 +299,7 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual void Initialize()
     {
+      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
       {
       }
@@ -282,6 +308,10 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual string GetIdentifier()
     {
+      // Added because this method intrinsically requires an opened session and should also be called when overriding.
+      ThrowWhenNoVisaSessionIsOpened();
+
+      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
         return AliasName;
     }
@@ -293,6 +323,10 @@ namespace VisaDeviceBuilder
     [DeviceAction]
     public virtual void Reset()
     {
+      // Added because this method intrinsically requires an opened session and should also be called when overriding.
+      ThrowWhenNoVisaSessionIsOpened();
+
+      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
       {
       }
@@ -306,6 +340,7 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual void DeInitialize()
     {
+      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
       {
       }
@@ -314,8 +349,7 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public void CloseSession()
     {
-      if (_isDisposed)
-        throw new ObjectDisposedException(GetType().Name);
+      ThrowWhenDeviceIsDisposed();
 
       if (ConnectionState != DeviceConnectionState.Connected)
         return;
@@ -356,7 +390,7 @@ namespace VisaDeviceBuilder
     public virtual object Clone()
     {
       var device = (VisaDevice) Activator.CreateInstance(GetType())!;
-      device._isClone = true;
+      device.IsClone = true;
       device.ResourceManager = ResourceManager != null
         ? (IResourceManager) Activator.CreateInstance(ResourceManager.GetType())!
         : null;
@@ -368,18 +402,18 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual void Dispose()
     {
-      if (_isDisposing || _isDisposed)
+      if (IsDisposing || IsDisposed)
         return;
-      _isDisposing = true;
+      IsDisposing = true;
 
       CloseSession();
 
       // If the device has been cloned, dispose of the VISA resource manager object created during the cloning process.
-      if (_isClone)
+      if (IsClone)
         ResourceManager?.Dispose();
 
       GC.SuppressFinalize(this);
-      _isDisposed = true;
+      IsDisposed = true;
     }
 
     /// <inheritdoc />

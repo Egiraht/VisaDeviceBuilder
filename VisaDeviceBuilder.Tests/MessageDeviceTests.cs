@@ -41,7 +41,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, resourceNameInfo.OriginalResourceName);
       Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, resourceNameInfo.AliasIfExists);
       Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, device.AliasName);
-      Assert.Equal(TestResourceManager.SerialTestDeviceAliasName, await device.GetIdentifierAsync());
       Assert.Null(device.Session);
       Assert.False(device.IsSessionOpened);
     }

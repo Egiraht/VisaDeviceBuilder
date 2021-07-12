@@ -47,16 +47,6 @@ namespace VisaDeviceBuilder
     public override HardwareInterfaceType[] SupportedInterfaces =>
       CustomSupportedInterfaces ?? base.SupportedInterfaces;
 
-    /// <summary>
-    ///   Throws a <see cref="VisaDeviceException" /> exception when no VISA session is opened.
-    /// </summary>
-    private void ThrowOnNoSession()
-    {
-      if (Session == null)
-        throw new VisaDeviceException(this,
-          new InvalidOperationException("There is no opened VISA session to perform an operation."));
-    }
-
     /// <inheritdoc />
     protected override void Initialize()
     {
@@ -80,7 +70,7 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public override string GetIdentifier()
     {
-      ThrowOnNoSession();
+      ThrowWhenNoVisaSessionIsOpened();
 
       lock (SessionLock)
         return CustomGetIdentifierCallback?.Invoke(this) ?? base.GetIdentifier();
@@ -89,7 +79,7 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public override void Reset()
     {
-      ThrowOnNoSession();
+      ThrowWhenNoVisaSessionIsOpened();
 
       lock (SessionLock)
       {

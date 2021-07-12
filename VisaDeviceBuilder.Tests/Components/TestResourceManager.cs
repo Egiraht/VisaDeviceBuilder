@@ -23,7 +23,7 @@ namespace VisaDeviceBuilder.Tests.Components
     public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
-    ///   Defines the session openning delay in milliseconds.
+    ///   Defines the session opening delay in milliseconds.
     /// </summary>
     public const int SessionOpeningDelay = 50;
 
@@ -119,9 +119,9 @@ namespace VisaDeviceBuilder.Tests.Components
     public short ManufacturerId => 0x1234;
 
     /// <summary>
-    ///   Gets the last message written in a message-based session.
+    ///   Gets the messages queue that represents a test input-output buffer of a message-based session.
     /// </summary>
-    public string Message { get; private set; } = string.Empty;
+    public Queue<string> Message { get; } = new();
 
     /// <summary>
     ///   Checks if this resource manager instance has been already disposed of.
@@ -176,9 +176,9 @@ namespace VisaDeviceBuilder.Tests.Components
             .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
           mock.Setup(session => session.FormattedIO.WriteLine(It.IsAny<string>()))
-            .Callback((string message) => Message = message);
+            .Callback((string message) => Message.Enqueue(message));
           mock.Setup(session => session.FormattedIO.ReadLine())
-            .Returns(() => Message);
+            .Returns(() => Message.TryDequeue(out var str) ? str : string.Empty);
 
           Task.Delay(SessionOpeningDelay).Wait();
           openStatus = ResourceOpenStatus.Success;

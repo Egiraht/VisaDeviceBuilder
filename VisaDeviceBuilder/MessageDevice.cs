@@ -50,13 +50,11 @@ namespace VisaDeviceBuilder
     /// </exception>
     public virtual string SendMessage(string message)
     {
-      if (Session == null)
-        throw new VisaDeviceException(this,
-          new InvalidOperationException("Cannot send a message as there is no opened VISA session."));
+      ThrowWhenNoVisaSessionIsOpened();
 
       lock (SessionLock)
       {
-        Session.FormattedIO.WriteLine(message);
+        Session!.FormattedIO.WriteLine(message);
         return Session.FormattedIO.ReadLine().TrimEnd('\x0A');
       }
     }
