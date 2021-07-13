@@ -1,3 +1,4 @@
+using System;
 using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder
@@ -6,16 +7,10 @@ namespace VisaDeviceBuilder
   ///   A builder class that can build VISA devices with custom behavior.
   /// </summary>
   /// <remarks>
-  ///   <para>
-  ///     This builder class is intended for building VISA devices that require using custom non-message-based VISA
-  ///     session implementations. For the most commonly used case of message-based device communication (e.g. SCPI
-  ///     language-based communication), consider using the <see cref="MessageDeviceBuilder" /> class instead of this
-  ///     one.
-  ///   </para>
-  ///   <para>
-  ///     After a VISA device is built, the current builder instance cannot be reused. Create a new builder if
-  ///     necessary.
-  ///   </para>
+  ///   This builder class is intended for building VISA devices that require using custom non-message-based VISA
+  ///   session implementations. For the most commonly used case of message-based device communication (e.g. SCPI
+  ///   language-based communication), consider using the <see cref="MessageDeviceBuilder" /> class instead of this
+  ///   one.
   /// </remarks>
   public class VisaDeviceBuilder : VisaDeviceBuilder<BuildableVisaDevice, IVisaDevice>
   {
@@ -27,13 +22,18 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible
-    ///   VISA device builder instance.
+    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible buildable
+    ///   VISA device instance.
     /// </summary>
-    /// <param name="baseDeviceBuilder">
-    ///   A <see cref="VisaDeviceBuilder" /> instance to copy configuration from.
+    /// <param name="device">
+    ///   A VISA device instance to copy configuration from. This instance must have been previously built by a
+    ///   compatible VISA device builder class and must be an instance of <see cref="BuildableVisaDevice" /> class.
     /// </param>
-    public VisaDeviceBuilder(VisaDeviceBuilder baseDeviceBuilder) : base(baseDeviceBuilder)
+    /// <exception cref="InvalidOperationException">
+    ///   Cannot copy building configuration from the provided VISA device instance because it is not assignable to the
+    ///   <see cref="BuildableVisaDevice" /> type.
+    /// </exception>
+    public VisaDeviceBuilder(IVisaDevice device) : base(device)
     {
     }
   }

@@ -47,15 +47,27 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible
-    ///   VISA device builder instance.
+    ///   Initializes a new VISA device builder instance with building configuration copied from a compatible buildable
+    ///   VISA device instance.
     /// </summary>
-    /// <param name="baseDeviceBuilder">
-    ///   A compatible <see cref="VisaDeviceBuilder{TBuildableVisaDevice, TOutputVisaDevice}" /> instance to copy
-    ///   configuration from.
+    /// <param name="device">
+    ///   A VISA device instance to copy configuration from. This instance must have been previously built by a
+    ///   compatible VISA device builder class and must be of <typeparamref name="TBuildableVisaDevice" /> type or
+    ///   derive from it.
     /// </param>
-    public VisaDeviceBuilder(VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> baseDeviceBuilder) =>
-      Device = (TBuildableVisaDevice) baseDeviceBuilder.BuildDevice().Clone();
+    /// <exception cref="InvalidOperationException">
+    ///   Cannot copy building configuration from the provided VISA device instance because it is not assignable to the
+    ///   <typeparamref name="TBuildableVisaDevice" /> type.
+    /// </exception>
+    public VisaDeviceBuilder(TOutputVisaDevice device)
+    {
+      if (device is not TBuildableVisaDevice buildableVisaDevice)
+        throw new InvalidOperationException(
+          "Cannot copy building configuration from the provided VISA device instance of type " +
+          $"\"{device.GetType().Name}\" because it is not assignable to the \"{typeof(TBuildableVisaDevice).Name}\" type.");
+
+      Device = (TBuildableVisaDevice) buildableVisaDevice.Clone();
+    }
 
     /// <summary>
     ///   Instructs the builder to use the <see cref="GlobalResourceManager" /> class for VISA device session
@@ -136,7 +148,20 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Defines VISA hardware interfaces that the created VISA device can support.
+    ///   Instructs the builder to treat the default hardware interfaces defined for the current buildable device type
+    ///   (<typeparamref name="TBuildableVisaDevice" />) as supported by the created VISA device.
+    /// </summary>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseDefaultSupportedHardwareInterfaces()
+    {
+      Device.CustomSupportedInterfaces = null;
+      return this;
+    }
+
+    /// <summary>
+    ///   Instructs the builder to treat the specified VISA hardware interfaces as supported by the created VISA device.
     /// </summary>
     /// <param name="interfaces">
     ///   An array or parameter sequence of VISA hardware interfaces supported by the device.
@@ -145,7 +170,7 @@ namespace VisaDeviceBuilder
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> DefineSupportedHardwareInterfaces(
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> UseSupportedHardwareInterfaces(
       params HardwareInterfaceType[] interfaces)
     {
       Device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
@@ -160,6 +185,7 @@ namespace VisaDeviceBuilder
     /// </typeparam>
     /// <param name="name">
     ///   The name of the asynchronous property.
+    ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="getter">
     ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
@@ -192,6 +218,7 @@ namespace VisaDeviceBuilder
     /// </typeparam>
     /// <param name="name">
     ///   The name of the asynchronous property.
+    ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="setter">
     ///   A setter delegate for the write-only asynchronous property that writes a value to the device instance. Both
@@ -224,6 +251,7 @@ namespace VisaDeviceBuilder
     /// </typeparam>
     /// <param name="name">
     ///   The name of the asynchronous property.
+    ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="getter">
     ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
@@ -302,10 +330,42 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
+    ///   Removes a previously added asynchronous property from the VISA device by its name.
+    /// </summary>
+    /// <param name="asyncPropertyName">
+    ///   The name of the asynchronous property to remove.
+    ///   If there are multiple asynchronous properties with the same name, only the first occurence will be removed.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RemoveAsyncProperty(string asyncPropertyName)
+    {
+      var asyncPropertyToRemove =
+        Device.CustomAsyncProperties.FirstOrDefault(asyncProperty => asyncProperty.Name == asyncPropertyName);
+      if (asyncPropertyToRemove != null)
+        Device.CustomAsyncProperties.Remove(asyncPropertyToRemove);
+      return this;
+    }
+
+    /// <summary>
+    ///   Clears all previously added asynchronous properties from the device.
+    /// </summary>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> ClearAsyncProperties()
+    {
+      Device.CustomAsyncProperties.Clear();
+      return this;
+    }
+
+    /// <summary>
     ///   Adds a device action to the VISA device.
     /// </summary>
     /// <param name="name">
     ///   The name of the device action.
+    ///   Adding multiple device actions with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="action">
     ///   A device action delegate that performs an asynchronous operation for the device instance provided as a
@@ -369,6 +429,40 @@ namespace VisaDeviceBuilder
         .Select(ownedDeviceAction => (IOwnedDeviceAction<TOutputVisaDevice>) ownedDeviceAction.Clone())
         .ToList()
         .ForEach(ownedDeviceActionClone => Device.CustomDeviceActions.Add(ownedDeviceActionClone));
+      return this;
+    }
+
+    /// <summary>
+    ///   Removes a previously added device action from the VISA device by its name.
+    /// </summary>
+    /// <param name="deviceActionName">
+    ///   The name of the device action to remove.
+    ///   If there are multiple device actions with the same name, only the first occurence will be removed.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RemoveDeviceAction(string deviceActionName)
+    {
+      var deviceActionToRemove =
+        Device.CustomDeviceActions.FirstOrDefault(deviceAction => deviceAction.Name == deviceActionName);
+      if (deviceActionToRemove != null)
+        Device.CustomDeviceActions.Remove(deviceActionToRemove);
+      return this;
+    }
+
+    /// <summary>
+    ///   Clears all previously added device actions from the device.
+    /// </summary>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    /// <remarks>
+    ///   The standard <see cref="IVisaDevice.Reset" /> device action is inherited and cannot be removed.
+    /// </remarks>
+    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> ClearDeviceActions()
+    {
+      Device.CustomDeviceActions.Clear();
       return this;
     }
 
@@ -454,39 +548,6 @@ namespace VisaDeviceBuilder
       Action<TOutputVisaDevice> callback)
     {
       Device.CustomResetCallback = callback;
-      return this;
-    }
-
-    /// <summary>
-    ///   Registers an <see cref="IDisposable" /> object for disposal when the created VISA device instance will be
-    ///   disposed of.
-    /// </summary>
-    /// <param name="disposable">
-    ///   An <see cref="IDisposable" /> object.
-    /// </param>
-    /// <returns>
-    ///   This builder instance.
-    /// </returns>
-    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RegisterDisposable(IDisposable disposable)
-    {
-      Device.CustomDisposables.Add(disposable);
-      return this;
-    }
-
-    /// <summary>
-    ///   Registers <see cref="IDisposable" /> objects for disposal when the created VISA device instance will be
-    ///   disposed of.
-    /// </summary>
-    /// <param name="disposables">
-    ///   An array or parameter sequence of <see cref="IDisposable" /> objects.
-    /// </param>
-    /// <returns>
-    ///   This builder instance.
-    /// </returns>
-    public VisaDeviceBuilder<TBuildableVisaDevice, TOutputVisaDevice> RegisterDisposables(
-      params IDisposable[] disposables)
-    {
-      Device.CustomDisposables.AddRange(disposables);
       return this;
     }
 

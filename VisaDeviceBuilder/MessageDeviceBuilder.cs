@@ -6,9 +6,6 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   A builder class that can build message-based VISA devices with custom behavior.
   /// </summary>
-  /// <remarks>
-  ///   After a VISA device is built, the current builder instance cannot be reused. Create a new builder if necessary.
-  /// </remarks>
   public class MessageDeviceBuilder : VisaDeviceBuilder<BuildableMessageDevice, IMessageDevice>
   {
     /// <summary>
@@ -20,12 +17,18 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Initializes a new message-based VISA device builder instance with building configuration copied from a
-    ///   <paramref name="baseDeviceBuilder" /> instance.
+    ///   compatible buildable message-based VISA device instance.
     /// </summary>
-    /// <param name="baseDeviceBuilder">
-    ///   A <see cref="MessageDeviceBuilder" /> instance to copy configuration from.
+    /// <param name="device">
+    ///   A message-based VISA device instance to copy configuration from. This instance must have been previously built
+    ///   by a compatible message-based VISA device builder class and must inherit from the
+    ///   <see cref="BuildableMessageDevice" /> class.
     /// </param>
-    public MessageDeviceBuilder(MessageDeviceBuilder baseDeviceBuilder) : base(baseDeviceBuilder)
+    /// <exception cref="InvalidOperationException">
+    ///   Cannot copy building configuration from the provided VISA device instance because it is not assignable to the
+    ///   <see cref="BuildableMessageDevice" /> type.
+    /// </exception>
+    public MessageDeviceBuilder(IMessageDevice device) : base(device)
     {
     }
 

@@ -34,9 +34,6 @@ namespace VisaDeviceBuilder
     public Action<IVisaDevice>? CustomResetCallback { get; set; }
 
     /// <inheritdoc />
-    public List<IDisposable> CustomDisposables { get; } = new();
-
-    /// <inheritdoc />
     public override IEnumerable<IAsyncProperty> AsyncProperties => base.AsyncProperties.Concat(CustomAsyncProperties);
 
     /// <inheritdoc />
@@ -124,13 +121,6 @@ namespace VisaDeviceBuilder
       clone.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
       clone.CustomResetCallback = CustomResetCallback;
       return clone;
-    }
-
-    /// <inheritdoc />
-    public override void Dispose()
-    {
-      CustomDisposables.ForEach(disposable => disposable.Dispose());
-      base.Dispose();
     }
   }
 }

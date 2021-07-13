@@ -37,9 +37,6 @@ namespace VisaDeviceBuilder
     public Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
 
     /// <inheritdoc />
-    public List<IDisposable> CustomDisposables { get; } = new();
-
-    /// <inheritdoc />
     public override IEnumerable<IAsyncProperty> AsyncProperties => base.AsyncProperties.Concat(CustomAsyncProperties);
 
     /// <inheritdoc />
@@ -141,13 +138,6 @@ namespace VisaDeviceBuilder
       clone.CustomResetCallback = CustomResetCallback;
       clone.CustomMessageProcessor = CustomMessageProcessor;
       return clone;
-    }
-
-    /// <inheritdoc />
-    public override void Dispose()
-    {
-      CustomDisposables.ForEach(disposable => disposable.Dispose());
-      base.Dispose();
     }
   }
 }

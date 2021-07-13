@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Ivi.Visa;
 
@@ -15,6 +14,8 @@ namespace VisaDeviceBuilder.Abstracts
   {
     /// <summary>
     ///   Gets the array of custom hardware interfaces supported by the device.
+    ///   If set to <c>null</c>, the default hardware interfaces defined for the <typeparamref name="TVisaDevice" />
+    ///   type will be supported.
     /// </summary>
     HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
@@ -50,10 +51,5 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Gets or sets the custom delegate to reset the device.
     /// </summary>
     Action<TVisaDevice>? CustomResetCallback { get; set; }
-
-    /// <summary>
-    ///   Gets the list of custom disposable objects.
-    /// </summary>
-    List<IDisposable> CustomDisposables { get; }
   }
 }

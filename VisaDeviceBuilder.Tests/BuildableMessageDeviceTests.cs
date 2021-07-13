@@ -149,8 +149,7 @@ namespace VisaDeviceBuilder.Tests
         CustomDeInitializeCallback = TestDeInitializeCallback,
         CustomGetIdentifierCallback = TestGetIdentifierCallback,
         CustomResetCallback = TestResetCallback,
-        CustomMessageProcessor = TestMessageProcessor,
-        CustomDisposables = {resourceManager}
+        CustomMessageProcessor = TestMessageProcessor
       };
       var baseDevice = (IMessageDevice) device;
 
@@ -163,7 +162,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestGetIdentifierCallback, device.CustomGetIdentifierCallback);
       Assert.Equal(TestResetCallback, device.CustomResetCallback);
       Assert.Equal(TestMessageProcessor, device.CustomMessageProcessor);
-      Assert.Contains(resourceManager, device.CustomDisposables);
 
       // Checking base device properties.
       Assert.Same(resourceManager, baseDevice.ResourceManager);
@@ -401,8 +399,7 @@ namespace VisaDeviceBuilder.Tests
         CustomDeInitializeCallback = TestDeInitializeCallback,
         CustomGetIdentifierCallback = TestGetIdentifierCallback,
         CustomResetCallback = TestResetCallback,
-        CustomMessageProcessor = TestMessageProcessor,
-        CustomDisposables = {resourceManager}
+        CustomMessageProcessor = TestMessageProcessor
       };
 
       // The cloned device should contain the same data but must not reference objects from the original device.
@@ -431,7 +428,6 @@ namespace VisaDeviceBuilder.Tests
         Assert.Equal(TestGetIdentifierCallback, clone.CustomGetIdentifierCallback);
         Assert.Equal(TestResetCallback, clone.CustomResetCallback);
         Assert.Equal(TestMessageProcessor, clone.CustomMessageProcessor);
-        Assert.Empty(clone.CustomDisposables);
 
         // The cloned resource manager instance should be intact here.
         Assert.False(((TestResourceManager) clone.ResourceManager!).IsDisposed);
@@ -443,42 +439,6 @@ namespace VisaDeviceBuilder.Tests
 
       // The original resource manager instance should still remain intact.
       Assert.False(((TestResourceManager) device.ResourceManager!).IsDisposed);
-    }
-
-    /// <summary>
-    ///   Testing buildable VISA device object disposal.
-    /// </summary>
-    [Fact]
-    public async Task BuildableMessageDeviceDisposalTest()
-    {
-      IMessageDevice? device;
-      var resourceManager = new TestResourceManager();
-      await using (device = new BuildableMessageDevice
-      {
-        ResourceManager = resourceManager,
-        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
-        CustomDisposables = {resourceManager}
-      })
-      {
-        await device.OpenSessionAsync();
-        Assert.False(resourceManager.IsDisposed); // A resource manager instance should be intact here.
-      }
-
-      // The device instance now should be disposed of.
-      Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
-      Assert.False(device.IsSessionOpened);
-      Assert.Null(device.Session);
-      Assert.Throws<ObjectDisposedException>(device.OpenSession);
-      Assert.Throws<ObjectDisposedException>(device.CloseSession);
-      await Assert.ThrowsAsync<ObjectDisposedException>(device.OpenSessionAsync);
-      await Assert.ThrowsAsync<ObjectDisposedException>(device.CloseSessionAsync);
-
-      // A resource manager instance should also be disposed of.
-      Assert.True(resourceManager.IsDisposed);
-
-      // Repeated device disposals should pass OK.
-      device.Dispose();
-      await device.DisposeAsync();
     }
   }
 }
