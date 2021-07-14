@@ -11,7 +11,7 @@ namespace VisaDeviceBuilder
   public class MessageDevice : VisaDevice, IMessageDevice
   {
     /// <summary>
-    ///   Defines the default collection of supported hardware interface types.
+    ///   Defines the default collection of supported hardware interface types that support message-based communication.
     /// </summary>
     public static readonly HardwareInterfaceType[] DefaultSupportedMessageBasedInterfaces =
     {
@@ -39,15 +39,13 @@ namespace VisaDeviceBuilder
         throw new VisaDeviceException(this, new NotSupportedException(
           $"The connected device \"{AliasName}\" does not support message-based VISA sessions."));
 
+      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
       {
       }
     }
 
     /// <inheritdoc />
-    /// <exception cref="VisaDeviceException">
-    ///   Cannot send a message as there is no opened VISA session.
-    /// </exception>
     public virtual string SendMessage(string message)
     {
       ThrowWhenNoVisaSessionIsOpened();
@@ -60,9 +58,6 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    /// <exception cref="VisaDeviceException">
-    ///   Cannot send a message as there is no opened VISA session.
-    /// </exception>
     public virtual Task<string> SendMessageAsync(string message) => Task.Run(() => SendMessage(message));
   }
 }

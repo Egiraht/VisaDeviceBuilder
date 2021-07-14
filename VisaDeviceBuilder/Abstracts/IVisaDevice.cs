@@ -89,16 +89,24 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Synchronously opens a connection session with the device.
     /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///   The device instance has been already disposed of.
+    /// </exception>
     /// <exception cref="VisaDeviceException">
-    ///   An error has occured during session opening with the device.
+    ///   An error has occured during session opening with the device. See the <see cref="Exception.InnerException" />
+    ///   for more information.
     /// </exception>
     void OpenSession();
 
     /// <summary>
     ///   Asynchronously opens a connection session with the device.
     /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    ///   The device instance has been already disposed of.
+    /// </exception>
     /// <exception cref="VisaDeviceException">
-    ///   An error has occured during session opening with the device.
+    ///   An error has occured during session opening with the device. See the <see cref="Exception.InnerException" />
+    ///   for more information.
     /// </exception>
     Task OpenSessionAsync();
 
@@ -108,6 +116,9 @@ namespace VisaDeviceBuilder.Abstracts
     /// <returns>
     ///   A string containing the identifier of the connected device.
     /// </returns>
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session to perform an operation.
+    /// </exception>
     string GetIdentifier();
 
     /// <summary>
@@ -116,16 +127,25 @@ namespace VisaDeviceBuilder.Abstracts
     /// <returns>
     ///   A string containing the identifier of the connected device.
     /// </returns>
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session to perform an operation.
+    /// </exception>
     Task<string> GetIdentifierAsync();
 
     /// <summary>
     ///   Resets the device to some predefined state.
     /// </summary>
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session to perform an operation.
+    /// </exception>
     void Reset();
 
     /// <summary>
     ///   Asynchronously resets the device to some predefined state.
     /// </summary>
+    /// <exception cref="VisaDeviceException">
+    ///   There is no opened VISA session to perform an operation.
+    /// </exception>
     Task ResetAsync();
 
     /// <summary>

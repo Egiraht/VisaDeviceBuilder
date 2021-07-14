@@ -10,8 +10,7 @@ using Xunit;
 namespace VisaDeviceBuilder.Tests
 {
   /// <summary>
-  ///   The unit tests class covering the <see cref="VisaDeviceBuilder" /> and
-  ///   <see cref="VisaDeviceBuilder{TBuildableVisaDevice,TOutputVisaDevice}" /> classes.
+  ///   The unit tests class covering the <see cref="VisaDeviceBuilder" /> class.
   /// </summary>
   public class VisaDeviceBuilderTests
   {
@@ -53,29 +52,29 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device action for the last time.
     /// </summary>
-    private IVisaDevice? DeviceActionCallingDevice { get; set; }
+    private IVisaDevice? TestDeviceActionCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device initialization callback for the last
     ///   time.
     /// </summary>
-    private IVisaDevice? DeviceInitializeCallingDevice { get; set; }
+    private IVisaDevice? TestInitializeCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device de-initialization callback for the last
     ///   time.
     /// </summary>
-    private IVisaDevice? DeviceDeInitializeCallingDevice { get; set; }
+    private IVisaDevice? TestDeInitializeCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test identifier-getting callback for the last time.
     /// </summary>
-    private IVisaDevice? DeviceGetIdentifierCallingDevice { get; set; }
+    private IVisaDevice? TestGetIdentifierCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device reset callback for the last time.
     /// </summary>
-    private IVisaDevice? DeviceResetCallingDevice { get; set; }
+    private IVisaDevice? TestResetCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Defines the callback method for the test device action.
@@ -83,7 +82,7 @@ namespace VisaDeviceBuilder.Tests
     private void TestDeviceActionCallback(IVisaDevice visaDevice)
     {
       Task.Delay(OperationDelay).Wait();
-      DeviceActionCallingDevice = visaDevice;
+      TestDeviceActionCallingDevice = visaDevice;
     }
 
     /// <summary>
@@ -92,7 +91,7 @@ namespace VisaDeviceBuilder.Tests
     private void TestInitializeCallback(IVisaDevice device)
     {
       Task.Delay(OperationDelay).Wait();
-      DeviceInitializeCallingDevice = device;
+      TestInitializeCallbackCallingDevice = device;
     }
 
     /// <summary>
@@ -101,7 +100,7 @@ namespace VisaDeviceBuilder.Tests
     private void TestDeInitializeCallback(IVisaDevice device)
     {
       Task.Delay(OperationDelay).Wait();
-      DeviceDeInitializeCallingDevice = device;
+      TestDeInitializeCallbackCallingDevice = device;
     }
 
     /// <summary>
@@ -110,7 +109,7 @@ namespace VisaDeviceBuilder.Tests
     private string TestGetIdentifierCallback(IVisaDevice device)
     {
       Task.Delay(OperationDelay).Wait();
-      DeviceGetIdentifierCallingDevice = device;
+      TestGetIdentifierCallbackCallingDevice = device;
       return device.AliasName;
     }
 
@@ -120,7 +119,7 @@ namespace VisaDeviceBuilder.Tests
     private void TestResetCallback(IVisaDevice device)
     {
       Task.Delay(OperationDelay).Wait();
-      DeviceResetCallingDevice = device;
+      TestResetCallbackCallingDevice = device;
     }
 
     /// <summary>
@@ -434,7 +433,7 @@ namespace VisaDeviceBuilder.Tests
       await using var device = new VisaDeviceBuilder()
         .AddDeviceAction(TestDeviceActionName, TestDeviceActionCallback)
         .BuildDevice();
-      Assert.Null(DeviceActionCallingDevice);
+      Assert.Null(TestDeviceActionCallingDevice);
 
       // Accessing the device action.
       var testDeviceAction = device.DeviceActions.First(deviceAction => deviceAction.Name == TestDeviceActionName);
@@ -443,9 +442,9 @@ namespace VisaDeviceBuilder.Tests
       // The standard must also be present in the device as inherited from the base VisaDevice class.
       Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Name == nameof(IVisaDevice.Reset));
 
-      // The device action must modify the DeviceActionCallingDevice property on call.
+      // The device action must modify the TestDeviceActionCallingDevice property on call.
       await testDeviceAction.ExecuteAsync();
-      Assert.Same(device, DeviceActionCallingDevice);
+      Assert.Same(device, TestDeviceActionCallingDevice);
     }
 
     /// <summary>
@@ -483,17 +482,17 @@ namespace VisaDeviceBuilder.Tests
       Assert.Same(device, ((IOwnedDeviceAction<IVisaDevice>) copiedDeviceAction3).Owner);
 
       // Testing the copied device actions.
-      DeviceActionCallingDevice = null;
+      TestDeviceActionCallingDevice = null;
       await copiedDeviceAction1.ExecuteAsync();
-      Assert.Same(device, DeviceActionCallingDevice);
+      Assert.Same(device, TestDeviceActionCallingDevice);
 
-      DeviceActionCallingDevice = null;
+      TestDeviceActionCallingDevice = null;
       await copiedDeviceAction2.ExecuteAsync();
-      Assert.Same(device, DeviceActionCallingDevice);
+      Assert.Same(device, TestDeviceActionCallingDevice);
 
-      DeviceActionCallingDevice = null;
+      TestDeviceActionCallingDevice = null;
       await copiedDeviceAction3.ExecuteAsync();
-      Assert.Same(device, DeviceActionCallingDevice);
+      Assert.Same(device, TestDeviceActionCallingDevice);
     }
 
     /// <summary>
@@ -550,27 +549,27 @@ namespace VisaDeviceBuilder.Tests
         .UseGetIdentifierCallback(TestGetIdentifierCallback)
         .UseResetCallback(TestResetCallback)
         .BuildDevice();
-      Assert.Null(DeviceInitializeCallingDevice);
-      Assert.Null(DeviceDeInitializeCallingDevice);
-      Assert.Null(DeviceGetIdentifierCallingDevice);
-      Assert.Null(DeviceResetCallingDevice);
+      Assert.Null(TestInitializeCallbackCallingDevice);
+      Assert.Null(TestDeInitializeCallbackCallingDevice);
+      Assert.Null(TestGetIdentifierCallbackCallingDevice);
+      Assert.Null(TestResetCallbackCallingDevice);
 
       // Testing the device initialization callback.
       await device.OpenSessionAsync();
-      Assert.Same(device, DeviceInitializeCallingDevice);
+      Assert.Same(device, TestInitializeCallbackCallingDevice);
 
       // Getting the device's identifier using a callback.
       var identifier = await device.GetIdentifierAsync();
-      Assert.Same(device, DeviceGetIdentifierCallingDevice);
+      Assert.Same(device, TestGetIdentifierCallbackCallingDevice);
       Assert.Equal(device.AliasName, identifier);
 
       // Testing the reset callback
       await device.ResetAsync();
-      Assert.Same(device, DeviceResetCallingDevice);
+      Assert.Same(device, TestResetCallbackCallingDevice);
 
       // Testing the device de-initialization callback.
       await device.CloseSessionAsync();
-      Assert.Same(device, DeviceDeInitializeCallingDevice);
+      Assert.Same(device, TestDeInitializeCallbackCallingDevice);
     }
 
     /// <summary>
@@ -604,10 +603,10 @@ namespace VisaDeviceBuilder.Tests
       await baseDevice.GetIdentifierAsync();
       await baseDevice.ResetAsync();
       await baseDevice.CloseSessionAsync();
-      Assert.Null(DeviceInitializeCallingDevice);
-      Assert.Null(DeviceDeInitializeCallingDevice);
-      Assert.Null(DeviceGetIdentifierCallingDevice);
-      Assert.Null(DeviceResetCallingDevice);
+      Assert.Null(TestInitializeCallbackCallingDevice);
+      Assert.Null(TestDeInitializeCallbackCallingDevice);
+      Assert.Null(TestGetIdentifierCallbackCallingDevice);
+      Assert.Null(TestResetCallbackCallingDevice);
 
       // Copying the configuration from the base buildable device instance to another device builder.
       // Also adding callbacks to it and removing all asynchronous properties and device actions (except Reset).
@@ -633,10 +632,10 @@ namespace VisaDeviceBuilder.Tests
       await derivedDevice.GetIdentifierAsync();
       await derivedDevice.ResetAsync();
       await derivedDevice.CloseSessionAsync();
-      Assert.Same(derivedDevice, DeviceInitializeCallingDevice);
-      Assert.Same(derivedDevice, DeviceDeInitializeCallingDevice);
-      Assert.Same(derivedDevice, DeviceGetIdentifierCallingDevice);
-      Assert.Same(derivedDevice, DeviceResetCallingDevice);
+      Assert.Same(derivedDevice, TestInitializeCallbackCallingDevice);
+      Assert.Same(derivedDevice, TestDeInitializeCallbackCallingDevice);
+      Assert.Same(derivedDevice, TestGetIdentifierCallbackCallingDevice);
+      Assert.Same(derivedDevice, TestResetCallbackCallingDevice);
 
       // Passing an invalid (non-buildable) device instance to the constructor must throw an exception.
       Assert.Throws<InvalidOperationException>(() => new VisaDeviceBuilder(new VisaDevice()));
@@ -683,10 +682,10 @@ namespace VisaDeviceBuilder.Tests
       deviceController.BeginConnect();
       await deviceController.GetDeviceConnectionTask();
       Assert.True(isTestAsyncPropertyUpdated);
-      Assert.Same(deviceController.Device, DeviceInitializeCallingDevice);
-      Assert.Same(deviceController.Device, DeviceGetIdentifierCallingDevice);
-      Assert.Null(DeviceResetCallingDevice);
-      Assert.Null(DeviceDeInitializeCallingDevice);
+      Assert.Same(deviceController.Device, TestInitializeCallbackCallingDevice);
+      Assert.Same(deviceController.Device, TestGetIdentifierCallbackCallingDevice);
+      Assert.Null(TestResetCallbackCallingDevice);
+      Assert.Null(TestDeInitializeCallbackCallingDevice);
       Assert.False(deviceController.CanConnect);
       Assert.True(deviceController.IsDeviceReady);
       Assert.Equal(deviceController.Device.AliasName, deviceController.Identifier);
@@ -699,13 +698,13 @@ namespace VisaDeviceBuilder.Tests
       // Executing all device actions (i.e. Reset and TestDeviceActionCallback).
       foreach (var deviceAction in deviceController.DeviceActions)
         await deviceAction.ExecuteAsync();
-      Assert.Same(deviceController.Device, DeviceResetCallingDevice);
-      Assert.Same(deviceController.Device, DeviceActionCallingDevice);
-      Assert.Null(DeviceDeInitializeCallingDevice);
+      Assert.Same(deviceController.Device, TestResetCallbackCallingDevice);
+      Assert.Same(deviceController.Device, TestDeviceActionCallingDevice);
+      Assert.Null(TestDeInitializeCallbackCallingDevice);
 
       deviceController.BeginDisconnect();
       await deviceController.GetDeviceDisconnectionTask();
-      Assert.Same(deviceController.Device, DeviceDeInitializeCallingDevice);
+      Assert.Same(deviceController.Device, TestDeInitializeCallbackCallingDevice);
     }
   }
 }

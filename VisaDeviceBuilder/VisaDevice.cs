@@ -239,12 +239,6 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    /// <exception cref="VisaDeviceException">
-    ///   The used resource manager cannot parse the provided resource name (inner
-    ///   <see cref="InvalidOperationException" />), or the used hardware interface is not supported by VISA devices of
-    ///   this type (inner <see cref="NotSupportedException" />), or any other device-specific error identified through
-    ///   the inner exception.
-    /// </exception>
     public void OpenSession()
     {
       ThrowWhenDeviceIsDisposed();
@@ -286,12 +280,6 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    /// <exception cref="VisaDeviceException">
-    ///   The used resource manager cannot parse the provided resource name (inner
-    ///   <see cref="InvalidOperationException" />), or the used hardware interface is not supported by VISA devices of
-    ///   this type (inner <see cref="NotSupportedException" />), or any other device-specific error identified through
-    ///   the inner exception.
-    /// </exception>
     public Task OpenSessionAsync() => Task.Run(OpenSession);
 
     /// <summary>
@@ -349,8 +337,6 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public void CloseSession()
     {
-      ThrowWhenDeviceIsDisposed();
-
       if (ConnectionState != DeviceConnectionState.Connected)
         return;
 

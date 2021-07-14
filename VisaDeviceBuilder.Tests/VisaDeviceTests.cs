@@ -283,9 +283,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(device.IsSessionOpened);
       Assert.Null(device.Session);
       Assert.Throws<ObjectDisposedException>(device.OpenSession);
-      Assert.Throws<ObjectDisposedException>(device.CloseSession);
       await Assert.ThrowsAsync<ObjectDisposedException>(device.OpenSessionAsync);
-      await Assert.ThrowsAsync<ObjectDisposedException>(device.CloseSessionAsync);
 
       // Repeated device disposals should pass OK.
       device.Dispose();
