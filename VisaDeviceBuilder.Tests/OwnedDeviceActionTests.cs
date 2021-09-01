@@ -22,10 +22,10 @@ namespace VisaDeviceBuilder.Tests
 
     /// <summary>
     ///   Defines the test owned device action delegate.
-    ///   Executes the owning device's <see cref="TestMessageDevice.DeclaredTestDeviceAction" /> device action.
+    ///   Executes the owning device's <see cref="TestMessageDevice.TestDeviceAction" /> device action.
     /// </summary>
     private void TestOwnedDeviceActionDelegate(TestMessageDevice device) =>
-      device.DeclaredTestDeviceAction.ExecuteAsync().Wait();
+      device.TestDeviceAction.ExecuteAsync().Wait();
 
     /// <summary>
     ///   Testing device action execution.
@@ -42,16 +42,16 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestName, ownedDeviceAction.Name);
       Assert.Equal(TestOwnedDeviceActionDelegate, ownedDeviceAction.OwnedDeviceActionDelegate);
       Assert.True(ownedDeviceAction.CanExecute);
-      Assert.False(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.False(Device.IsTestDeviceActionCalled);
 
       var executionTask = ownedDeviceAction.ExecuteAsync();
       _ = ownedDeviceAction.ExecuteAsync(); // Repeated call should pass OK.
       Assert.False(ownedDeviceAction.CanExecute);
-      Assert.False(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.False(Device.IsTestDeviceActionCalled);
 
       await executionTask;
       Assert.True(ownedDeviceAction.CanExecute);
-      Assert.True(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.True(Device.IsTestDeviceActionCalled);
     }
 
     /// <summary>
@@ -64,22 +64,22 @@ namespace VisaDeviceBuilder.Tests
       var device2 = new TestMessageDevice();
       var ownedDeviceAction = new OwnedDeviceAction<TestMessageDevice>(TestOwnedDeviceActionDelegate) {Owner = device1};
       Assert.Equal(device1, ownedDeviceAction.Owner);
-      Assert.False(device1.IsDeclaredTestDeviceActionCalled);
-      Assert.False(device2.IsDeclaredTestDeviceActionCalled);
+      Assert.False(device1.IsTestDeviceActionCalled);
+      Assert.False(device2.IsTestDeviceActionCalled);
 
       // Testing ownership of the device1, this must not influence the device2.
       await ownedDeviceAction.ExecuteAsync();
       Assert.Equal(device1, ownedDeviceAction.Owner);
-      Assert.True(device1.IsDeclaredTestDeviceActionCalled);
-      Assert.False(device2.IsDeclaredTestDeviceActionCalled);
+      Assert.True(device1.IsTestDeviceActionCalled);
+      Assert.False(device2.IsTestDeviceActionCalled);
 
       // Testing ownership of the device2, this must not influence the device1.
-      device1.IsDeclaredTestDeviceActionCalled = false;
+      device1.IsTestDeviceActionCalled = false;
       ownedDeviceAction.Owner = device2;
       await ownedDeviceAction.ExecuteAsync();
       Assert.Equal(device2, ownedDeviceAction.Owner);
-      Assert.False(device1.IsDeclaredTestDeviceActionCalled);
-      Assert.True(device2.IsDeclaredTestDeviceActionCalled);
+      Assert.False(device1.IsTestDeviceActionCalled);
+      Assert.True(device2.IsTestDeviceActionCalled);
     }
 
     /// <summary>
@@ -114,19 +114,19 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestOwnedDeviceActionDelegate, clone.OwnedDeviceActionDelegate);
       Assert.True(clone.CanExecute);
       Assert.True(deviceAction.CanExecute);
-      Assert.False(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.False(Device.IsTestDeviceActionCalled);
 
       // The cloned device action must behave as the original one.
       var executionTask = clone.ExecuteAsync();
       _ = clone.ExecuteAsync(); // Repeated call should pass OK.
       Assert.False(clone.CanExecute);
       Assert.True(deviceAction.CanExecute); // The original device must remain executable.
-      Assert.False(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.False(Device.IsTestDeviceActionCalled);
 
       await executionTask;
       Assert.True(clone.CanExecute);
       Assert.True(deviceAction.CanExecute);
-      Assert.True(Device.IsDeclaredTestDeviceActionCalled);
+      Assert.True(Device.IsTestDeviceActionCalled);
     }
   }
 }

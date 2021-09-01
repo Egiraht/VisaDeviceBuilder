@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
@@ -12,7 +12,7 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   The class for connectable VISA devices.
   /// </summary>
-  public class VisaDevice : IVisaDevice
+  public class VisaDevice : IBuildableVisaDevice<IVisaDevice>
   {
     /// <summary>
     ///   Defines the default connection timeout in milliseconds.
@@ -20,25 +20,25 @@ namespace VisaDeviceBuilder
     public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
-    ///   Defines the default collection of supported hardware interface types.
+    ///   Defines the array of all supported hardware interface types.
     /// </summary>
-    public static readonly HardwareInterfaceType[] DefaultSupportedInterfaces =
+    public static readonly HardwareInterfaceType[] HardwareInterfaceTypes =
       (HardwareInterfaceType[]) Enum.GetValues(typeof(HardwareInterfaceType));
 
     /// <summary>
-    ///   Gets or sets the flag indicating if the VISA device is being disposed of at the moment.
+    ///   The flag indicating if the VISA device is being disposed of at the moment.
     /// </summary>
-    protected bool IsDisposing { get; set; }
+    private bool _isDisposing;
 
     /// <summary>
-    ///   Gets or sets the flag indicating if the VISA device has been already disposed of.
+    ///   The flag indicating if the VISA device has been already disposed of.
     /// </summary>
-    protected bool IsDisposed { get; set; }
+    private bool _isDisposed;
 
     /// <summary>
-    ///   Gets or sets the flag indicating if this VISA device instance has been cloned from another instance.
+    ///   The flag indicating if this VISA device instance has been cloned from another instance.
     /// </summary>
-    protected bool IsClone { get; set; }
+    private bool _isClone;
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
@@ -96,8 +96,95 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public string AliasName => ResourceNameInfo?.AliasIfExists ?? ResourceName;
 
+    /// <summary>
+    ///   Gets the array of hardware interface types supported by the device by default.
+    ///   It is used when the <see cref="CustomSupportedInterfaces" /> property is set to <c>null</c>.
+    ///   Can be overriden in derived classes.
+    /// </summary>
+    protected virtual HardwareInterfaceType[] DefaultSupportedInterfaces => HardwareInterfaceTypes;
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomSupportedInterfaces" />
+    protected HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
+
     /// <inheritdoc />
-    public virtual HardwareInterfaceType[] SupportedInterfaces => DefaultSupportedInterfaces;
+    public HardwareInterfaceType[] SupportedInterfaces => CustomSupportedInterfaces ?? DefaultSupportedInterfaces;
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomAsyncProperties" />
+    protected ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; } = new();
+
+    /// <summary>
+    ///   Gets the enumeration of asynchronous properties declared for the current VISA device instance.
+    /// </summary>
+    protected IEnumerable<IAsyncProperty> DeclaredAsyncProperties { get; }
+
+    /// <inheritdoc />
+    public virtual IEnumerable<IAsyncProperty> AsyncProperties => DeclaredAsyncProperties.Concat(CustomAsyncProperties);
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomDeviceActions" />
+    protected ObservableCollection<IDeviceAction> CustomDeviceActions { get; } = new();
+
+    /// <summary>
+    ///   Gets the enumeration of device actions declared for the current VISA device instance.
+    /// </summary>
+    protected IEnumerable<IDeviceAction> DeclaredDeviceActions { get; }
+
+    /// <inheritdoc />
+    public virtual IEnumerable<IDeviceAction> DeviceActions => DeclaredDeviceActions.Concat(CustomDeviceActions);
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomInitializeCallback" />
+    protected Action<IVisaDevice>? CustomInitializeCallback { get; set; }
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomDeInitializeCallback" />
+    protected Action<IVisaDevice>? CustomDeInitializeCallback { get; set; }
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomGetIdentifierCallback" />
+    protected Func<IVisaDevice, string>? CustomGetIdentifierCallback { get; set; }
+
+    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomResetCallback" />
+    protected Action<IVisaDevice>? CustomResetCallback { get; set; }
+
+    /// <inheritdoc />
+    ObservableCollection<IAsyncProperty> IBuildableVisaDevice<IVisaDevice>.CustomAsyncProperties =>
+      CustomAsyncProperties;
+
+    /// <inheritdoc />
+    ObservableCollection<IDeviceAction> IBuildableVisaDevice<IVisaDevice>.CustomDeviceActions =>
+      CustomDeviceActions;
+
+    /// <inheritdoc />
+    HardwareInterfaceType[]? IBuildableVisaDevice<IVisaDevice>.CustomSupportedInterfaces
+    {
+      get => CustomSupportedInterfaces;
+      set => CustomSupportedInterfaces = value;
+    }
+
+    /// <inheritdoc />
+    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomInitializeCallback
+    {
+      get => CustomInitializeCallback;
+      set => CustomInitializeCallback = value;
+    }
+
+    /// <inheritdoc />
+    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomDeInitializeCallback
+    {
+      get => CustomDeInitializeCallback;
+      set => CustomDeInitializeCallback = value;
+    }
+
+    /// <inheritdoc />
+    Func<IVisaDevice, string>? IBuildableVisaDevice<IVisaDevice>.CustomGetIdentifierCallback
+    {
+      get => CustomGetIdentifierCallback;
+      set => CustomGetIdentifierCallback = value;
+    }
+
+    /// <inheritdoc />
+    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomResetCallback
+    {
+      get => CustomResetCallback;
+      set => CustomResetCallback = value;
+    }
 
     /// <inheritdoc />
     public DeviceConnectionState ConnectionState
@@ -124,11 +211,11 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected object SessionLock { get; } = new();
 
-    /// <inheritdoc />
-    public virtual IEnumerable<IAsyncProperty> AsyncProperties { get; }
-
-    /// <inheritdoc />
-    public virtual IEnumerable<IDeviceAction> DeviceActions { get; }
+    /// <summary>
+    ///   Gets the standard "Reset" device action that calls the <see cref="Reset" /> method.
+    /// </summary>
+    public IDeviceAction ResetAction => _resetAction ??= new DeviceAction(Reset) { Name = nameof(Reset) };
+    private IDeviceAction? _resetAction;
 
     /// <inheritdoc />
     public event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
@@ -138,9 +225,41 @@ namespace VisaDeviceBuilder
     /// </summary>
     public VisaDevice()
     {
-      AsyncProperties = CollectOwnAsyncProperties();
-      DeviceActions = CollectOwnDeviceActions();
+      // Collecting the asynchronous properties and device actions declared for the current VISA device instance.
+      DeclaredAsyncProperties = CollectDeclaredAsyncProperties();
+      DeclaredDeviceActions = CollectDeclaredDeviceActions();
+
+      // Taking ownership of asynchronous properties and device actions when adding them to the corresponding custom
+      // collections.
+      CustomAsyncProperties.CollectionChanged += (_, args) => OwnAsyncProperties(args.NewItems?.Cast<IAsyncProperty>());
+      CustomDeviceActions.CollectionChanged += (_, args) => OwnDeviceActions(args.NewItems?.Cast<IDeviceAction>());
     }
+
+    /// <summary>
+    ///   Takes ownership of the provided asynchronous properties. Only owned asynchronous properties among the provided
+    ///   ones are processed.
+    /// </summary>
+    /// <param name="asyncProperties">
+    ///   An enumeration of asynchronous properties to process. It is safe to be <c>null</c>.
+    /// </param>
+    private void OwnAsyncProperties(IEnumerable<IAsyncProperty>? asyncProperties) => asyncProperties
+      ?.Where(asyncProperty => asyncProperty is IOwnedAsyncProperty)
+      .Cast<IOwnedAsyncProperty>()
+      .ToList()
+      .ForEach(ownedAsyncProperty => ownedAsyncProperty.Owner = this);
+
+    /// <summary>
+    ///   Takes ownership of the provided device actions. Only owned device actions among the provided ones are
+    ///   processed.
+    /// </summary>
+    /// <param name="deviceActions">
+    ///   An enumeration of device actions to process. It is safe to be <c>null</c>.
+    /// </param>
+    private void OwnDeviceActions(IEnumerable<IDeviceAction>? deviceActions) => deviceActions
+      ?.Where(deviceAction => deviceAction is IOwnedDeviceAction)
+      .Cast<IOwnedDeviceAction>()
+      .ToList()
+      .ForEach(ownedDeviceAction => ownedDeviceAction.Owner = this);
 
     /// <inheritdoc cref="IVisaDevice.ResourceNameInfo" />
     private ParseResult? GetResourceNameInfo()
@@ -158,14 +277,14 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Enumerates all asynchronous properties defined in the current device class.
+    ///   Collects all asynchronous properties declared for the current VISA device instance.
     ///   Asynchronous properties to be collected must be declared as public properties of types implementing the
     ///   <see cref="IAsyncProperty" /> interface.
     /// </summary>
     /// <returns>
-    ///   An enumeration of collected device actions.
+    ///   An enumeration of collected asynchronous properties.
     /// </returns>
-    private IEnumerable<IAsyncProperty> CollectOwnAsyncProperties() => GetType()
+    private IEnumerable<IAsyncProperty> CollectDeclaredAsyncProperties() => GetType()
       .GetProperties()
       .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
       .Select(property =>
@@ -176,41 +295,22 @@ namespace VisaDeviceBuilder
       });
 
     /// <summary>
-    ///   Enumerates all device actions defined in the current device class.
+    ///   Collects all device actions declared for the current VISA device instance.
     ///   Device actions to be collected must be declared as public properties of types implementing the
-    ///   <see cref="IDeviceAction" /> interface, or as public methods having the <see cref="Action" /> delegate
-    ///   signature and decorated with the <see cref="DeviceActionAttribute" />.
+    ///   <see cref="IDeviceAction" /> interface.
     /// </summary>
     /// <returns>
     ///   An enumeration the collected device actions.
     /// </returns>
-    private IEnumerable<IDeviceAction> CollectOwnDeviceActions()
-    {
-      var declaredActions = GetType()
-        .GetProperties()
-        .Where(property => typeof(IDeviceAction).IsAssignableFrom(property.PropertyType) && property.CanRead)
-        .Select(property =>
-        {
-          var result = (IDeviceAction) property.GetValue(this)!;
-          result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
-          return result;
-        });
-
-      var decoratedActions = GetType()
-        .GetMethods()
-        .Where(method => method.ValidateDelegateType<Action>() &&
-          method.GetCustomAttribute<DeviceActionAttribute>() != null)
-        .Select(method =>
-        {
-          var attribute = method.GetCustomAttribute<DeviceActionAttribute>();
-          return (IDeviceAction) new DeviceAction((Action) method.CreateDelegate(typeof(Action), this))
-          {
-            Name = !string.IsNullOrWhiteSpace(attribute?.Name) ? attribute.Name : method.Name,
-          };
-        });
-
-      return declaredActions.Concat(decoratedActions);
-    }
+    private IEnumerable<IDeviceAction> CollectDeclaredDeviceActions() => GetType()
+      .GetProperties()
+      .Where(property => typeof(IDeviceAction).IsAssignableFrom(property.PropertyType) && property.CanRead)
+      .Select(property =>
+      {
+        var result = (IDeviceAction) property.GetValue(this)!;
+        result.Name = !string.IsNullOrWhiteSpace(result.Name) ? result.Name : property.Name;
+        return result;
+      });
 
     /// <summary>
     ///   Throws an <see cref="ObjectDisposedException" /> exception when this VISA device instance has been already
@@ -219,7 +319,7 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected void ThrowWhenDeviceIsDisposed()
     {
-      if (IsDisposed)
+      if (_isDisposed)
         throw new ObjectDisposedException(
           $"The device instance of type \"{GetType().Name}\" has been already disposed of.");
     }
@@ -264,7 +364,12 @@ namespace VisaDeviceBuilder
           : GlobalResourceManager.Open(ResourceName, AccessModes.ExclusiveLock, ConnectionTimeout);
 
         lock (SessionLock)
-          Initialize();
+        {
+          if (CustomInitializeCallback != null)
+            CustomInitializeCallback.Invoke(this);
+          else
+            DefaultInitializeCallback();
+        }
 
         ConnectionState = DeviceConnectionState.Connected;
       }
@@ -283,55 +388,64 @@ namespace VisaDeviceBuilder
     public Task OpenSessionAsync() => Task.Run(OpenSession);
 
     /// <summary>
-    ///   Initializes the device after the successful session opening.
+    ///   Defines the default device initialization callback method.
+    ///   It is called when the <see cref="CustomInitializeCallback" /> property is set to <c>null</c>.
+    ///   Can be overriden in derived classes.
     /// </summary>
-    protected virtual void Initialize()
+    protected virtual void DefaultInitializeCallback()
     {
-      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
-      lock (SessionLock)
-      {
-      }
+      // Does nothing by default.
     }
 
     /// <inheritdoc />
-    public virtual string GetIdentifier()
+    public string GetIdentifier()
     {
-      // Added because this method intrinsically requires an opened session and should also be called when overriding.
       ThrowWhenNoVisaSessionIsOpened();
 
-      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
       lock (SessionLock)
-        return AliasName;
+        return CustomGetIdentifierCallback != null
+          ? CustomGetIdentifierCallback.Invoke(this)
+          : DefaultGetIdentifierCallback();
     }
 
     /// <inheritdoc />
-    public virtual Task<string> GetIdentifierAsync() => Task.Run(GetIdentifier);
-
-    /// <inheritdoc />
-    [DeviceAction]
-    public virtual void Reset()
-    {
-      // Added because this method intrinsically requires an opened session and should also be called when overriding.
-      ThrowWhenNoVisaSessionIsOpened();
-
-      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
-      lock (SessionLock)
-      {
-      }
-    }
-
-    /// <inheritdoc />
-    public virtual Task ResetAsync() => Task.Run(Reset);
+    public Task<string> GetIdentifierAsync() => Task.Run(GetIdentifier);
 
     /// <summary>
-    ///   De-initializes the device before the session closing.
+    ///   Defines the default callback method that gets the device's identifier string.
+    ///   It is called when the <see cref="CustomGetIdentifierCallback" /> property is set to <c>null</c>.
+    ///   Can be overriden in derived classes.
     /// </summary>
-    protected virtual void DeInitialize()
+    /// <returns>
+    ///   The device's identifier string.
+    /// </returns>
+    protected virtual string DefaultGetIdentifierCallback() => AliasName;
+
+    /// <inheritdoc />
+    public void Reset()
     {
-      // Added as a notification that a session lock should be used when accessing a VISA session in overriding methods.
+      ThrowWhenNoVisaSessionIsOpened();
+
       lock (SessionLock)
       {
+        if (CustomResetCallback != null)
+          CustomResetCallback.Invoke(this);
+        else
+          DefaultResetCallback();
       }
+    }
+
+    /// <inheritdoc />
+    public Task ResetAsync() => Task.Run(Reset);
+
+    /// <summary>
+    ///   Defines the default device reset callback method.
+    ///   It is called when the <see cref="CustomResetCallback" /> property is set to <c>null</c>.
+    ///   Can be overriden in derived classes.
+    /// </summary>
+    protected virtual void DefaultResetCallback()
+    {
+      // Does nothing by default.
     }
 
     /// <inheritdoc />
@@ -345,7 +459,12 @@ namespace VisaDeviceBuilder
         ConnectionState = DeviceConnectionState.DeInitializing;
 
         lock (SessionLock)
-          DeInitialize();
+        {
+          if (CustomDeInitializeCallback != null)
+            CustomDeInitializeCallback.Invoke(this);
+          else
+            DefaultDeInitializeCallback();
+        }
 
         Session?.Dispose();
       }
@@ -364,6 +483,16 @@ namespace VisaDeviceBuilder
     public Task CloseSessionAsync() => Task.Run(CloseSession);
 
     /// <summary>
+    ///   Defines the default device de-initialization callback method.
+    ///   It is called when the <see cref="CustomDeInitializeCallback" /> property is set to <c>null</c>.
+    ///   Can be overriden in derived classes.
+    /// </summary>
+    protected virtual void DefaultDeInitializeCallback()
+    {
+      // Does nothing by default.
+    }
+
+    /// <summary>
     ///   Invokes the <see cref="ConnectionStateChanged" /> event.
     /// </summary>
     /// <param name="state">
@@ -375,31 +504,47 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual object Clone()
     {
-      var device = (VisaDevice) Activator.CreateInstance(GetType())!;
-      device.IsClone = true;
-      device.ResourceManager = ResourceManager != null
+      var clone = (VisaDevice) Activator.CreateInstance(GetType())!;
+      clone._isClone = true;
+
+      clone.ResourceManager = ResourceManager != null
         ? (IResourceManager) Activator.CreateInstance(ResourceManager.GetType())!
         : null;
-      device.ResourceName = ResourceName;
-      device.ConnectionTimeout = ConnectionTimeout;
-      return device;
+      clone.ResourceName = ResourceName;
+      clone.ConnectionTimeout = ConnectionTimeout;
+
+      clone.CustomSupportedInterfaces = CustomSupportedInterfaces;
+      CustomAsyncProperties
+        .Select(asyncProperty => (IAsyncProperty) asyncProperty.Clone())
+        .ToList()
+        .ForEach(asyncPropertyClone => clone.CustomAsyncProperties.Add(asyncPropertyClone));
+      CustomDeviceActions
+        .Select(deviceAction => (IDeviceAction) deviceAction.Clone())
+        .ToList()
+        .ForEach(deviceActionClone => clone.CustomDeviceActions.Add(deviceActionClone));
+      clone.CustomInitializeCallback = CustomInitializeCallback;
+      clone.CustomDeInitializeCallback = CustomDeInitializeCallback;
+      clone.CustomGetIdentifierCallback = CustomGetIdentifierCallback;
+      clone.CustomResetCallback = CustomResetCallback;
+
+      return clone;
     }
 
     /// <inheritdoc />
     public virtual void Dispose()
     {
-      if (IsDisposing || IsDisposed)
+      if (_isDisposing || _isDisposed)
         return;
-      IsDisposing = true;
+      _isDisposing = true;
 
       CloseSession();
 
       // If the device has been cloned, dispose of the VISA resource manager object created during the cloning process.
-      if (IsClone)
+      if (_isClone)
         ResourceManager?.Dispose();
 
       GC.SuppressFinalize(this);
-      IsDisposed = true;
+      _isDisposed = true;
     }
 
     /// <inheritdoc />

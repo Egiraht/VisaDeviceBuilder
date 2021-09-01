@@ -14,7 +14,7 @@ namespace VisaDeviceBuilder
     ///   The base buildable message-based VISA device instance that stores the builder configuration and is used for
     ///   building of new VISA device instances by cloning.
     /// </summary>
-    private readonly IBuildableMessageDevice<IMessageDevice> _device = new BuildableMessageDevice();
+    private readonly IBuildableMessageDevice<IMessageDevice> _device = new MessageDevice();
 
     /// <summary>
     ///   Initializes a new message-based VISA device builder instance.
@@ -27,23 +27,21 @@ namespace VisaDeviceBuilder
     ///   Initializes a new VISA device builder instance with building configuration copied from a compatible buildable
     ///   VISA device instance.
     /// </summary>
-    /// <param name="device">
-    ///   A VISA device instance to copy configuration from. This instance must have been previously built by a
-    ///   compatible VISA device builder class and must implement the
-    ///   <see cref="IBuildableMessageDevice{TMessageDevice}" /> interface where TMessageDevice =
-    ///   <see cref="IMessageDevice" />.
+    /// <param name="baseMessageDevice">
+    ///   A base message-based VISA device instance to copy configuration from. This instance must derive from the
+    ///   <see cref="MessageDevice" /> class or must implement the <see cref="IBuildableVisaDevice{TVisaDevice}" />
+    ///   interface where TVisaDevice = <see cref="IMessageDevice" />.
     /// </param>
     /// <exception cref="InvalidOperationException">
     ///   Cannot copy building configuration from the provided VISA device instance because it does not implement the
-    ///   <see cref="IBuildableMessageDevice{TMessageDevice}" /> interface where TMessageDevice =
-    ///   <see cref="IMessageDevice" />.
+    ///   <see cref="IBuildableVisaDevice{TVisaDevice}" /> interface where TVisaDevice = <see cref="IMessageDevice" />.
     /// </exception>
-    public MessageDeviceBuilder(IMessageDevice device)
+    public MessageDeviceBuilder(IMessageDevice baseMessageDevice)
     {
-      if (device is not IBuildableMessageDevice<IMessageDevice> buildableMessageDevice)
+      if (baseMessageDevice is not IBuildableMessageDevice<IMessageDevice> buildableMessageDevice)
         throw new InvalidOperationException(
           "Cannot copy building configuration from the provided VISA device instance of type " +
-          $"\"{device.GetType().Name}\" because it does not implement the " +
+          $"\"{baseMessageDevice.GetType().Name}\" because it does not implement the " +
           $"\"{typeof(IBuildableVisaDevice<IMessageDevice>).Name}\" interface.");
 
       _device = (IBuildableMessageDevice<IMessageDevice>) buildableMessageDevice.Clone();
@@ -128,7 +126,7 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Instructs the builder that the VISA device being built supports the default hardware interfaces, defined for
-    ///   the <see cref="MessageDevice" /> class (<see cref="MessageDevice.DefaultSupportedMessageBasedInterfaces" />).
+    ///   the <see cref="MessageDevice" /> class (<see cref="MessageDevice.MessageBasedHardwareInterfaceTypes" />).
     /// </summary>
     /// <returns>
     ///   This builder instance.

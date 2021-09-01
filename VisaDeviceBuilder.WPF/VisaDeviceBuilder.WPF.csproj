@@ -10,6 +10,8 @@
     <RepositoryType>Git</RepositoryType>
     <PackageTags>VISA, device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
+    <InformationalVersion>1.0.0</InformationalVersion>
+    <PackageVersion>1.0.0</PackageVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>The library providing simple WPF GUI controls for VISA devices.</Description>

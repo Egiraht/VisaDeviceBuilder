@@ -58,7 +58,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsUpdatingVisaResources);
       Assert.False(controller.IsUpdatingAsyncProperties);
       Assert.Empty(controller.AsyncProperties);
-      Assert.Contains(controller.DeviceActions, deviceAction => deviceAction.DeviceActionDelegate == device.Reset);
+      Assert.Contains(device.ResetAction, controller.DeviceActions);
       Assert.False(controller.IsDisconnectionRequested);
     }
 

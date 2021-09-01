@@ -45,7 +45,7 @@ namespace VisaDeviceBuilder.Tests
       };
       await using var autoUpdater = new AutoUpdater(device) {Delay = AutoUpdateDelay};
       Assert.False(autoUpdater.IsRunning);
-      Assert.Same(device.AsyncProperties, autoUpdater.AsyncProperties);
+      Assert.Equal(device.AsyncProperties, autoUpdater.AsyncProperties);
       Assert.Equal(default, device.TestAsyncProperty.Getter);
 
       var cycleCounter = 0;

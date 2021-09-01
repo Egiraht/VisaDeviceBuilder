@@ -24,14 +24,9 @@ namespace VisaDeviceBuilder.Tests.Components
     public int TestValue { get; set; }
 
     /// <summary>
-    ///   Gets or sets the flag indicating if the <see cref="DeclaredTestDeviceAction" /> has been called.
+    ///   Gets or sets the flag indicating if the <see cref="TestDeviceAction" /> has been called.
     /// </summary>
-    public bool IsDeclaredTestDeviceActionCalled { get; set; }
-
-    /// <summary>
-    ///   Gets or sets the flag indicating if the <see cref="DecoratedTestDeviceAction" /> has been called.
-    /// </summary>
-    public bool IsDecoratedTestDeviceActionCalled { get; set; }
+    public bool IsTestDeviceActionCalled { get; set; }
 
     /// <summary>
     ///   Gets or sets the flag indicating if the <see cref="IVisaDevice.Reset" /> device action has been called.
@@ -69,12 +64,12 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets the device action that is defined using the <see cref="IDeviceAction" /> type class declaration and
     ///   must be enlisted into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
     /// </summary>
-    public IDeviceAction DeclaredTestDeviceAction => _testDeclaredDeviceAction ??= new DeviceAction(() =>
+    public IDeviceAction TestDeviceAction => _testDeviceAction ??= new DeviceAction(() =>
     {
       Task.Delay(CommunicationDelay).Wait();
-      IsDeclaredTestDeviceActionCalled = true;
+      IsTestDeviceActionCalled = true;
     });
-    private IDeviceAction? _testDeclaredDeviceAction;
+    private IDeviceAction? _testDeviceAction;
 
     /// <summary>
     ///   Gets or sets the flag defining if a test exception should be thrown on the device initialization.
@@ -99,35 +94,24 @@ namespace VisaDeviceBuilder.Tests.Components
     public bool ThrowOnAsyncPropertySetter { get; set; }
 
     /// <inheritdoc />
-    protected override void Initialize()
+    protected override void DefaultInitializeCallback()
     {
       if (ThrowOnInitialization)
         throw new TestException();
     }
 
     /// <inheritdoc />
-    protected override void DeInitialize()
+    protected override void DefaultDeInitializeCallback()
     {
       if (ThrowOnDeInitialization)
         throw new TestException();
     }
 
     /// <inheritdoc />
-    public override void Reset()
+    protected override void DefaultResetCallback()
     {
       Task.Delay(CommunicationDelay).Wait();
       IsResetCalled = true;
-    }
-
-    /// <summary>
-    ///   Defines the device action that is defined using the <see cref="DeviceActionAttribute" /> and must be enlisted
-    ///   into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
-    /// </summary>
-    [DeviceAction]
-    public void DecoratedTestDeviceAction()
-    {
-      Task.Delay(CommunicationDelay).Wait();
-      IsDecoratedTestDeviceActionCalled = true;
     }
   }
 }

@@ -9,11 +9,18 @@ namespace VisaDeviceBuilder.Abstracts
   ///   The type of a VISA device that can own this device action.
   ///   It must implement the <see cref="IVisaDevice" /> interface.
   /// </typeparam>
-  public interface IOwnedDeviceAction<TOwner> : IDeviceAction where TOwner : IVisaDevice
+  public interface IOwnedDeviceAction<TOwner> : IOwnedDeviceAction where TOwner : IVisaDevice
   {
     /// <summary>
     ///   Gets or sets the VISA device instance of <typeparamref name="TOwner" /> type that owns this device action.
     /// </summary>
-    TOwner? Owner { get; set; }
+    new TOwner? Owner { get; set; }
+
+    /// <inheritdoc />
+    IVisaDevice? IOwnedDeviceAction.Owner
+    {
+      get => Owner;
+      set => Owner = (TOwner?) value;
+    }
   }
 }

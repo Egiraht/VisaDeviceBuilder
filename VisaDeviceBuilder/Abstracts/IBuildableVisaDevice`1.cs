@@ -24,13 +24,13 @@ namespace VisaDeviceBuilder.Abstracts
     ///   The buildable device instance automatically takes ownership of owned asynchronous properties added to the
     ///   collection.
     /// </summary>
-    ObservableCollection<IOwnedAsyncProperty<TVisaDevice>> CustomAsyncProperties { get; }
+    ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; }
 
     /// <summary>
     ///   Gets the observable collection of custom owned device actions.
     ///   The buildable device instance automatically takes ownership of owned device actions added to the collection.
     /// </summary>
-    ObservableCollection<IOwnedDeviceAction<TVisaDevice>> CustomDeviceActions { get; }
+    ObservableCollection<IDeviceAction> CustomDeviceActions { get; }
 
     /// <summary>
     ///   Gets or sets the custom device initialization stage callback delegate.

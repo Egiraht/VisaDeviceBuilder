@@ -187,7 +187,7 @@ namespace VisaDeviceBuilder.Tests
         .UseDefaultResourceName(TestResourceManager.SerialTestDeviceResourceName) // Uses a serial interface.
         .UseDefaultSupportedHardwareInterfaces()
         .BuildDevice();
-      Assert.Equal(MessageDevice.DefaultSupportedMessageBasedInterfaces, defaultInterfacesDevice.SupportedInterfaces);
+      Assert.Equal(MessageDevice.MessageBasedHardwareInterfaceTypes, defaultInterfacesDevice.SupportedInterfaces);
 
       // Session opening should pass OK because the custom hardware interface type is supported by default by the
       // BuildableVisaDevice type.
@@ -454,7 +454,7 @@ namespace VisaDeviceBuilder.Tests
       var testDeviceAction = device.DeviceActions.First(deviceAction => deviceAction.Name == TestDeviceActionName);
       Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) testDeviceAction).Owner);
 
-      // The standard must also be present in the device as inherited from the base VisaDevice class.
+      // The standard Reset device action must also be present in the device as inherited from the base VisaDevice class.
       Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Name == nameof(IMessageDevice.Reset));
 
       // The device action must modify the TestDeviceActionCallingDevice property on call.
@@ -672,9 +672,6 @@ namespace VisaDeviceBuilder.Tests
       Assert.Same(derivedDevice, TestResetCallbackCallingDevice);
       Assert.Same(derivedDevice, TestMessageProcessorCallingDevice);
       Assert.Equal(derivedDevice.AliasName + TestString, response);
-
-      // Passing an invalid (non-buildable) device instance to the constructor must throw an exception.
-      Assert.Throws<InvalidOperationException>(() => new MessageDeviceBuilder(new MessageDevice()));
     }
 
     /// <summary>

@@ -241,12 +241,12 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Calls the <see cref="GetterUpdated" /> event.
     /// </summary>
-    private void OnGetterUpdated() => GetterUpdated?.Invoke(this, new EventArgs());
+    private void OnGetterUpdated() => GetterUpdated?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     ///   Calls the <see cref="SetterCompleted" /> event.
     /// </summary>
-    private void OnSetterCompleted() => SetterCompleted?.Invoke(this, new EventArgs());
+    private void OnSetterCompleted() => SetterCompleted?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     ///   Calls the <see cref="GetterException" /> event.

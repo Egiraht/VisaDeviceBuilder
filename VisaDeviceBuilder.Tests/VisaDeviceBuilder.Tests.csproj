@@ -8,7 +8,6 @@
     <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
     <RepositoryType>Git</RepositoryType>
     <IsPackable>false</IsPackable>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder.Tests</PackageProjectUrl>

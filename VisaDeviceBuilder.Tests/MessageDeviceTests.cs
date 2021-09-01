@@ -31,7 +31,7 @@ namespace VisaDeviceBuilder.Tests
       // Checking device properties.
       Assert.Equal(resourceManager, device.ResourceManager);
       Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, device.ResourceName);
-      Assert.Equal(MessageDevice.DefaultSupportedMessageBasedInterfaces, device.SupportedInterfaces);
+      Assert.Equal(MessageDevice.MessageBasedHardwareInterfaceTypes, device.SupportedInterfaces);
       var resourceNameInfo = device.ResourceNameInfo;
       Assert.NotNull(resourceNameInfo);
       Assert.Equal(TestResourceManager.SerialTestDeviceInterfaceType, resourceNameInfo!.InterfaceType);

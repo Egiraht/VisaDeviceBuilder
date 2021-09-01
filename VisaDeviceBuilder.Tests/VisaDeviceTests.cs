@@ -35,7 +35,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.Same(resourceManager, device.ResourceManager);
       Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, device.ResourceName);
       Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
-      Assert.Equal(VisaDevice.DefaultSupportedInterfaces, device.SupportedInterfaces);
+      Assert.Equal(VisaDevice.HardwareInterfaceTypes, device.SupportedInterfaces);
       Assert.Equal(TestResourceManager.CustomTestDeviceAliasName, device.AliasName);
       Assert.Null(device.Session);
       Assert.False(device.IsSessionOpened);
@@ -119,15 +119,15 @@ namespace VisaDeviceBuilder.Tests
     ///   Testing the VISA device's asynchronous properties.
     /// </summary>
     [Fact]
-    public void VisaAsyncPropertiesTest()
+    public async Task VisaAsyncPropertiesTest()
     {
-      // VisaDevice instance has no predefined asynchronous properties.
-      using (var visaDevice = new VisaDevice())
-        Assert.Empty(visaDevice.AsyncProperties);
+      // Default VisaDevice instances have no predefined asynchronous properties.
+      await using var visaDevice = new VisaDevice();
+      Assert.Empty(visaDevice.AsyncProperties);
 
       // TestMessageDevice must contain the single TestAsyncProperty in its AsyncProperties enumeration.
-      using (var messageDevice = new TestMessageDevice())
-        Assert.Single(messageDevice.AsyncProperties, messageDevice.TestAsyncProperty);
+      await using var testDevice = new TestMessageDevice();
+      Assert.Single(testDevice.AsyncProperties, testDevice.TestAsyncProperty);
     }
 
     /// <summary>
@@ -136,29 +136,19 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task VisaDeviceActionsTest()
     {
-      // TestMessageDevice must contain the Reset (as inherited from VisaDevice), DecoratedTestDeviceAction, and
-      // DeclaredTestDeviceAction device actions.
-      // It must not contain any other methods with the Action delegate signature but without DeviceActionAttribute,
-      // like OpenSession method.
-      await using var messageDevice = new TestMessageDevice();
-      Assert.Contains(messageDevice.DeviceActions,
-        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.Reset);
-      Assert.Contains(messageDevice.DeviceActions,
-        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.DecoratedTestDeviceAction);
-      Assert.Contains(messageDevice.DeviceActions,
-        deviceAction => deviceAction == messageDevice.DeclaredTestDeviceAction);
-      Assert.DoesNotContain(messageDevice.DeviceActions,
-        deviceAction => deviceAction.DeviceActionDelegate == messageDevice.OpenSession);
+      // Default VisaDevice instances have only the Reset device action.
+      await using var visaDevice = new VisaDevice();
+      Assert.Contains(visaDevice.ResetAction, visaDevice.DeviceActions);
 
-      // Testing device actions execution.
-      Assert.False(messageDevice.IsResetCalled);
-      Assert.False(messageDevice.IsDecoratedTestDeviceActionCalled);
-      Assert.False(messageDevice.IsDeclaredTestDeviceActionCalled);
-      foreach (var deviceAction in messageDevice.DeviceActions)
-        await deviceAction.ExecuteAsync();
-      Assert.True(messageDevice.IsResetCalled);
-      Assert.True(messageDevice.IsDecoratedTestDeviceActionCalled);
-      Assert.True(messageDevice.IsDeclaredTestDeviceActionCalled);
+      // TestMessageDevice must contain the Reset (as inherited from VisaDevice) and TestDeviceAction device actions.
+      using var resourceManager = new TestResourceManager();
+      await using var testDevice = new TestMessageDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName
+      };
+      Assert.Contains(testDevice.ResetAction, testDevice.DeviceActions);
+      Assert.Contains(testDevice.TestDeviceAction, testDevice.DeviceActions);
     }
 
     /// <summary>
@@ -210,6 +200,12 @@ namespace VisaDeviceBuilder.Tests
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
+
+      // Exceptions should be thrown as there is no opened VISA session.
+      Assert.Throws<VisaDeviceException>(device.Reset);
+      Assert.Throws<VisaDeviceException>(device.GetIdentifier);
+      await Assert.ThrowsAsync<VisaDeviceException>(device.ResetAsync);
+      await Assert.ThrowsAsync<VisaDeviceException>(device.GetIdentifierAsync);
 
       // Exceptions during device initialization should be thrown.
       device.ThrowOnInitialization = true;

@@ -26,7 +26,7 @@ namespace VisaDeviceBuilder
     ///   The base buildable VISA device instance that stores the builder configuration and is used for building of new
     ///   VISA device instances by cloning.
     /// </summary>
-    private readonly IBuildableVisaDevice<IVisaDevice> _device = new BuildableVisaDevice();
+    private readonly IBuildableVisaDevice<IVisaDevice> _device = new VisaDevice();
 
     /// <summary>
     ///   Initializes a new VISA device builder instance.
@@ -39,21 +39,21 @@ namespace VisaDeviceBuilder
     ///   Initializes a new VISA device builder instance with building configuration copied from a compatible buildable
     ///   VISA device instance.
     /// </summary>
-    /// <param name="device">
-    ///   A VISA device instance to copy configuration from. This instance must have been previously built by a
-    ///   compatible VISA device builder class and must implement the
-    ///   <see cref="IBuildableVisaDevice{TVisaDevice}" /> interface where TVisaDevice = <see cref="IVisaDevice" />.
+    /// <param name="baseDevice">
+    ///   A base VISA device instance to copy configuration from. This instance must derive from the
+    ///   <see cref="VisaDevice" /> class or must implement the <see cref="IBuildableVisaDevice{TVisaDevice}" />
+    ///   interface where TVisaDevice = <see cref="IVisaDevice" />.
     /// </param>
     /// <exception cref="InvalidOperationException">
     ///   Cannot copy building configuration from the provided VISA device instance because it does not implement the
     ///   <see cref="IBuildableVisaDevice{TVisaDevice}" /> interface where TVisaDevice = <see cref="IVisaDevice" />.
     /// </exception>
-    public VisaDeviceBuilder(IVisaDevice device)
+    public VisaDeviceBuilder(IVisaDevice baseDevice)
     {
-      if (device is not IBuildableVisaDevice<IVisaDevice> buildableVisaDevice)
+      if (baseDevice is not IBuildableVisaDevice<IVisaDevice> buildableVisaDevice)
         throw new InvalidOperationException(
           "Cannot copy building configuration from the provided VISA device instance of type " +
-          $"\"{device.GetType().Name}\" because it does not implement the " +
+          $"\"{baseDevice.GetType().Name}\" because it does not implement the " +
           $"\"{typeof(IBuildableVisaDevice<IVisaDevice>).Name}\" interface.");
 
       _device = (IBuildableVisaDevice<IVisaDevice>) buildableVisaDevice.Clone();
