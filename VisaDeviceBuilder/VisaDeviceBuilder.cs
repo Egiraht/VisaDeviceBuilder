@@ -26,7 +26,7 @@ namespace VisaDeviceBuilder
     ///   The base buildable VISA device instance that stores the builder configuration and is used for building of new
     ///   VISA device instances by cloning.
     /// </summary>
-    private readonly IBuildableVisaDevice<IVisaDevice> _device = new VisaDevice();
+    private readonly IBuildableVisaDevice _device = new VisaDevice();
 
     /// <summary>
     ///   Initializes a new VISA device builder instance.
@@ -41,22 +41,20 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="baseDevice">
     ///   A base VISA device instance to copy configuration from. This instance must derive from the
-    ///   <see cref="VisaDevice" /> class or must implement the <see cref="IBuildableVisaDevice{TVisaDevice}" />
-    ///   interface where TVisaDevice = <see cref="IVisaDevice" />.
+    ///   <see cref="VisaDevice" /> class or must implement the <see cref="IBuildableVisaDevice" /> interface.
     /// </param>
     /// <exception cref="InvalidOperationException">
     ///   Cannot copy building configuration from the provided VISA device instance because it does not implement the
-    ///   <see cref="IBuildableVisaDevice{TVisaDevice}" /> interface where TVisaDevice = <see cref="IVisaDevice" />.
+    ///   <see cref="IBuildableVisaDevice" /> interface.
     /// </exception>
     public VisaDeviceBuilder(IVisaDevice baseDevice)
     {
-      if (baseDevice is not IBuildableVisaDevice<IVisaDevice> buildableVisaDevice)
+      if (baseDevice is not IBuildableVisaDevice buildableVisaDevice)
         throw new InvalidOperationException(
           "Cannot copy building configuration from the provided VISA device instance of type " +
-          $"\"{baseDevice.GetType().Name}\" because it does not implement the " +
-          $"\"{typeof(IBuildableVisaDevice<IVisaDevice>).Name}\" interface.");
+          $"\"{baseDevice.GetType().Name}\" because it does not implement the \"{nameof(IBuildableVisaDevice)}\" interface.");
 
-      _device = (IBuildableVisaDevice<IVisaDevice>) buildableVisaDevice.Clone();
+      _device = (IBuildableVisaDevice) buildableVisaDevice.Clone();
     }
 
     /// <summary>
@@ -466,7 +464,7 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder UseInitializeCallback(Action<IVisaDevice> callback)
+    public VisaDeviceBuilder UseInitializeCallback(Action<IVisaDevice?> callback)
     {
       _device.CustomInitializeCallback = callback;
       return this;
@@ -486,7 +484,7 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder UseDeInitializeCallback(Action<IVisaDevice> callback)
+    public VisaDeviceBuilder UseDeInitializeCallback(Action<IVisaDevice?> callback)
     {
       _device.CustomDeInitializeCallback = callback;
       return this;
@@ -507,7 +505,7 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder UseGetIdentifierCallback(Func<IVisaDevice, string> callback)
+    public VisaDeviceBuilder UseGetIdentifierCallback(Func<IVisaDevice?, string> callback)
     {
       _device.CustomGetIdentifierCallback = callback;
       return this;
@@ -527,7 +525,7 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IVisaDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder UseResetCallback(Action<IVisaDevice> callback)
+    public VisaDeviceBuilder UseResetCallback(Action<IVisaDevice?> callback)
     {
       _device.CustomResetCallback = callback;
       return this;

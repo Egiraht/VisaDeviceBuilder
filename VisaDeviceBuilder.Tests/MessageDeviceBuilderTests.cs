@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Ivi.Visa;
+using Moq;
 using VisaDeviceBuilder.Abstracts;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
@@ -188,6 +189,7 @@ namespace VisaDeviceBuilder.Tests
         .UseDefaultSupportedHardwareInterfaces()
         .BuildDevice();
       Assert.Equal(MessageDevice.MessageBasedHardwareInterfaceTypes, defaultInterfacesDevice.SupportedInterfaces);
+      Assert.Null(((IBuildableMessageDevice) defaultInterfacesDevice).CustomSupportedInterfaces);
 
       // Session opening should pass OK because the custom hardware interface type is supported by default by the
       // BuildableVisaDevice type.
@@ -202,6 +204,7 @@ namespace VisaDeviceBuilder.Tests
         .UseSupportedHardwareInterfaces(hardwareInterfaces)
         .BuildDevice();
       Assert.Equal(hardwareInterfaces, specifiedInterfacesDevice.SupportedInterfaces);
+      Assert.Equal(hardwareInterfaces, ((IBuildableMessageDevice) specifiedInterfacesDevice).CustomSupportedInterfaces);
 
       // Session opening should throw a VisaDeviceException because the custom hardware interface type is not defined
       // as supported.
@@ -232,6 +235,7 @@ namespace VisaDeviceBuilder.Tests
       // Accessing the read-only asynchronous property.
       var readOnlyAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestReadOnlyAsyncPropertyName && asyncProperty.CanGet && !asyncProperty.CanSet);
+      Assert.Contains(readOnlyAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
       Assert.Same(device, readOnlyAsyncProperty.TargetDevice);
       Assert.Equal(default, readOnlyAsyncProperty.Getter);
 
@@ -266,6 +270,7 @@ namespace VisaDeviceBuilder.Tests
       // Accessing the write-only asynchronous property.
       var writeOnlyAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestWriteOnlyAsyncPropertyName && !asyncProperty.CanGet && asyncProperty.CanSet);
+      Assert.Contains(writeOnlyAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
       Assert.Same(device, writeOnlyAsyncProperty.TargetDevice);
       Assert.Equal(default, writeOnlyAsyncProperty.Getter);
 
@@ -306,6 +311,7 @@ namespace VisaDeviceBuilder.Tests
       // Accessing the read-write asynchronous property.
       var readWriteAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestReadWriteAsyncPropertyName && asyncProperty.CanGet && asyncProperty.CanSet);
+      Assert.Contains(readWriteAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
       Assert.Same(device, readWriteAsyncProperty.TargetDevice);
       Assert.Equal(default, readWriteAsyncProperty.Getter);
 
@@ -365,6 +371,9 @@ namespace VisaDeviceBuilder.Tests
         asyncProperty.Name == TestWriteOnlyAsyncPropertyName && !asyncProperty.CanGet && asyncProperty.CanSet);
       var copiedReadWriteAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestReadWriteAsyncPropertyName && asyncProperty.CanGet && asyncProperty.CanSet);
+      Assert.Contains(copiedReadOnlyAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
+      Assert.Contains(copiedWriteOnlyAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
+      Assert.Contains(copiedReadWriteAsyncProperty, ((IBuildableMessageDevice) device).CustomAsyncProperties);
       Assert.NotSame(copiedReadOnlyAsyncProperty, readOnlyAsyncProperty);
       Assert.NotSame(copiedWriteOnlyAsyncProperty, writeOnlyAsyncProperty);
       Assert.NotSame(copiedReadWriteAsyncProperty, readWriteAsyncProperty);
@@ -452,6 +461,8 @@ namespace VisaDeviceBuilder.Tests
 
       // Accessing the device action.
       var testDeviceAction = device.DeviceActions.First(deviceAction => deviceAction.Name == TestDeviceActionName);
+      Assert.Contains(((IBuildableMessageDevice) device).CustomDeviceActions,
+        deviceAction => deviceAction.Name == TestDeviceActionName);
       Assert.Same(device, testDeviceAction.TargetDevice);
 
       // The standard Reset device action must also be present in the device as inherited from the base VisaDevice class.
@@ -487,6 +498,9 @@ namespace VisaDeviceBuilder.Tests
       var copiedDeviceAction3 = device.DeviceActions
         .Where(deviceAction => deviceAction.Name == TestDeviceActionName)
         .ElementAt(2);
+      Assert.Contains(copiedDeviceAction1, ((IBuildableMessageDevice) device).CustomDeviceActions);
+      Assert.Contains(copiedDeviceAction2, ((IBuildableMessageDevice) device).CustomDeviceActions);
+      Assert.Contains(copiedDeviceAction3, ((IBuildableMessageDevice) device).CustomDeviceActions);
       Assert.NotSame(deviceAction1, copiedDeviceAction1);
       Assert.NotSame(deviceAction2, copiedDeviceAction2);
       Assert.NotSame(deviceAction2, copiedDeviceAction3);
@@ -565,6 +579,9 @@ namespace VisaDeviceBuilder.Tests
         .UseResetCallback(TestResetCallback)
         .UseMessageProcessor(TestMessageProcessor)
         .BuildDevice();
+      Assert.Equal(TestMessageProcessor, ((IBuildableMessageDevice) device).CustomMessageProcessor);
+      // Other custom callbacks cannot be directly compared here as they are wrapped in additional code for
+      // compatibility with the IBuildableVisaDevice interface.
       Assert.Null(TestInitializeCallbackCallingDevice);
       Assert.Null(TestDeInitializeCallbackCallingDevice);
       Assert.Null(TestGetIdentifierCallbackCallingDevice);
@@ -670,6 +687,9 @@ namespace VisaDeviceBuilder.Tests
       Assert.Same(derivedDevice, TestResetCallbackCallingDevice);
       Assert.Same(derivedDevice, TestMessageProcessorCallingDevice);
       Assert.Equal(derivedDevice.AliasName + TestString, response);
+
+      // Testing an exception on trying to copy configuration from an unsupported base device.
+      Assert.Throws<InvalidOperationException>(() => new MessageDeviceBuilder(new Mock<IMessageDevice>().Object));
     }
 
     /// <summary>

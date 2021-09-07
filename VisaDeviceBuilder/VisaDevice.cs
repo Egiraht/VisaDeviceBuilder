@@ -13,7 +13,7 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   The class for connectable VISA devices.
   /// </summary>
-  public class VisaDevice : IBuildableVisaDevice<IVisaDevice>
+  public class VisaDevice : IBuildableVisaDevice
   {
     /// <summary>
     ///   Defines the default connection timeout in milliseconds.
@@ -104,13 +104,13 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected virtual HardwareInterfaceType[] DefaultSupportedInterfaces => HardwareInterfaceTypes;
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomSupportedInterfaces" />
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomSupportedInterfaces" />
     protected HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <inheritdoc />
     public HardwareInterfaceType[] SupportedInterfaces => CustomSupportedInterfaces ?? DefaultSupportedInterfaces;
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomAsyncProperties" />
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomAsyncProperties" />
     protected ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; } = new();
 
     /// <summary>
@@ -121,7 +121,7 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual IEnumerable<IAsyncProperty> AsyncProperties => DeclaredAsyncProperties.Concat(CustomAsyncProperties);
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomDeviceActions" />
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomDeviceActions" />
     protected ObservableCollection<IDeviceAction> CustomDeviceActions { get; } = new();
 
     /// <summary>
@@ -132,56 +132,56 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public virtual IEnumerable<IDeviceAction> DeviceActions => DeclaredDeviceActions.Concat(CustomDeviceActions);
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomInitializeCallback" />
-    protected Action<IVisaDevice>? CustomInitializeCallback { get; set; }
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomInitializeCallback" />
+    protected Action<IVisaDevice?>? CustomInitializeCallback { get; set; }
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomDeInitializeCallback" />
-    protected Action<IVisaDevice>? CustomDeInitializeCallback { get; set; }
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomDeInitializeCallback" />
+    protected Action<IVisaDevice?>? CustomDeInitializeCallback { get; set; }
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomGetIdentifierCallback" />
-    protected Func<IVisaDevice, string>? CustomGetIdentifierCallback { get; set; }
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomGetIdentifierCallback" />
+    protected Func<IVisaDevice?, string>? CustomGetIdentifierCallback { get; set; }
 
-    /// <inheritdoc cref="IBuildableVisaDevice{TVisaDevice}.CustomResetCallback" />
-    protected Action<IVisaDevice>? CustomResetCallback { get; set; }
+    /// <inheritdoc cref="IBuildableVisaDevice.CustomResetCallback" />
+    protected Action<IVisaDevice?>? CustomResetCallback { get; set; }
 
     /// <inheritdoc />
-    ObservableCollection<IAsyncProperty> IBuildableVisaDevice<IVisaDevice>.CustomAsyncProperties =>
+    ObservableCollection<IAsyncProperty> IBuildableVisaDevice.CustomAsyncProperties =>
       CustomAsyncProperties;
 
     /// <inheritdoc />
-    ObservableCollection<IDeviceAction> IBuildableVisaDevice<IVisaDevice>.CustomDeviceActions =>
+    ObservableCollection<IDeviceAction> IBuildableVisaDevice.CustomDeviceActions =>
       CustomDeviceActions;
 
     /// <inheritdoc />
-    HardwareInterfaceType[]? IBuildableVisaDevice<IVisaDevice>.CustomSupportedInterfaces
+    HardwareInterfaceType[]? IBuildableVisaDevice.CustomSupportedInterfaces
     {
       get => CustomSupportedInterfaces;
       set => CustomSupportedInterfaces = value;
     }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomInitializeCallback
+    Action<IVisaDevice?>? IBuildableVisaDevice.CustomInitializeCallback
     {
       get => CustomInitializeCallback;
       set => CustomInitializeCallback = value;
     }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomDeInitializeCallback
+    Action<IVisaDevice?>? IBuildableVisaDevice.CustomDeInitializeCallback
     {
       get => CustomDeInitializeCallback;
       set => CustomDeInitializeCallback = value;
     }
 
     /// <inheritdoc />
-    Func<IVisaDevice, string>? IBuildableVisaDevice<IVisaDevice>.CustomGetIdentifierCallback
+    Func<IVisaDevice?, string>? IBuildableVisaDevice.CustomGetIdentifierCallback
     {
       get => CustomGetIdentifierCallback;
       set => CustomGetIdentifierCallback = value;
     }
 
     /// <inheritdoc />
-    Action<IVisaDevice>? IBuildableVisaDevice<IVisaDevice>.CustomResetCallback
+    Action<IVisaDevice?>? IBuildableVisaDevice.CustomResetCallback
     {
       get => CustomResetCallback;
       set => CustomResetCallback = value;

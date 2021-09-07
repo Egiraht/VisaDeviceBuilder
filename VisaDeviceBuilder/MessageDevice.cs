@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
@@ -9,7 +8,7 @@ namespace VisaDeviceBuilder
   /// <summary>
   ///   The class for connectable VISA devices that use message-based communication.
   /// </summary>
-  public class MessageDevice : VisaDevice, IBuildableMessageDevice<IMessageDevice>
+  public class MessageDevice : VisaDevice, IBuildableMessageDevice
   {
     /// <summary>
     ///   Defines the array of hardware interface types that support message-based communication.
@@ -27,54 +26,11 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     protected override HardwareInterfaceType[] DefaultSupportedInterfaces => MessageBasedHardwareInterfaceTypes;
 
-    /// <inheritdoc cref="IBuildableMessageDevice{TMessageDevice}.CustomMessageProcessor" />
-    protected Func<IMessageDevice, string, string>? CustomMessageProcessor { get; set; }
+    /// <inheritdoc cref="IBuildableMessageDevice.CustomMessageProcessor" />
+    protected Func<IMessageDevice?, string, string>? CustomMessageProcessor { get; set; }
 
     /// <inheritdoc />
-    HardwareInterfaceType[]? IBuildableVisaDevice<IMessageDevice>.CustomSupportedInterfaces
-    {
-      get => CustomSupportedInterfaces;
-      set => CustomSupportedInterfaces = value;
-    }
-
-    /// <inheritdoc />
-    ObservableCollection<IAsyncProperty> IBuildableVisaDevice<IMessageDevice>.CustomAsyncProperties =>
-      CustomAsyncProperties;
-
-    /// <inheritdoc />
-    ObservableCollection<IDeviceAction> IBuildableVisaDevice<IMessageDevice>.CustomDeviceActions =>
-      CustomDeviceActions;
-
-    /// <inheritdoc />
-    Action<IMessageDevice>? IBuildableVisaDevice<IMessageDevice>.CustomInitializeCallback
-    {
-      get => CustomInitializeCallback;
-      set => CustomInitializeCallback = value != null ? device => value.Invoke((IMessageDevice) device) : null;
-    }
-
-    /// <inheritdoc />
-    Action<IMessageDevice>? IBuildableVisaDevice<IMessageDevice>.CustomDeInitializeCallback
-    {
-      get => CustomDeInitializeCallback;
-      set => CustomDeInitializeCallback = value != null ? device => value.Invoke((IMessageDevice) device) : null;
-    }
-
-    /// <inheritdoc />
-    Func<IMessageDevice, string>? IBuildableVisaDevice<IMessageDevice>.CustomGetIdentifierCallback
-    {
-      get => CustomGetIdentifierCallback;
-      set => CustomGetIdentifierCallback = value != null ? device => value.Invoke((IMessageDevice) device) : null;
-    }
-
-    /// <inheritdoc />
-    Action<IMessageDevice>? IBuildableVisaDevice<IMessageDevice>.CustomResetCallback
-    {
-      get => CustomResetCallback;
-      set => CustomResetCallback = value != null ? device => value.Invoke((IMessageDevice) device) : null;
-    }
-
-    /// <inheritdoc />
-    Func<IMessageDevice, string, string>? IBuildableMessageDevice<IMessageDevice>.CustomMessageProcessor
+    Func<IMessageDevice?, string, string>? IBuildableMessageDevice.CustomMessageProcessor
     {
       get => CustomMessageProcessor;
       set => CustomMessageProcessor = value;

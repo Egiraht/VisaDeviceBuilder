@@ -14,7 +14,7 @@ namespace VisaDeviceBuilder
     ///   The base buildable message-based VISA device instance that stores the builder configuration and is used for
     ///   building of new VISA device instances by cloning.
     /// </summary>
-    private readonly IBuildableMessageDevice<IMessageDevice> _device = new MessageDevice();
+    private readonly IBuildableMessageDevice _device = new MessageDevice();
 
     /// <summary>
     ///   Initializes a new message-based VISA device builder instance.
@@ -29,22 +29,20 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="baseMessageDevice">
     ///   A base message-based VISA device instance to copy configuration from. This instance must derive from the
-    ///   <see cref="MessageDevice" /> class or must implement the <see cref="IBuildableVisaDevice{TVisaDevice}" />
-    ///   interface where TVisaDevice = <see cref="IMessageDevice" />.
+    ///   <see cref="MessageDevice" /> class or must implement the <see cref="IBuildableVisaDevice" /> interface.
     /// </param>
     /// <exception cref="InvalidOperationException">
     ///   Cannot copy building configuration from the provided VISA device instance because it does not implement the
-    ///   <see cref="IBuildableVisaDevice{TVisaDevice}" /> interface where TVisaDevice = <see cref="IMessageDevice" />.
+    ///   <see cref="IBuildableVisaDevice" /> interface.
     /// </exception>
     public MessageDeviceBuilder(IMessageDevice baseMessageDevice)
     {
-      if (baseMessageDevice is not IBuildableMessageDevice<IMessageDevice> buildableMessageDevice)
+      if (baseMessageDevice is not IBuildableMessageDevice buildableMessageDevice)
         throw new InvalidOperationException(
           "Cannot copy building configuration from the provided VISA device instance of type " +
-          $"\"{baseMessageDevice.GetType().Name}\" because it does not implement the " +
-          $"\"{typeof(IBuildableVisaDevice<IMessageDevice>).Name}\" interface.");
+          $"\"{baseMessageDevice.GetType().Name}\" because it does not implement the \"{nameof(IBuildableVisaDevice)}\" interface.");
 
-      _device = (IBuildableMessageDevice<IMessageDevice>) buildableMessageDevice.Clone();
+      _device = (IBuildableMessageDevice) buildableMessageDevice.Clone();
     }
 
     /// <summary>
@@ -458,9 +456,9 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseInitializeCallback(Action<IMessageDevice> callback)
+    public MessageDeviceBuilder UseInitializeCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomInitializeCallback = callback;
+      _device.CustomInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -478,9 +476,9 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseDeInitializeCallback(Action<IMessageDevice> callback)
+    public MessageDeviceBuilder UseDeInitializeCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomDeInitializeCallback = callback;
+      _device.CustomDeInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -499,9 +497,9 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseGetIdentifierCallback(Func<IMessageDevice, string> callback)
+    public MessageDeviceBuilder UseGetIdentifierCallback(Func<IMessageDevice?, string> callback)
     {
-      _device.CustomGetIdentifierCallback = callback;
+      _device.CustomGetIdentifierCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -519,9 +517,9 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying
     ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseResetCallback(Action<IMessageDevice> callback)
+    public MessageDeviceBuilder UseResetCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomResetCallback = callback;
+      _device.CustomResetCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -543,7 +541,7 @@ namespace VisaDeviceBuilder
     ///   For low-level control over the device communication process use the device's underlying message-based
     ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public MessageDeviceBuilder UseMessageProcessor(Func<IMessageDevice, string, string> messageProcessor)
+    public MessageDeviceBuilder UseMessageProcessor(Func<IMessageDevice?, string, string> messageProcessor)
     {
       _device.CustomMessageProcessor = messageProcessor;
       return this;

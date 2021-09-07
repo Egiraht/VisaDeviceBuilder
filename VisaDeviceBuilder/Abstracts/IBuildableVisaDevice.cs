@@ -7,15 +7,11 @@ namespace VisaDeviceBuilder.Abstracts
   /// <summary>
   ///   The common interface for VISA devices that can be built using builders.
   /// </summary>
-  /// <typeparam name="TVisaDevice">
-  ///   The target VISA device type.
-  /// </typeparam>
-  public interface IBuildableVisaDevice<TVisaDevice> : IVisaDevice where TVisaDevice : IVisaDevice
+  public interface IBuildableVisaDevice : IVisaDevice
   {
     /// <summary>
     ///   Gets the array of custom hardware interfaces supported by the device.
-    ///   If set to <c>null</c>, the default hardware interfaces defined for the <typeparamref name="TVisaDevice" />
-    ///   type will be supported.
+    ///   If set to <c>null</c>, the default hardware interfaces defined for the VISA device will be supported.
     /// </summary>
     HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
@@ -36,21 +32,21 @@ namespace VisaDeviceBuilder.Abstracts
     /// <summary>
     ///   Gets or sets the custom device initialization stage callback delegate.
     /// </summary>
-    Action<TVisaDevice>? CustomInitializeCallback { get; set; }
+    Action<IVisaDevice?>? CustomInitializeCallback { get; set; }
 
     /// <summary>
     ///   Gets or sets the custom device de-initialization stage callback delegate.
     /// </summary>
-    Action<TVisaDevice>? CustomDeInitializeCallback { get; set; }
+    Action<IVisaDevice?>? CustomDeInitializeCallback { get; set; }
 
     /// <summary>
     ///   Gets or sets the custom delegate for getting the device identifier string.
     /// </summary>
-    Func<TVisaDevice, string>? CustomGetIdentifierCallback { get; set; }
+    Func<IVisaDevice?, string>? CustomGetIdentifierCallback { get; set; }
 
     /// <summary>
     ///   Gets or sets the custom delegate to reset the device.
     /// </summary>
-    Action<TVisaDevice>? CustomResetCallback { get; set; }
+    Action<IVisaDevice?>? CustomResetCallback { get; set; }
   }
 }
