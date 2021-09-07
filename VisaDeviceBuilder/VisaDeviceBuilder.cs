@@ -176,21 +176,23 @@ namespace VisaDeviceBuilder
     ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="getter">
-    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
-    ///   instance provided as a delegate parameter.
+    ///   A getter delegate to be called when the asynchronous property is read.
+    ///   The delegate may accept a nullable VISA device instance (the one to be built) as a parameter, or just reject
+    ///   it if it is not required for functioning.
+    ///   The delegate must return a stored property's value of type <typeparamref name="TValue" />.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
     ///   For low-level control over the device communication process use the device's underlying
-    ///   <see cref="IVisaDevice.Session" /> object.
+    ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder AddReadOnlyAsyncProperty<TValue>(string name, Func<IVisaDevice, TValue> getter)
+    public VisaDeviceBuilder AddReadOnlyAsyncProperty<TValue>(string name, Func<IVisaDevice?, TValue> getter)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<IVisaDevice, TValue>(getter)
+      _device.CustomAsyncProperties.Add(new AsyncProperty<TValue>(getter)
       {
-        Owner = _device,
+        TargetDevice = _device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = false
       });
@@ -208,21 +210,24 @@ namespace VisaDeviceBuilder
     ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="setter">
-    ///   A setter delegate for the write-only asynchronous property that writes a value to the device instance. Both
-    ///   objects are provided as delegate parameters.
+    ///   A setter delegate to be called when the asynchronous property is written.
+    ///   The delegate may accept a nullable VISA device instance (the one to be built) as the first parameter, or just
+    ///   reject it if it is not required for functioning.
+    ///   As the second parameter the delegate is provided with a new property's value of type
+    ///   <typeparamref name="TValue" />.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
     ///   For low-level control over the device communication process use the device's underlying
-    ///   <see cref="IVisaDevice.Session" /> object.
+    ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder AddWriteOnlyAsyncProperty<TValue>(string name, Action<IVisaDevice, TValue> setter)
+    public VisaDeviceBuilder AddWriteOnlyAsyncProperty<TValue>(string name, Action<IVisaDevice?, TValue> setter)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<IVisaDevice, TValue>(setter)
+      _device.CustomAsyncProperties.Add(new AsyncProperty<TValue>(setter)
       {
-        Owner = _device,
+        TargetDevice = _device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = false
       });
@@ -240,12 +245,17 @@ namespace VisaDeviceBuilder
     ///   Adding multiple asynchronous properties with the same name is not forbidden but highly not recommended.
     /// </param>
     /// <param name="getter">
-    ///   A getter delegate for the read-only asynchronous property that reads and returns a value from the device
-    ///   instance provided as a delegate parameter.
+    ///   A getter delegate to be called when the asynchronous property is read.
+    ///   The delegate may accept a nullable VISA device instance (the one to be built) as a parameter, or just reject
+    ///   it if it is not required for functioning.
+    ///   The delegate must return a stored property's value of type <typeparamref name="TValue" />.
     /// </param>
     /// <param name="setter">
-    ///   A setter delegate for the write-only asynchronous property that writes a value to the device instance. Both
-    ///   objects are provided as delegate parameters.
+    ///   A setter delegate to be called when the asynchronous property is written.
+    ///   The delegate may accept a nullable VISA device instance (the one to be built) as the first parameter, or just
+    ///   reject it if it is not required for functioning.
+    ///   As the second parameter the delegate is provided with a new property's value of type
+    ///   <typeparamref name="TValue" />.
     /// </param>
     /// <param name="autoUpdateGetter">
     ///   Defines if the property's getter must be automatically updated every time a new value is successfully
@@ -256,14 +266,14 @@ namespace VisaDeviceBuilder
     /// </returns>
     /// <remarks>
     ///   For low-level control over the device communication process use the device's underlying
-    ///   <see cref="IVisaDevice.Session" /> object.
+    ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder AddReadWriteAsyncProperty<TValue>(string name, Func<IVisaDevice, TValue> getter,
-      Action<IVisaDevice, TValue> setter, bool autoUpdateGetter = true)
+    public VisaDeviceBuilder AddReadWriteAsyncProperty<TValue>(string name, Func<IVisaDevice?, TValue> getter,
+      Action<IVisaDevice?, TValue> setter, bool autoUpdateGetter = true)
     {
-      _device.CustomAsyncProperties.Add(new OwnedAsyncProperty<IVisaDevice, TValue>(getter, setter)
+      _device.CustomAsyncProperties.Add(new AsyncProperty<TValue>(getter, setter)
       {
-        Owner = _device,
+        TargetDevice = _device,
         Name = name,
         AutoUpdateGetterAfterSetterCompletes = autoUpdateGetter
       });
@@ -271,45 +281,41 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
-    ///   Copies a compatible owned asynchronous property to the VISA device.
+    ///   Copies the asynchronous property to the VISA device.
     /// </summary>
-    /// <param name="ownedAsyncProperty">
-    ///   An owned asynchronous property instance of a compatible device type to copy.
+    /// <param name="asyncProperty">
+    ///   The asynchronous property to copy.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    /// <remarks>
-    ///   Non-owned asynchronous properties declared in classes as <see cref="AsyncProperty{TValue}" /> instances cannot
-    ///   be copied because they reference their device directly in code. These instances can only be inherited in
-    ///   deriving classes.
-    /// </remarks>
-    public VisaDeviceBuilder CopyAsyncProperty(IOwnedAsyncProperty<IVisaDevice> ownedAsyncProperty)
+    public VisaDeviceBuilder CopyAsyncProperty(IAsyncProperty asyncProperty)
     {
-      _device.CustomAsyncProperties.Add((IOwnedAsyncProperty<IVisaDevice>) ownedAsyncProperty.Clone());
+      var asyncPropertyClone = (IAsyncProperty) asyncProperty.Clone();
+      asyncPropertyClone.TargetDevice = _device;
+      _device.CustomAsyncProperties.Add(asyncPropertyClone);
       return this;
     }
 
     /// <summary>
-    ///   Copies compatible owned asynchronous property to the VISA device.
+    ///   Copies asynchronous properties to the VISA device.
     /// </summary>
-    /// <param name="ownedAsyncProperties">
-    ///   An array or a parameter sequence of owned asynchronous property instances of a compatible device type to copy.
+    /// <param name="asyncProperties">
+    ///   An array or a parameter sequence of asynchronous properties to copy.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    /// <remarks>
-    ///   Non-owned asynchronous properties declared in classes as <see cref="AsyncProperty{TValue}" /> instances cannot
-    ///   be copied because they reference their device directly in code. These instances can only be inherited in
-    ///   deriving classes.
-    /// </remarks>
-    public VisaDeviceBuilder CopyAsyncProperties(params IOwnedAsyncProperty<IVisaDevice>[] ownedAsyncProperties)
+    public VisaDeviceBuilder CopyAsyncProperties(params IAsyncProperty[] asyncProperties)
     {
-      ownedAsyncProperties
-        .Select(ownedAsyncProperty => (IOwnedAsyncProperty<IVisaDevice>) ownedAsyncProperty.Clone())
+      asyncProperties
+        .Select(asyncProperty => (IAsyncProperty) asyncProperty.Clone())
         .ToList()
-        .ForEach(ownedAsyncPropertyClone => _device.CustomAsyncProperties.Add(ownedAsyncPropertyClone));
+        .ForEach(asyncPropertyClone =>
+        {
+          asyncPropertyClone.TargetDevice = _device;
+          _device.CustomAsyncProperties.Add(asyncPropertyClone);
+        });
       return this;
     }
 
@@ -318,17 +324,17 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="asyncPropertyName">
     ///   The name of the asynchronous property to remove.
-    ///   If there are multiple asynchronous properties with the same name, only the first occurence will be removed.
+    ///   If there are multiple asynchronous properties with the same name, all of them will be removed.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     public VisaDeviceBuilder RemoveAsyncProperty(string asyncPropertyName)
     {
-      var asyncPropertyToRemove =
-        _device.CustomAsyncProperties.FirstOrDefault(asyncProperty => asyncProperty.Name == asyncPropertyName);
-      if (asyncPropertyToRemove != null)
-        _device.CustomAsyncProperties.Remove(asyncPropertyToRemove);
+      _device.CustomAsyncProperties
+        .Where(asyncProperty => asyncProperty.Name == asyncPropertyName)
+        .ToList()
+        .ForEach(asyncProperty => _device.CustomAsyncProperties.Remove(asyncProperty));
       return this;
     }
 
@@ -351,65 +357,64 @@ namespace VisaDeviceBuilder
     ///   The name of the device action.
     ///   Adding multiple device actions with the same name is not forbidden but highly not recommended.
     /// </param>
-    /// <param name="action">
-    ///   A device action delegate that performs an asynchronous operation for the device instance provided as a
-    ///   delegate parameter.
+    /// <param name="deviceAction">
+    ///   An action delegate to be invoked when the device action is executed.
+    ///   The delegate may accept a nullable VISA device instance (the one to be built) as a parameter, or just reject
+    ///   it if it is not required for functioning.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     /// <remarks>
     ///   For low-level control over the device communication process use the device's underlying
-    ///   <see cref="IVisaDevice.Session" /> object.
+    ///   <see cref="IMessageDevice.Session" /> object.
     /// </remarks>
-    public VisaDeviceBuilder AddDeviceAction(string name, Action<IVisaDevice> action)
+    public VisaDeviceBuilder AddDeviceAction(string name, Action<IVisaDevice?> deviceAction)
     {
-      _device.CustomDeviceActions.Add(new OwnedDeviceAction<IVisaDevice>(action)
+      _device.CustomDeviceActions.Add(new DeviceAction(deviceAction)
       {
-        Owner = _device,
+        TargetDevice = _device,
         Name = name
       });
       return this;
     }
 
     /// <summary>
-    ///   Copies a compatible owned device action to the VISA device.
+    ///   Copies a device action to the VISA device.
     /// </summary>
-    /// <param name="ownedDeviceAction">
-    ///   An owned device action instance of a compatible device type to copy.
+    /// <param name="deviceAction">
+    ///   A device action to copy.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    /// <remarks>
-    ///   Non-owned device actions declared in classes as <see cref="DeviceAction" /> instances cannot be copied because
-    ///   they reference their device directly in code. These instances can only be inherited in deriving classes.
-    /// </remarks>
-    public VisaDeviceBuilder CopyDeviceAction(IOwnedDeviceAction<IVisaDevice> ownedDeviceAction)
+    public VisaDeviceBuilder CopyDeviceAction(IDeviceAction deviceAction)
     {
-      _device.CustomDeviceActions.Add((IOwnedDeviceAction<IVisaDevice>) ownedDeviceAction.Clone());
+      var deviceActionClone = (IDeviceAction) deviceAction.Clone();
+      deviceActionClone.TargetDevice = _device;
+      _device.CustomDeviceActions.Add(deviceActionClone);
       return this;
     }
 
     /// <summary>
-    ///   Copies compatible owned device actions to the VISA device.
+    ///   Copies device actions to the VISA device.
     /// </summary>
-    /// <param name="ownedDeviceActions">
-    ///   An array or a parameter sequence of owned device action instances of a compatible device type to copy.
+    /// <param name="deviceActions">
+    ///   An array or a parameter sequence of device actions to copy.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
-    /// <remarks>
-    ///   Non-owned device actions declared in classes as <see cref="DeviceAction" /> instances cannot be copied because
-    ///   they reference their device directly in code. These instances can only be inherited in deriving classes.
-    /// </remarks>
-    public VisaDeviceBuilder CopyDeviceActions(params IOwnedDeviceAction<IVisaDevice>[] ownedDeviceActions)
+    public VisaDeviceBuilder CopyDeviceActions(params IDeviceAction[] deviceActions)
     {
-      ownedDeviceActions
-        .Select(ownedDeviceAction => (IOwnedDeviceAction<IVisaDevice>) ownedDeviceAction.Clone())
+      deviceActions
+        .Select(deviceAction => (IDeviceAction) deviceAction.Clone())
         .ToList()
-        .ForEach(ownedDeviceActionClone => _device.CustomDeviceActions.Add(ownedDeviceActionClone));
+        .ForEach(deviceActionClone =>
+        {
+          deviceActionClone.TargetDevice = _device;
+          _device.CustomDeviceActions.Add(deviceActionClone);
+        });
       return this;
     }
 
@@ -418,17 +423,17 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="deviceActionName">
     ///   The name of the device action to remove.
-    ///   If there are multiple device actions with the same name, only the first occurence will be removed.
+    ///   If there are multiple device actions with the same name, all of them will be removed.
     /// </param>
     /// <returns>
     ///   This builder instance.
     /// </returns>
     public VisaDeviceBuilder RemoveDeviceAction(string deviceActionName)
     {
-      var deviceActionToRemove =
-        _device.CustomDeviceActions.FirstOrDefault(deviceAction => deviceAction.Name == deviceActionName);
-      if (deviceActionToRemove != null)
-        _device.CustomDeviceActions.Remove(deviceActionToRemove);
+      _device.CustomDeviceActions
+        .Where(deviceAction => deviceAction.Name == deviceActionName)
+        .ToList()
+        .ForEach(deviceAction => _device.CustomDeviceActions.Remove(deviceAction));
       return this;
     }
 

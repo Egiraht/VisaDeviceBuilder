@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
@@ -214,7 +215,11 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Gets the standard "Reset" device action that calls the <see cref="Reset" /> method.
     /// </summary>
-    public IDeviceAction ResetAction => _resetAction ??= new DeviceAction(Reset) { Name = nameof(Reset) };
+    public IDeviceAction ResetAction => _resetAction ??= new DeviceAction(visaDevice => visaDevice?.Reset())
+    {
+      Name = nameof(Reset),
+      TargetDevice = this
+    };
     private IDeviceAction? _resetAction;
 
     /// <inheritdoc />
@@ -229,37 +234,27 @@ namespace VisaDeviceBuilder
       DeclaredAsyncProperties = CollectDeclaredAsyncProperties();
       DeclaredDeviceActions = CollectDeclaredDeviceActions();
 
-      // Taking ownership of asynchronous properties and device actions when adding them to the corresponding custom
-      // collections.
-      CustomAsyncProperties.CollectionChanged += (_, args) => OwnAsyncProperties(args.NewItems?.Cast<IAsyncProperty>());
-      CustomDeviceActions.CollectionChanged += (_, args) => OwnDeviceActions(args.NewItems?.Cast<IDeviceAction>());
+      // Set targets of asynchronous properties and device actions to this device instance when adding them to the
+      // corresponding custom collections.
+      CustomAsyncProperties.CollectionChanged += OnCustomAsyncPropertiesChanged;
+      CustomDeviceActions.CollectionChanged += OnCustomDeviceActionsChanged;
     }
 
     /// <summary>
-    ///   Takes ownership of the provided asynchronous properties. Only owned asynchronous properties among the provided
-    ///   ones are processed.
+    ///   The event handler method that is called when the <see cref="CustomAsyncProperties" /> collection is changed.
     /// </summary>
-    /// <param name="asyncProperties">
-    ///   An enumeration of asynchronous properties to process. It is safe to be <c>null</c>.
-    /// </param>
-    private void OwnAsyncProperties(IEnumerable<IAsyncProperty>? asyncProperties) => asyncProperties
-      ?.Where(asyncProperty => asyncProperty is IOwnedAsyncProperty)
-      .Cast<IOwnedAsyncProperty>()
+    private void OnCustomAsyncPropertiesChanged(object? sender, NotifyCollectionChangedEventArgs args) => args.NewItems
+      ?.Cast<IAsyncProperty>()
       .ToList()
-      .ForEach(ownedAsyncProperty => ownedAsyncProperty.Owner = this);
+      .ForEach(asyncProperty => asyncProperty.TargetDevice = this);
 
     /// <summary>
-    ///   Takes ownership of the provided device actions. Only owned device actions among the provided ones are
-    ///   processed.
+    ///   The event handler method that is called when the <see cref="CustomDeviceActions" /> collection is changed.
     /// </summary>
-    /// <param name="deviceActions">
-    ///   An enumeration of device actions to process. It is safe to be <c>null</c>.
-    /// </param>
-    private void OwnDeviceActions(IEnumerable<IDeviceAction>? deviceActions) => deviceActions
-      ?.Where(deviceAction => deviceAction is IOwnedDeviceAction)
-      .Cast<IOwnedDeviceAction>()
+    private void OnCustomDeviceActionsChanged(object? sender, NotifyCollectionChangedEventArgs args) => args.NewItems
+      ?.Cast<IDeviceAction>()
       .ToList()
-      .ForEach(ownedDeviceAction => ownedDeviceAction.Owner = this);
+      .ForEach(deviceAction => deviceAction.TargetDevice = this);
 
     /// <inheritdoc cref="IVisaDevice.ResourceNameInfo" />
     private ParseResult? GetResourceNameInfo()
@@ -539,7 +534,11 @@ namespace VisaDeviceBuilder
 
       CloseSession();
 
-      // If the device has been cloned, dispose of the VISA resource manager object created during the cloning process.
+      CustomAsyncProperties.CollectionChanged -= OnCustomAsyncPropertiesChanged;
+      CustomDeviceActions.CollectionChanged -= OnCustomDeviceActionsChanged;
+
+      // If this device instance has been previously cloned from another one, dispose of the VISA resource manager
+      // object because it was automatically created during the cloning process.
       if (_isClone)
         ResourceManager?.Dispose();
 

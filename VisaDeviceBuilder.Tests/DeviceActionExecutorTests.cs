@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Abstracts;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests
@@ -28,7 +29,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Defines the test device action delegate.
     /// </summary>
-    private void TestDeviceActionDelegate()
+    private void TestDeviceActionDelegate(IVisaDevice? visaDevice)
     {
       Task.Delay(DeviceActionDelay).Wait();
       TestValue = TestString;
@@ -93,7 +94,7 @@ namespace VisaDeviceBuilder.Tests
     {
       object? source = null;
       Exception? exception = null;
-      var deviceAction = new DeviceAction(() =>
+      var deviceAction = new DeviceAction(_ =>
       {
         Task.Delay(DeviceActionDelay).Wait();
         throw new Exception(TestString);

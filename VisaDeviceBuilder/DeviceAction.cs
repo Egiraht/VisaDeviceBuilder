@@ -17,7 +17,10 @@ namespace VisaDeviceBuilder
     public string Name { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public virtual Action DeviceActionDelegate { get; }
+    public IVisaDevice? TargetDevice { get; set; }
+
+    /// <inheritdoc />
+    public virtual Action<IVisaDevice?> DeviceActionDelegate { get; }
 
     /// <inheritdoc />
     public bool CanExecute => DeviceActionExecutor.CanExecute(this);
@@ -25,12 +28,14 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Creates a new device action instance.
     /// </summary>
-    /// <param name="actionDelegate">
+    /// <param name="deviceActionDelegate">
     ///   The action delegate representing a device action.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
     /// </param>
-    public DeviceAction(Action actionDelegate)
+    public DeviceAction(Action<IVisaDevice?> deviceActionDelegate)
     {
-      DeviceActionDelegate = actionDelegate;
+      DeviceActionDelegate = deviceActionDelegate;
 
       DeviceActionExecutor.Exception += OnException;
       DeviceActionExecutor.DeviceActionCompleted += OnExecutionCompleted;
@@ -89,7 +94,11 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
-    public virtual object Clone() => new DeviceAction(DeviceActionDelegate) {Name = Name};
+    public virtual object Clone() => new DeviceAction(DeviceActionDelegate)
+    {
+      Name = Name,
+      TargetDevice = TargetDevice
+    };
 
     /// <summary>
     ///   Implicitly converts the provided device action instance to its action delegate.
@@ -101,6 +110,6 @@ namespace VisaDeviceBuilder
     ///   The getter value string stored in the provided asynchronous property instance.
     /// </returns>
     [ExcludeFromCodeCoverage]
-    public static implicit operator Action(DeviceAction action) => action.DeviceActionDelegate;
+    public static implicit operator Action<IVisaDevice?>(DeviceAction action) => action.DeviceActionDelegate;
   }
 }

@@ -20,15 +20,16 @@ namespace VisaDeviceBuilder.Abstracts
     HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <summary>
-    ///   Gets the observable collection of custom owned asynchronous properties.
-    ///   The buildable device instance automatically takes ownership of owned asynchronous properties added to the
-    ///   collection.
+    ///   Gets the observable collection of custom asynchronous properties.
+    ///   The <see cref="IAsyncProperty.TargetDevice" /> properties of asynchronous properties being added to the
+    ///   collection will be automatically assigned.
     /// </summary>
     ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; }
 
     /// <summary>
-    ///   Gets the observable collection of custom owned device actions.
-    ///   The buildable device instance automatically takes ownership of owned device actions added to the collection.
+    ///   Gets the observable collection of custom device actions.
+    ///   The <see cref="IDeviceAction.TargetDevice" /> properties of device actions being added to the collection will
+    ///   be automatically assigned.
     /// </summary>
     ObservableCollection<IDeviceAction> CustomDeviceActions { get; }
 

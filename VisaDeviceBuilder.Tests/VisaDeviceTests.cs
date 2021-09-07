@@ -149,6 +149,17 @@ namespace VisaDeviceBuilder.Tests
       };
       Assert.Contains(testDevice.ResetAction, testDevice.DeviceActions);
       Assert.Contains(testDevice.TestDeviceAction, testDevice.DeviceActions);
+
+      // Testing the device actions.
+      await testDevice.OpenSessionAsync();
+      Assert.False(testDevice.IsResetCalled);
+      Assert.False(testDevice.IsTestDeviceActionCalled);
+
+      await testDevice.ResetAction.ExecuteAsync();
+      Assert.True(testDevice.IsResetCalled);
+
+      await testDevice.TestDeviceAction.ExecuteAsync();
+      Assert.True(testDevice.IsTestDeviceActionCalled);
     }
 
     /// <summary>

@@ -43,7 +43,7 @@ namespace VisaDeviceBuilder.Tests
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
-      await using var autoUpdater = new AutoUpdater(device) {Delay = AutoUpdateDelay};
+      await using var autoUpdater = new AutoUpdater(device) { Delay = AutoUpdateDelay };
       Assert.False(autoUpdater.IsRunning);
       Assert.Equal(device.AsyncProperties, autoUpdater.AsyncProperties);
       Assert.Equal(default, device.TestAsyncProperty.Getter);
@@ -70,7 +70,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public void EmptyAutoUpdateLoopTest()
     {
-      using var autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) {Delay = AutoUpdateDelay};
+      using var autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) { Delay = AutoUpdateDelay };
       autoUpdater.Start();
       Assert.False(autoUpdater.IsRunning);
     }
@@ -82,8 +82,8 @@ namespace VisaDeviceBuilder.Tests
     public async Task AutoUpdaterLoopExceptionTest()
     {
       Exception? exception = null;
-      var testAsyncProperty = new AsyncProperty<string>(() => throw new Exception(TestExceptionMessage));
-      await using var autoUpdater = new AutoUpdater(new[] {testAsyncProperty}) {Delay = AutoUpdateDelay};
+      var testAsyncProperty = new AsyncProperty<string>(_ => throw new Exception(TestExceptionMessage));
+      await using var autoUpdater = new AutoUpdater(new[] { testAsyncProperty }) { Delay = AutoUpdateDelay };
       autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
       Assert.Contains(testAsyncProperty, autoUpdater.AsyncProperties);
       Assert.Null(exception);
@@ -104,7 +104,7 @@ namespace VisaDeviceBuilder.Tests
     public async Task AutoUpdaterDisposalTest()
     {
       AutoUpdater? autoUpdater;
-      await using (autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) {Delay = AutoUpdateDelay})
+      await using (autoUpdater = new AutoUpdater(Array.Empty<IAsyncProperty>()) { Delay = AutoUpdateDelay })
         autoUpdater.Start();
 
       Assert.False(autoUpdater.IsRunning);

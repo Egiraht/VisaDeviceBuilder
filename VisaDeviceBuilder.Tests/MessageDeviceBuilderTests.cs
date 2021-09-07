@@ -52,39 +52,39 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device action for the last time.
     /// </summary>
-    private IMessageDevice? TestDeviceActionCallingDevice { get; set; }
+    private IVisaDevice? TestDeviceActionCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device initialization callback for the last
     ///   time.
     /// </summary>
-    private IMessageDevice? TestInitializeCallbackCallingDevice { get; set; }
+    private IVisaDevice? TestInitializeCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device de-initialization callback for the last
     ///   time.
     /// </summary>
-    private IMessageDevice? TestDeInitializeCallbackCallingDevice { get; set; }
+    private IVisaDevice? TestDeInitializeCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test identifier-getting callback for the last time.
     /// </summary>
-    private IMessageDevice? TestGetIdentifierCallbackCallingDevice { get; set; }
+    private IVisaDevice? TestGetIdentifierCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test device reset callback for the last time.
     /// </summary>
-    private IMessageDevice? TestResetCallbackCallingDevice { get; set; }
+    private IVisaDevice? TestResetCallbackCallingDevice { get; set; }
 
     /// <summary>
     ///   Gets or sets the VISA device instance that has called the test message processor for the last time.
     /// </summary>
-    private IMessageDevice? TestMessageProcessorCallingDevice { get; set; }
+    private IVisaDevice? TestMessageProcessorCallingDevice { get; set; }
 
     /// <summary>
     ///   Defines the callback method for the test device action.
     /// </summary>
-    private void TestDeviceActionCallback(IMessageDevice visaDevice)
+    private void TestDeviceActionCallback(IVisaDevice? visaDevice)
     {
       Task.Delay(OperationDelay).Wait();
       TestDeviceActionCallingDevice = visaDevice;
@@ -93,7 +93,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test device initialization callback.
     /// </summary>
-    private void TestInitializeCallback(IMessageDevice device)
+    private void TestInitializeCallback(IVisaDevice? device)
     {
       Task.Delay(OperationDelay).Wait();
       TestInitializeCallbackCallingDevice = device;
@@ -102,7 +102,7 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test device de-initialization callback.
     /// </summary>
-    private void TestDeInitializeCallback(IMessageDevice device)
+    private void TestDeInitializeCallback(IVisaDevice? device)
     {
       Task.Delay(OperationDelay).Wait();
       TestDeInitializeCallbackCallingDevice = device;
@@ -111,17 +111,17 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test callback that gets the device's identifier.
     /// </summary>
-    private string TestGetIdentifierCallback(IMessageDevice device)
+    private string TestGetIdentifierCallback(IVisaDevice? device)
     {
       Task.Delay(OperationDelay).Wait();
       TestGetIdentifierCallbackCallingDevice = device;
-      return device.AliasName;
+      return device?.AliasName ?? string.Empty;
     }
 
     /// <summary>
     ///   The test callback that resets the device.
     /// </summary>
-    private void TestResetCallback(IMessageDevice device)
+    private void TestResetCallback(IVisaDevice? device)
     {
       Task.Delay(OperationDelay).Wait();
       TestResetCallbackCallingDevice = device;
@@ -130,11 +130,11 @@ namespace VisaDeviceBuilder.Tests
     /// <summary>
     ///   The test message processor method.
     /// </summary>
-    private string TestMessageProcessor(IMessageDevice device, string request)
+    private string TestMessageProcessor(IVisaDevice? device, string request)
     {
       Task.Delay(OperationDelay).Wait();
       TestMessageProcessorCallingDevice = device;
-      return device.AliasName + request;
+      return device?.AliasName + request;
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ namespace VisaDeviceBuilder.Tests
       await defaultInterfacesDevice.CloseSessionAsync();
 
       // Testing support of only the specified hardware interfaces (serial and USB).
-      var hardwareInterfaces = new[] {HardwareInterfaceType.Serial, HardwareInterfaceType.Usb};
+      var hardwareInterfaces = new[] { HardwareInterfaceType.Serial, HardwareInterfaceType.Usb };
       await using var specifiedInterfacesDevice = new MessageDeviceBuilder()
         .UseCustomVisaResourceManagerType<TestResourceManager>()
         .UseDefaultResourceName(TestResourceManager.CustomTestDeviceResourceName) // Uses a custom interface.
@@ -220,19 +220,19 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task ReadOnlyAsyncPropertyAdditionTest()
     {
-      var testDictionary = new Dictionary<IMessageDevice, string>();
+      var testDictionary = new Dictionary<IVisaDevice, string>();
       await using var device = new MessageDeviceBuilder()
         .AddReadOnlyAsyncProperty(TestReadOnlyAsyncPropertyName, visaDevice =>
         {
           Task.Delay(OperationDelay).Wait();
-          return testDictionary[visaDevice];
+          return testDictionary[visaDevice!];
         })
         .BuildDevice();
 
       // Accessing the read-only asynchronous property.
       var readOnlyAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestReadOnlyAsyncPropertyName && asyncProperty.CanGet && !asyncProperty.CanSet);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) readOnlyAsyncProperty).Owner);
+      Assert.Same(device, readOnlyAsyncProperty.TargetDevice);
       Assert.Equal(default, readOnlyAsyncProperty.Getter);
 
       // The getter must return the value from the dictionary.
@@ -254,19 +254,19 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task WriteOnlyAsyncPropertyAdditionTest()
     {
-      var testDictionary = new Dictionary<IMessageDevice, string>();
+      var testDictionary = new Dictionary<IVisaDevice, string>();
       await using var device = new MessageDeviceBuilder()
         .AddWriteOnlyAsyncProperty<string>(TestWriteOnlyAsyncPropertyName, (visaDevice, value) =>
         {
           Task.Delay(OperationDelay).Wait();
-          testDictionary[visaDevice] = value;
+          testDictionary[visaDevice!] = value;
         })
         .BuildDevice();
 
       // Accessing the write-only asynchronous property.
       var writeOnlyAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestWriteOnlyAsyncPropertyName && !asyncProperty.CanGet && asyncProperty.CanSet);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) writeOnlyAsyncProperty).Owner);
+      Assert.Same(device, writeOnlyAsyncProperty.TargetDevice);
       Assert.Equal(default, writeOnlyAsyncProperty.Getter);
 
       // The getter must return a default value.
@@ -288,25 +288,25 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task ReadWriteAsyncPropertyAdditionTest()
     {
-      var testDictionary = new Dictionary<IMessageDevice, string>();
+      var testDictionary = new Dictionary<IVisaDevice, string>();
       await using var device = new MessageDeviceBuilder()
         .AddReadWriteAsyncProperty(TestReadWriteAsyncPropertyName,
           visaDevice =>
           {
             Task.Delay(OperationDelay).Wait();
-            return testDictionary[visaDevice];
+            return testDictionary[visaDevice!];
           },
           (visaDevice, value) =>
           {
             Task.Delay(OperationDelay).Wait();
-            testDictionary[visaDevice] = value;
+            testDictionary[visaDevice!] = value;
           })
         .BuildDevice();
 
       // Accessing the read-write asynchronous property.
       var readWriteAsyncProperty = device.AsyncProperties.First(asyncProperty =>
         asyncProperty.Name == TestReadWriteAsyncPropertyName && asyncProperty.CanGet && asyncProperty.CanSet);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) readWriteAsyncProperty).Owner);
+      Assert.Same(device, readWriteAsyncProperty.TargetDevice);
       Assert.Equal(default, readWriteAsyncProperty.Getter);
 
       // The getter must return the value from the dictionary.
@@ -328,31 +328,31 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task AsyncPropertiesCopyingTest()
     {
-      var testDictionary = new Dictionary<IMessageDevice, string>();
-      var readOnlyAsyncProperty = new OwnedAsyncProperty<IMessageDevice, string>(visaDevice =>
+      var testDictionary = new Dictionary<IVisaDevice, string>();
+      var readOnlyAsyncProperty = new AsyncProperty<string>(visaDevice =>
         {
           Task.Delay(OperationDelay).Wait();
-          return testDictionary[visaDevice];
+          return testDictionary[visaDevice!];
         })
-        {Name = TestReadOnlyAsyncPropertyName};
-      var writeOnlyAsyncProperty = new OwnedAsyncProperty<IMessageDevice, string>((visaDevice, value) =>
+        { Name = TestReadOnlyAsyncPropertyName };
+      var writeOnlyAsyncProperty = new AsyncProperty<string>((visaDevice, value) =>
         {
           Task.Delay(OperationDelay).Wait();
-          testDictionary[visaDevice] = value;
+          testDictionary[visaDevice!] = value;
         })
-        {Name = TestWriteOnlyAsyncPropertyName};
-      var readWriteAsyncProperty = new OwnedAsyncProperty<IMessageDevice, string>(
+        { Name = TestWriteOnlyAsyncPropertyName };
+      var readWriteAsyncProperty = new AsyncProperty<string>(
           visaDevice =>
           {
             Task.Delay(OperationDelay).Wait();
-            return testDictionary[visaDevice];
+            return testDictionary[visaDevice!];
           },
           (visaDevice, value) =>
           {
             Task.Delay(OperationDelay).Wait();
-            testDictionary[visaDevice] = value;
+            testDictionary[visaDevice!] = value;
           })
-        {Name = TestReadWriteAsyncPropertyName};
+        { Name = TestReadWriteAsyncPropertyName };
       await using var device = new MessageDeviceBuilder()
         .CopyAsyncProperties(readOnlyAsyncProperty, writeOnlyAsyncProperty)
         .CopyAsyncProperty(readWriteAsyncProperty)
@@ -368,9 +368,9 @@ namespace VisaDeviceBuilder.Tests
       Assert.NotSame(copiedReadOnlyAsyncProperty, readOnlyAsyncProperty);
       Assert.NotSame(copiedWriteOnlyAsyncProperty, writeOnlyAsyncProperty);
       Assert.NotSame(copiedReadWriteAsyncProperty, readWriteAsyncProperty);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) copiedReadOnlyAsyncProperty).Owner);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) copiedWriteOnlyAsyncProperty).Owner);
-      Assert.Same(device, ((IOwnedAsyncProperty<IMessageDevice>) copiedReadWriteAsyncProperty).Owner);
+      Assert.Same(device, copiedReadOnlyAsyncProperty.TargetDevice);
+      Assert.Same(device, copiedWriteOnlyAsyncProperty.TargetDevice);
+      Assert.Same(device, copiedReadWriteAsyncProperty.TargetDevice);
 
       // The readOnlyAsyncProperty's getter must return the value from the dictionary.
       testDictionary[device] = TestString;
@@ -402,8 +402,8 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task AsyncPropertiesRemovingTest()
     {
-      var readWriteAsyncProperty = new OwnedAsyncProperty<IMessageDevice, string>(_ => string.Empty, (_, _) => { })
-        {Name = TestReadWriteAsyncPropertyName};
+      var readWriteAsyncProperty = new AsyncProperty<string>(_ => string.Empty, (_, _) => { })
+        { Name = TestReadWriteAsyncPropertyName };
       var deviceBuilder = new MessageDeviceBuilder()
         .AddReadOnlyAsyncProperty(TestReadOnlyAsyncPropertyName,
           _ => string.Empty) // Adding a read-only asynchronous property.
@@ -452,7 +452,7 @@ namespace VisaDeviceBuilder.Tests
 
       // Accessing the device action.
       var testDeviceAction = device.DeviceActions.First(deviceAction => deviceAction.Name == TestDeviceActionName);
-      Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) testDeviceAction).Owner);
+      Assert.Same(device, testDeviceAction.TargetDevice);
 
       // The standard Reset device action must also be present in the device as inherited from the base VisaDevice class.
       Assert.Contains(device.DeviceActions, deviceAction => deviceAction.Name == nameof(IMessageDevice.Reset));
@@ -470,8 +470,8 @@ namespace VisaDeviceBuilder.Tests
     {
       // Copying multiple device actions (as well as asynchronous properties) with the same name or even the same
       // instance multiple times is not recommended but is admitted.
-      var deviceAction1 = new OwnedDeviceAction<IMessageDevice>(TestDeviceActionCallback) {Name = TestDeviceActionName};
-      var deviceAction2 = new OwnedDeviceAction<IMessageDevice>(TestDeviceActionCallback) {Name = TestDeviceActionName};
+      var deviceAction1 = new DeviceAction(TestDeviceActionCallback) { Name = TestDeviceActionName };
+      var deviceAction2 = new DeviceAction(TestDeviceActionCallback) { Name = TestDeviceActionName };
       await using var device = new MessageDeviceBuilder()
         .CopyDeviceAction(deviceAction1)
         .CopyDeviceActions(deviceAction2, deviceAction2) // Adding the same instance twice.
@@ -492,9 +492,9 @@ namespace VisaDeviceBuilder.Tests
       Assert.NotSame(deviceAction2, copiedDeviceAction3);
       Assert.NotSame(copiedDeviceAction1, copiedDeviceAction2);
       Assert.NotSame(copiedDeviceAction2, copiedDeviceAction3);
-      Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) copiedDeviceAction1).Owner);
-      Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) copiedDeviceAction2).Owner);
-      Assert.Same(device, ((IOwnedDeviceAction<IMessageDevice>) copiedDeviceAction3).Owner);
+      Assert.Same(device, copiedDeviceAction1.TargetDevice);
+      Assert.Same(device, copiedDeviceAction2.TargetDevice);
+      Assert.Same(device, copiedDeviceAction3.TargetDevice);
 
       // Testing the copied device actions.
       TestDeviceActionCallingDevice = null;
@@ -519,10 +519,8 @@ namespace VisaDeviceBuilder.Tests
       const string testDeviceActionName1 = TestDeviceActionName + "1";
       const string testDeviceActionName2 = TestDeviceActionName + "2";
       const string testDeviceActionName3 = TestDeviceActionName + "3";
-      var deviceAction1 = new OwnedDeviceAction<IMessageDevice>(TestDeviceActionCallback)
-        {Name = testDeviceActionName1};
-      var deviceAction2 = new OwnedDeviceAction<IMessageDevice>(TestDeviceActionCallback)
-        {Name = testDeviceActionName2};
+      var deviceAction1 = new DeviceAction(TestDeviceActionCallback) { Name = testDeviceActionName1 };
+      var deviceAction2 = new DeviceAction(TestDeviceActionCallback) { Name = testDeviceActionName2 };
       var deviceBuilder = new MessageDeviceBuilder()
         .CopyDeviceActions(deviceAction1, deviceAction2)
         .AddDeviceAction(testDeviceActionName3, TestDeviceActionCallback);
@@ -603,7 +601,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceBuilderConfigurationCopyingTest()
     {
-      var hardwareInterfaces = new[] {HardwareInterfaceType.Serial};
+      var hardwareInterfaces = new[] { HardwareInterfaceType.Serial };
       // Creating a base device instance without callbacks and with a default message processor.
       await using var baseDevice = new MessageDeviceBuilder()
         .UseCustomVisaResourceManagerType<TestResourceManager>()
@@ -680,7 +678,7 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceControllerTest()
     {
-      var hardwareInterfaces = new[] {HardwareInterfaceType.Serial};
+      var hardwareInterfaces = new[] { HardwareInterfaceType.Serial };
       var isTestAsyncPropertyUpdated = false;
       await using var deviceController = new MessageDeviceBuilder()
         .UseCustomVisaResourceManagerType<TestResourceManager>()

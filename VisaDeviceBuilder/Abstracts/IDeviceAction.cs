@@ -15,9 +15,19 @@ namespace VisaDeviceBuilder.Abstracts
     string Name { get; set; }
 
     /// <summary>
-    ///   Gets the actual device action delegate this object wraps.
+    ///   The VISA device instance this device action currently targets.
+    ///   This reference will be passed to the device action delegate when it is executed, so ensure it is set
+    ///   correctly before any execution occurs.
+    ///   May be set to <c>null</c>, if the device action does not require a VISA device instance for functioning.
     /// </summary>
-    Action DeviceActionDelegate { get; }
+    IVisaDevice? TargetDevice { get; set; }
+
+    /// <summary>
+    ///   Gets the actual device action delegate this object wraps.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
+    /// </summary>
+    Action<IVisaDevice?> DeviceActionDelegate { get; }
 
     /// <summary>
     ///   Checks if the current device action can be executed at the moment.

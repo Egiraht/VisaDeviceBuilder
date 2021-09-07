@@ -76,7 +76,7 @@ namespace VisaDeviceBuilder
       {
         try
         {
-          deviceAction.DeviceActionDelegate.Invoke();
+          deviceAction.DeviceActionDelegate.Invoke(deviceAction.TargetDevice);
         }
         catch (Exception e)
         {

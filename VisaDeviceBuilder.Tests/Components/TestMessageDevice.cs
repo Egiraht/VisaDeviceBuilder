@@ -37,7 +37,7 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets the test asynchronous property of integer type that is defined using the <see cref="IAsyncProperty" />
     ///   type class declaration and must be enlisted into the <see cref="IVisaDevice.AsyncProperties" /> enumeration.
     /// </summary>
-    public IAsyncProperty<int> TestAsyncProperty => _testAsyncProperty ??= new AsyncProperty<int>(() =>
+    public IAsyncProperty<int> TestAsyncProperty => _testAsyncProperty ??= new AsyncProperty<int>(_ =>
     {
       lock (_synchronizationLock)
       {
@@ -47,7 +47,7 @@ namespace VisaDeviceBuilder.Tests.Components
         Task.Delay(CommunicationDelay).Wait();
         return TestValue;
       }
-    }, newValue =>
+    }, (_, newValue) =>
     {
       lock (_synchronizationLock)
       {
@@ -64,7 +64,7 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Gets the device action that is defined using the <see cref="IDeviceAction" /> type class declaration and
     ///   must be enlisted into the <see cref="IVisaDevice.DeviceActions" /> enumeration.
     /// </summary>
-    public IDeviceAction TestDeviceAction => _testDeviceAction ??= new DeviceAction(() =>
+    public IDeviceAction TestDeviceAction => _testDeviceAction ??= new DeviceAction(_ =>
     {
       Task.Delay(CommunicationDelay).Wait();
       IsTestDeviceActionCalled = true;

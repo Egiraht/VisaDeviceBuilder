@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using VisaDeviceBuilder.Abstracts;
+using VisaDeviceBuilder.Tests.Components;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests
@@ -38,58 +40,66 @@ namespace VisaDeviceBuilder.Tests
     private const string SetterExceptionMessage = "Setter exception";
 
     /// <summary>
-    ///   Gets or sets the double test value imitating a value type device parameter.
+    ///   Gets the test VISA device instance.
     /// </summary>
-    private double PropertyValue { get; set; }
+    private IVisaDevice TestVisaDevice { get; } = new TestMessageDevice();
+
+    /// <summary>
+    ///   Gets the dictionary that holds independent values for the test asynchronous property depending on the
+    ///   property's target device.
+    /// </summary>
+    private Dictionary<IVisaDevice, double> PropertyValues { get; } = new();
 
     /// <summary>
     ///   The getter method of double type that imitates time-consuming reading of the remote device parameter.
     /// </summary>
-    private double GetterCallback()
+    private double GetterCallback(IVisaDevice? visaDevice)
     {
       Task.Delay(OperationDelay).Wait();
-      return PropertyValue;
+      return PropertyValues.TryGetValue(visaDevice!, out var value) ? value : default;
     }
 
     /// <summary>
     ///   The setter method of double type that imitates time-consuming writing of the remote device parameter.
     /// </summary>
-    private void SetterCallback(double value)
+    private void SetterCallback(IVisaDevice? visaDevice, double value)
     {
       Task.Delay(OperationDelay).Wait();
-      PropertyValue = value;
+      PropertyValues[visaDevice!] = value;
     }
 
     /// <summary>
     ///   Testing the get-only asynchronous property.
     /// </summary>
     [Fact]
-    public async Task GetOnlyPropertyTest()
+    public async Task ReadOnlyPropertyTest()
     {
       var asyncProperty = new AsyncProperty<double>(GetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var baseAsyncProperty = (IAsyncProperty) asyncProperty;
       Assert.True(asyncProperty.CanGet);
       Assert.False(asyncProperty.CanSet);
       Assert.Equal(GetterCallback, asyncProperty.GetterDelegate);
-      asyncProperty.SetterDelegate.Invoke(default); // The default setter delegate should pass OK.
+      asyncProperty.SetterDelegate.Invoke(null, default); // The default setter delegate should pass OK.
       Assert.Equal(default, asyncProperty.Getter);
       Assert.Equal(typeof(double), baseAsyncProperty.ValueType);
       Assert.Equal(TestName, asyncProperty.Name);
+      Assert.Same(TestVisaDevice, asyncProperty.TargetDevice);
       Assert.False(asyncProperty.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return the correct value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       asyncProperty.RequestGetterUpdate();
       await asyncProperty.GetGetterUpdatingTask();
       Assert.Equal(TestValue, asyncProperty.Getter);
       Assert.Equal(TestValue, baseAsyncProperty.Getter);
 
       // The setter must not change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       asyncProperty.Setter = TestValue;
       await asyncProperty.GetSetterProcessingTask();
       asyncProperty.RequestGetterUpdate();
@@ -102,51 +112,54 @@ namespace VisaDeviceBuilder.Tests
     ///   Testing the set-only asynchronous property.
     /// </summary>
     [Fact]
-    public async Task SetOnlyPropertyTest()
+    public async Task WriteOnlyPropertyTest()
     {
       var asyncProperty = new AsyncProperty<double>(SetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var baseAsyncProperty = (IAsyncProperty) asyncProperty;
       Assert.False(asyncProperty.CanGet);
       Assert.True(asyncProperty.CanSet);
-      Assert.Equal(default, asyncProperty.GetterDelegate.Invoke()); // The default getter delegate should pass OK.
+      Assert.Equal(default, asyncProperty.GetterDelegate.Invoke(null)); // The default getter delegate should pass OK.
       Assert.Equal(SetterCallback, asyncProperty.SetterDelegate);
       Assert.Equal(default, asyncProperty.Getter);
       Assert.Equal(typeof(double), baseAsyncProperty.ValueType);
       Assert.Equal(TestName, asyncProperty.Name);
+      Assert.Same(TestVisaDevice, asyncProperty.TargetDevice);
       Assert.False(asyncProperty.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return a default value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       asyncProperty.RequestGetterUpdate();
       await asyncProperty.GetGetterUpdatingTask();
       Assert.Equal(default, asyncProperty.Getter);
       Assert.Equal(default(double), baseAsyncProperty.Getter);
 
       // The setter must change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       asyncProperty.Setter = TestValue;
       await asyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
 
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = TestValue;
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
     }
 
     /// <summary>
     ///   Testing the get/set asynchronous property.
     /// </summary>
     [Fact]
-    public async Task GetSetPropertyTest()
+    public async Task ReadWritePropertyTest()
     {
       var asyncProperty = new AsyncProperty<double>(GetterCallback, SetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var baseAsyncProperty = (IAsyncProperty) asyncProperty;
@@ -157,30 +170,31 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, asyncProperty.Getter);
       Assert.Equal(typeof(double), baseAsyncProperty.ValueType);
       Assert.Equal(TestName, asyncProperty.Name);
+      Assert.Same(TestVisaDevice, asyncProperty.TargetDevice);
       Assert.False(asyncProperty.AutoUpdateGetterAfterSetterCompletes);
 
       // The getter must return the correct value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       asyncProperty.RequestGetterUpdate();
       await asyncProperty.GetGetterUpdatingTask();
       Assert.Equal(TestValue, asyncProperty.Getter);
       Assert.Equal(TestValue, baseAsyncProperty.Getter);
 
       // The setter must change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       asyncProperty.Setter = TestValue;
       await asyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
 
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = TestValue;
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
 
       // Testing base setter type conversion.
       baseAsyncProperty.Setter = TestValue.ToString(CultureInfo.CurrentCulture);
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
     }
 
     /// <summary>
@@ -190,31 +204,34 @@ namespace VisaDeviceBuilder.Tests
     public async Task BaseSetterTypeConversionTest()
     {
       IAsyncProperty baseAsyncProperty = new AsyncProperty<double>(GetterCallback, SetterCallback)
-        {AutoUpdateGetterAfterSetterCompletes = false};
+      {
+        TargetDevice = TestVisaDevice,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
 
       // String to double conversion.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = TestValue.ToString(CultureInfo.CurrentCulture);
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
 
       // Double to double conversion.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = TestValue;
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
 
       // Incompatible type conversion.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = new object();
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(default, PropertyValue);
+      Assert.Equal(default, PropertyValues[TestVisaDevice]);
 
       // Null value conversion.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       baseAsyncProperty.Setter = null;
       await baseAsyncProperty.GetSetterProcessingTask();
-      Assert.Equal(default, PropertyValue);
+      Assert.Equal(default, PropertyValues[TestVisaDevice]);
     }
 
     /// <summary>
@@ -224,18 +241,21 @@ namespace VisaDeviceBuilder.Tests
     public async Task GetterAutoUpdatingTest()
     {
       var asyncProperty = new AsyncProperty<double>(GetterCallback, SetterCallback)
-        {AutoUpdateGetterAfterSetterCompletes = false};
+      {
+        TargetDevice = TestVisaDevice,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       Assert.Equal(default, asyncProperty.Getter);
 
       // Getter auto-update is disabled, the getter value must not get updated automatically.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       asyncProperty.Setter = TestValue;
       await asyncProperty.GetSetterProcessingTask();
       await asyncProperty.GetGetterUpdatingTask();
       Assert.Equal(default, asyncProperty.Getter);
 
       // Getter auto-update is enabled, the getter value must get updated automatically.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       asyncProperty.AutoUpdateGetterAfterSetterCompletes = true;
       asyncProperty.Setter = TestValue;
       await asyncProperty.GetSetterProcessingTask();
@@ -252,7 +272,10 @@ namespace VisaDeviceBuilder.Tests
       var getterPassed = false;
       var setterPassed = false;
       var asyncProperty = new AsyncProperty<double>(GetterCallback, SetterCallback)
-        {AutoUpdateGetterAfterSetterCompletes = false};
+      {
+        TargetDevice = TestVisaDevice,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       asyncProperty.GetterUpdated += (_, _) => getterPassed = true;
       asyncProperty.SetterCompleted += (_, _) => setterPassed = true;
 
@@ -279,9 +302,12 @@ namespace VisaDeviceBuilder.Tests
       Exception? getterException = null;
       Exception? setterException = null;
       var asyncProperty = new AsyncProperty<double>(
-          () => throw new Exception(GetterExceptionMessage),
-          _ => throw new Exception(SetterExceptionMessage))
-        {AutoUpdateGetterAfterSetterCompletes = false};
+          _ => throw new Exception(GetterExceptionMessage),
+          (_, _) => throw new Exception(SetterExceptionMessage))
+      {
+        TargetDevice = TestVisaDevice,
+        AutoUpdateGetterAfterSetterCompletes = false
+      };
       asyncProperty.GetterException += (_, e) => getterException = e.Exception;
       asyncProperty.SetterException += (_, e) => setterException = e.Exception;
       Assert.Null(getterException);
@@ -312,6 +338,7 @@ namespace VisaDeviceBuilder.Tests
       var asyncProperty = new AsyncProperty<double>(GetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var clone = (AsyncProperty<double>) asyncProperty.Clone();
@@ -321,19 +348,20 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, clone.Getter);
       Assert.Equal(typeof(double), clone.ValueType);
       Assert.Equal(TestName, clone.Name);
+      Assert.Same(TestVisaDevice, clone.TargetDevice);
       Assert.False(clone.AutoUpdateGetterAfterSetterCompletes);
 
       // The clone's getter must return the correct value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       clone.RequestGetterUpdate();
       await clone.GetGetterUpdatingTask();
       Assert.Equal(TestValue, clone.Getter);
 
       // The clone's setter must not change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       clone.Setter = TestValue;
       await clone.GetSetterProcessingTask();
-      Assert.Equal(default, PropertyValue);
+      Assert.Equal(default, PropertyValues[TestVisaDevice]);
     }
 
     /// <summary>
@@ -345,6 +373,7 @@ namespace VisaDeviceBuilder.Tests
       var asyncProperty = new AsyncProperty<double>(SetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var clone = (AsyncProperty<double>) asyncProperty.Clone();
@@ -354,19 +383,20 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, clone.Getter);
       Assert.Equal(typeof(double), clone.ValueType);
       Assert.Equal(TestName, clone.Name);
+      Assert.Same(TestVisaDevice, clone.TargetDevice);
       Assert.False(clone.AutoUpdateGetterAfterSetterCompletes);
 
       // The clone's getter must return a default value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       clone.RequestGetterUpdate();
       await clone.GetGetterUpdatingTask();
       Assert.Equal(default, clone.Getter);
 
       // The clone's setter must change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       clone.Setter = TestValue;
       await clone.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
     }
 
     /// <summary>
@@ -378,6 +408,7 @@ namespace VisaDeviceBuilder.Tests
       var asyncProperty = new AsyncProperty<double>(GetterCallback, SetterCallback)
       {
         Name = TestName,
+        TargetDevice = TestVisaDevice,
         AutoUpdateGetterAfterSetterCompletes = false
       };
       var clone = (AsyncProperty<double>) asyncProperty.Clone();
@@ -388,19 +419,20 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(default, clone.Getter);
       Assert.Equal(typeof(double), clone.ValueType);
       Assert.Equal(TestName, clone.Name);
+      Assert.Same(TestVisaDevice, clone.TargetDevice);
       Assert.False(clone.AutoUpdateGetterAfterSetterCompletes);
 
       // The clone's getter must return the correct value.
-      PropertyValue = TestValue;
+      PropertyValues[TestVisaDevice] = TestValue;
       clone.RequestGetterUpdate();
       await clone.GetGetterUpdatingTask();
       Assert.Equal(TestValue, clone.Getter);
 
       // The clone's setter must change the value.
-      PropertyValue = default;
+      PropertyValues[TestVisaDevice] = default;
       clone.Setter = TestValue;
       await clone.GetSetterProcessingTask();
-      Assert.Equal(TestValue, PropertyValue);
+      Assert.Equal(TestValue, PropertyValues[TestVisaDevice]);
     }
   }
 }

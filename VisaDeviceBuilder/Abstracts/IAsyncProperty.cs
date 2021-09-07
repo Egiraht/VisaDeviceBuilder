@@ -15,6 +15,15 @@ namespace VisaDeviceBuilder.Abstracts
     string Name { get; set; }
 
     /// <summary>
+    ///   The VISA device instance this asynchronous property currently targets.
+    ///   This reference will be passed to the property's getter and setter delegates during read and write operations
+    ///   respectively, so ensure it is set correctly before any read or write accesses.
+    ///   May be set to <c>null</c>, if the asynchronous property does not require a VISA device instance for
+    ///   functioning.
+    /// </summary>
+    IVisaDevice? TargetDevice { get; set; }
+
+    /// <summary>
     ///   Checks if the asynchronous property can be read.
     /// </summary>
     bool CanGet { get; }

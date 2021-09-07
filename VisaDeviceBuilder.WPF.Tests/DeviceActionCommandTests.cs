@@ -36,7 +36,7 @@ namespace VisaDeviceBuilder.WPF.Tests
     public async Task DeviceActionTest()
     {
       var value = string.Empty;
-      var deviceAction = new DeviceAction(() =>
+      var deviceAction = new DeviceAction(_ =>
       {
         Task.Delay(DeviceActionDelay).Wait();
         value = TestString;

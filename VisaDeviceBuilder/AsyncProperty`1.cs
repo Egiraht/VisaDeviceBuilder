@@ -29,20 +29,30 @@ namespace VisaDeviceBuilder
     public string Name { get; set; } = string.Empty;
 
     /// <inheritdoc />
-    public bool CanGet { get; } = false;
+    public IVisaDevice? TargetDevice { get; set; }
 
     /// <inheritdoc />
-    public bool CanSet { get; } = false;
+    public bool CanGet { get; }
+
+    /// <inheritdoc />
+    public bool CanSet { get; }
 
     /// <summary>
     ///   Gets the getter delegate to be called when the asynchronous property is read.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
+    ///   The delegate must return a stored property's value of type <typeparamref name="TValue" />.
     /// </summary>
-    public virtual Func<TValue> GetterDelegate { get; } = () => default!;
+    public virtual Func<IVisaDevice?, TValue> GetterDelegate { get; } = _ => default!;
 
     /// <summary>
     ///   Gets the setter delegate to be called when the asynchronous property is written.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as the
+    ///   first parameter, or just reject it if it is not required for functioning.
+    ///   As the second parameter the delegate is provided with a new property's value of type
+    ///   <typeparamref name="TValue" />.
     /// </summary>
-    public virtual Action<TValue> SetterDelegate { get; } = _ => { };
+    public virtual Action<IVisaDevice?, TValue> SetterDelegate { get; } = (_, _) => { };
 
     /// <inheritdoc />
     public TValue Getter { get; private set; } = default!;
@@ -100,8 +110,11 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
+    ///   The delegate must return a stored property's value of type <typeparamref name="TValue" />.
     /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate)
+    public AsyncProperty(Func<IVisaDevice?, TValue> getterDelegate)
     {
       GetterDelegate = getterDelegate;
       CanGet = true;
@@ -112,8 +125,12 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as the
+    ///   first parameter, or just reject it if it is not required for functioning.
+    ///   As the second parameter the delegate is provided with a new property's value of type
+    ///   <typeparamref name="TValue" />.
     /// </param>
-    public AsyncProperty(Action<TValue> setterDelegate)
+    public AsyncProperty(Action<IVisaDevice?, TValue> setterDelegate)
     {
       SetterDelegate = setterDelegate;
       CanSet = true;
@@ -124,11 +141,18 @@ namespace VisaDeviceBuilder
     /// </summary>
     /// <param name="getterDelegate">
     ///   The getter delegate to be called when the asynchronous property is read.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
+    ///   The delegate must return a stored property's value of type <typeparamref name="TValue" />.
     /// </param>
     /// <param name="setterDelegate">
     ///   The setter delegate to be called when the asynchronous property is written.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as the
+    ///   first parameter, or just reject it if it is not required for functioning.
+    ///   As the second parameter the delegate is provided with a new property's value of type
+    ///   <typeparamref name="TValue" />.
     /// </param>
-    public AsyncProperty(Func<TValue> getterDelegate, Action<TValue> setterDelegate)
+    public AsyncProperty(Func<IVisaDevice?, TValue> getterDelegate, Action<IVisaDevice?, TValue> setterDelegate)
     {
       GetterDelegate = getterDelegate;
       SetterDelegate = setterDelegate;
@@ -182,7 +206,7 @@ namespace VisaDeviceBuilder
 
           try
           {
-            Getter = GetterDelegate.Invoke();
+            Getter = GetterDelegate.Invoke(TargetDevice);
             OnGetterUpdated();
           }
           catch (Exception e)
@@ -217,7 +241,7 @@ namespace VisaDeviceBuilder
 
           try
           {
-            SetterDelegate.Invoke(newValue);
+            SetterDelegate.Invoke(TargetDevice, newValue);
             OnSetterCompleted();
 
             if (AutoUpdateGetterAfterSetterCompletes)
@@ -273,6 +297,7 @@ namespace VisaDeviceBuilder
       {CanGet: true, CanSet: false} => new AsyncProperty<TValue>(GetterDelegate)
       {
         Name = Name,
+        TargetDevice = TargetDevice,
         AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
       },
 
@@ -280,6 +305,7 @@ namespace VisaDeviceBuilder
       {CanGet: false, CanSet: true} => new AsyncProperty<TValue>(SetterDelegate)
       {
         Name = Name,
+        TargetDevice = TargetDevice,
         AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
       },
 
@@ -287,6 +313,7 @@ namespace VisaDeviceBuilder
       {CanGet: true, CanSet: true} => new AsyncProperty<TValue>(GetterDelegate, SetterDelegate)
       {
         Name = Name,
+        TargetDevice = TargetDevice,
         AutoUpdateGetterAfterSetterCompletes = AutoUpdateGetterAfterSetterCompletes
       },
 

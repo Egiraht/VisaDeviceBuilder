@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using VisaDeviceBuilder.Abstracts;
+using VisaDeviceBuilder.Tests.Components;
 using Xunit;
 
 namespace VisaDeviceBuilder.Tests
@@ -25,17 +28,23 @@ namespace VisaDeviceBuilder.Tests
     private const string TestString = "Test string";
 
     /// <summary>
-    ///   Gets or sets the value of the test device action.
+    ///   Gets the test VISA device instance.
     /// </summary>
-    private string TestValue { get; set; } = string.Empty;
+    private IVisaDevice TestVisaDevice { get; } = new TestMessageDevice();
+
+    /// <summary>
+    ///   Gets the dictionary that holds independent string values for the test device action delegate depending on the
+    ///   target device.
+    /// </summary>
+    private Dictionary<IVisaDevice, string> TestValues { get; } = new();
 
     /// <summary>
     ///   Defines the test device action delegate.
     /// </summary>
-    private void TestDeviceActionDelegate()
+    private void TestDeviceActionDelegate(IVisaDevice? visaDevice)
     {
       Task.Delay(DeviceActionDelay).Wait();
-      TestValue = TestString;
+      TestValues[visaDevice!] = TestString;
     }
 
     /// <summary>
@@ -44,20 +53,25 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceActionExecutionTest()
     {
-      var deviceAction = new DeviceAction(TestDeviceActionDelegate) {Name = TestName};
+      var deviceAction = new DeviceAction(TestDeviceActionDelegate)
+      {
+        Name = TestName,
+        TargetDevice = TestVisaDevice
+      };
       Assert.Equal(TestName, deviceAction.Name);
+      Assert.Same(TestVisaDevice, deviceAction.TargetDevice);
       Assert.Equal(TestDeviceActionDelegate, deviceAction.DeviceActionDelegate);
       Assert.True(deviceAction.CanExecute);
-      Assert.Empty(TestValue);
+      Assert.Empty(TestValues);
 
       var executionTask = deviceAction.ExecuteAsync();
       _ = deviceAction.ExecuteAsync(); // Repeated call should pass OK.
       Assert.False(deviceAction.CanExecute);
-      Assert.Empty(TestValue);
+      Assert.Empty(TestValues);
 
       await executionTask;
       Assert.True(deviceAction.CanExecute);
-      Assert.Equal(TestString, TestValue);
+      Assert.Equal(TestString, TestValues[TestVisaDevice]);
     }
 
     /// <summary>
@@ -87,7 +101,7 @@ namespace VisaDeviceBuilder.Tests
     {
       object? source = null;
       Exception? exception = null;
-      var deviceAction = new DeviceAction(() =>
+      var deviceAction = new DeviceAction(_ =>
       {
         Task.Delay(DeviceActionDelay).Wait();
         throw new Exception(TestString);
@@ -115,9 +129,14 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task DeviceActionCloningTest()
     {
-      var deviceAction = new DeviceAction(TestDeviceActionDelegate) {Name = TestName};
+      var deviceAction = new DeviceAction(TestDeviceActionDelegate)
+      {
+        Name = TestName,
+        TargetDevice = TestVisaDevice
+      };
       var clone = (DeviceAction) deviceAction.Clone();
       Assert.Equal(TestName, clone.Name);
+      Assert.Same(TestVisaDevice, clone.TargetDevice);
       Assert.Equal(TestDeviceActionDelegate, clone.DeviceActionDelegate);
       Assert.True(clone.CanExecute);
       Assert.True(deviceAction.CanExecute);
@@ -127,12 +146,12 @@ namespace VisaDeviceBuilder.Tests
       _ = clone.ExecuteAsync(); // Repeated call should pass OK.
       Assert.False(clone.CanExecute);
       Assert.True(deviceAction.CanExecute); // The original device action must remain executable.
-      Assert.Empty(TestValue);
+      Assert.Empty(TestValues);
 
       await executionTask;
       Assert.True(clone.CanExecute);
       Assert.True(deviceAction.CanExecute);
-      Assert.Equal(TestString, TestValue);
+      Assert.Equal(TestString, TestValues[TestVisaDevice]);
     }
   }
 }
