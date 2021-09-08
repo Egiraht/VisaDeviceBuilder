@@ -1,32 +1,37 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<!--
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ Copyright © 2020-2021 Maxim Yudin
+-->
+
+<Project Sdk="Microsoft.NET.Sdk">
   <!-- Common project properties. -->
   <PropertyGroup>
     <TargetFramework>net5.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <Title>WPF GUI controls library for VISA devices</Title>
-    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
-    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
-    <RepositoryType>Git</RepositoryType>
-    <PackageTags>VISA, device control</PackageTags>
+    <Authors>Maxim Yudin (Egiraht)</Authors>
+    <Copyright>Copyright © 2020-2021 Maxim Yudin</Copyright>
+    <PackageTags>visa laboratory equipment device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
     <PackageVersion>1.0.0</PackageVersion>
     <NeutralLanguage>en</NeutralLanguage>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>The library providing simple WPF GUI controls for VISA devices.</Description>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder.WPF</PackageProjectUrl>
-  </PropertyGroup>
-
-  <!-- Project properties for "Release" configuration. -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>none</DebugType>
+    <PackageReleaseNotes>https://github.com/Egiraht/VisaDeviceBuilder/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <!-- Local project dependencies. -->
   <ItemGroup>
-    <ProjectReference Include="..\VisaDeviceBuilder\VisaDeviceBuilder.csproj" />
+    <ProjectReference Include="../VisaDeviceBuilder/VisaDeviceBuilder.csproj" />
   </ItemGroup>
 
   <!-- Use public static resource class generator for all ResX files. -->

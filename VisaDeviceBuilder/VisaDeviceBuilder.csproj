@@ -1,13 +1,20 @@
+<!--
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ Copyright © 2020-2021 Maxim Yudin
+-->
+
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Common project properties. -->
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>enable</Nullable>
     <Title>VISA device builder library</Title>
-    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
-    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
-    <RepositoryType>Git</RepositoryType>
-    <PackageTags>VISA, device control</PackageTags>
+    <Authors>Maxim Yudin (Egiraht)</Authors>
+    <Copyright>Copyright © 2020-2021 Maxim Yudin</Copyright>
+    <PackageTags>visa laboratory equipment device control</PackageTags>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
     <PackageVersion>1.0.0</PackageVersion>
@@ -15,13 +22,11 @@
     <NoWarn>NU1701</NoWarn>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>This library targets convenient creation of software VISA device abstractions.</Description>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
     <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder</PackageProjectUrl>
-  </PropertyGroup>
-
-  <!-- Project properties for "Release" configuration. -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>none</DebugType>
+    <PackageReleaseNotes>https://github.com/Egiraht/VisaDeviceBuilder/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <!-- Project dependencies. -->

@@ -1,16 +1,23 @@
+<!--
+ This Source Code Form is subject to the terms of the Mozilla Public
+ License, v. 2.0. If a copy of the MPL was not distributed with this
+ file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+ Copyright © 2020-2021 Maxim Yudin
+-->
+
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Common project properties. -->
   <PropertyGroup>
     <TargetFramework>net5.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <Title>WPF GUI controls library unit tests</Title>
-    <Authors>Maxim Yudin &lt;stibiu@yandex.ru&gt;</Authors>
-    <Copyright>Copyright © 2020 Maxim Yudin</Copyright>
-    <RepositoryType>Git</RepositoryType>
+    <Authors>Maxim Yudin (Egiraht)</Authors>
+    <Copyright>Copyright © 2020-2021 Maxim Yudin</Copyright>
     <IsPackable>false</IsPackable>
     <NeutralLanguage>en</NeutralLanguage>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/Egiraht/VisaDeviceBuilder</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/Egiraht/VisaDeviceBuilder/tree/master/VisaDeviceBuilder.WPF.Tests</PackageProjectUrl>
   </PropertyGroup>
 
   <!-- Project dependencies. -->
@@ -27,7 +34,7 @@
 
   <!-- Project local dependencies. -->
   <ItemGroup>
-    <ProjectReference Include="..\VisaDeviceBuilder\VisaDeviceBuilder.csproj" />
-    <ProjectReference Include="..\VisaDeviceBuilder.WPF\VisaDeviceBuilder.WPF.csproj" />
+    <ProjectReference Include="../VisaDeviceBuilder/VisaDeviceBuilder.csproj" />
+    <ProjectReference Include="../VisaDeviceBuilder.WPF/VisaDeviceBuilder.WPF.csproj" />
   </ItemGroup>
 </Project>

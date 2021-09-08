@@ -1,9 +1,17 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Copyright © 2020-2021 Maxim Yudin
+
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisaDeviceBuilder", "VisaDeviceBuilder\VisaDeviceBuilder.csproj", "{FE2BCBBF-31F4-4E73-8D07-1496E5BEDEDA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common files", "Common files", "{C95F024B-7DBE-4EF9-AD7B-60962A92335F}"
 ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
+	LICENSE.txt = LICENSE.txt
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisaDeviceBuilder.Tests", "VisaDeviceBuilder.Tests\VisaDeviceBuilder.Tests.csproj", "{3009C7DE-34F0-4805-B63B-E7CBF6D32DD9}"
