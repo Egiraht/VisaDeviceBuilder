@@ -163,5 +163,20 @@ namespace VisaDeviceBuilder.Abstracts
     ///   Asynchronously closes the connection session with the device.
     /// </summary>
     Task CloseSessionAsync();
+
+    /// <summary>
+    ///   Closes the connection session with the device.
+    ///   It is similar to the <see cref="CloseSession" /> method but it also sets the <see cref="ConnectionState" />
+    ///   property to <see cref="DeviceConnectionState.DisconnectedWithError" /> after the device gets disconnected.
+    /// </summary>
+    void CloseSessionWithError();
+
+    /// <summary>
+    ///   Asynchronously closes the connection session with the device.
+    ///   It is similar to the <see cref="CloseSessionAsync" /> method but it also sets the
+    ///   <see cref="ConnectionState" /> property to <see cref="DeviceConnectionState.DisconnectedWithError" /> after
+    ///   the device gets disconnected.
+    /// </summary>
+    Task CloseSessionWithErrorAsync();
   }
 }

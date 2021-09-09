@@ -245,8 +245,11 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public Task GetDeviceConnectionTask() => ConnectionTask ?? Task.CompletedTask;
 
-    /// <inheritdoc />
-    public void BeginDisconnect()
+    /// <inheritdoc cref="BeginDisconnect" />
+    /// <param name="withError">
+    ///   The flag defining if the disconnection was caused by an error.
+    /// </param>
+    protected void BeginDisconnect(bool withError)
     {
       if (IsDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
@@ -257,14 +260,20 @@ namespace VisaDeviceBuilder
 
       IsDeviceReady = false;
       Identifier = string.Empty;
-      DisconnectionTask = DisconnectDeviceAsync();
+      DisconnectionTask = DisconnectDeviceAsync(withError);
     }
+
+    /// <inheritdoc />
+    public void BeginDisconnect() => BeginDisconnect(false);
 
     /// <summary>
     ///   Creates and asynchronously runs the device disconnection <see cref="Task" /> that handles the entire VISA
     ///   device disconnection process.
     /// </summary>
-    private async Task DisconnectDeviceAsync()
+    /// <param name="withError">
+    ///   The flag defining if the disconnection was caused by an error.
+    /// </param>
+    private async Task DisconnectDeviceAsync(bool withError)
     {
       try
       {
@@ -303,7 +312,12 @@ namespace VisaDeviceBuilder
         await Task.Run(() =>
         {
           lock (DisconnectionLock)
-            Device.CloseSession();
+          {
+            if (withError)
+              Device.CloseSessionWithError();
+            else
+              Device.CloseSession();
+          }
         });
       }
       catch (Exception e)

@@ -376,8 +376,7 @@ namespace VisaDeviceBuilder
       }
       catch (Exception e)
       {
-        CloseSession();
-        ConnectionState = DeviceConnectionState.DisconnectedWithError;
+        CloseSessionWithError();
 
         throw e is VisaDeviceException visaDeviceException
           ? visaDeviceException
@@ -482,6 +481,16 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public Task CloseSessionAsync() => Task.Run(CloseSession);
+
+    /// <inheritdoc />
+    public void CloseSessionWithError()
+    {
+      CloseSession();
+      ConnectionState = DeviceConnectionState.DisconnectedWithError;
+    }
+
+    /// <inheritdoc />
+    public Task CloseSessionWithErrorAsync() => Task.Run(CloseSessionWithError);
 
     /// <summary>
     ///   Defines the default device de-initialization callback method.
