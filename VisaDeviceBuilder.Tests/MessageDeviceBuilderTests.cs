@@ -722,18 +722,10 @@ namespace VisaDeviceBuilder.Tests
       deviceController.IsAutoUpdaterEnabled = false;
 
       // Checking the device controller's properties.
-      Assert.IsType<TestResourceManager>(deviceController.ResourceManager);
-      Assert.Equal(TestResourceManager.SerialTestDeviceResourceName, deviceController.ResourceName);
       Assert.Equal(TestConnectionTimeoutValue, deviceController.Device.ConnectionTimeout);
       Assert.Equal(hardwareInterfaces, deviceController.Device.SupportedInterfaces);
-      Assert.Contains(deviceController.AsyncProperties,
-        asyncProperty => asyncProperty.Name == TestReadOnlyAsyncPropertyName);
-      Assert.Contains(deviceController.DeviceActions, deviceAction => deviceAction.Name == TestDeviceActionName);
-      Assert.Contains(deviceController.DeviceActions,
-        deviceAction => deviceAction.Name == nameof(IMessageDevice.Reset));
       Assert.True(deviceController.CanConnect);
       Assert.False(deviceController.IsDeviceReady);
-      Assert.True(deviceController.IsMessageDevice);
 
       // Establishing a device connection and waiting for the device to get ready.
       // The device controller must call the initialization callback, get the device's identifier, and update getters
@@ -754,17 +746,12 @@ namespace VisaDeviceBuilder.Tests
       await deviceController.UpdateAsyncPropertiesAsync();
       Assert.True(isTestAsyncPropertyUpdated);
 
-      // Executing all device actions (i.e. Reset and TestDeviceActionCallback).
-      foreach (var deviceAction in deviceController.DeviceActions)
-        await deviceAction.ExecuteAsync();
-      Assert.Same(deviceController.Device, TestResetCallbackCallingDevice);
-      Assert.Same(deviceController.Device, TestDeviceActionCallingDevice);
-      Assert.Null(TestDeInitializeCallbackCallingDevice);
-
       // Testing sending a message.
       var response = await ((IMessageDevice) deviceController.Device).SendMessageAsync(TestString);
       Assert.Equal(deviceController.Device.AliasName + TestString, response);
 
+      // Testing device disconnection.
+      Assert.Null(TestDeInitializeCallbackCallingDevice);
       deviceController.BeginDisconnect();
       await deviceController.GetDeviceDisconnectionTask();
       Assert.Same(deviceController.Device, TestDeInitializeCallbackCallingDevice);

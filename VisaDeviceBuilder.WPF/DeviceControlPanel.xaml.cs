@@ -105,7 +105,7 @@ namespace VisaDeviceBuilder.WPF
     ///   The event arguments object.
     /// </param>
     private async void OnResourceNamesComboBoxDropDownOpened(object sender, EventArgs e) =>
-      await ViewModel.UpdateResourcesListAsync();
+      await ViewModel.UpdateAvailableVisaResourcesAsync();
 
     /// <summary>
     ///   Updates the data source value bound to the sender <see cref="TextBox" /> control on <i>Enter</i> key-down

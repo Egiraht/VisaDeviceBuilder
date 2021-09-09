@@ -5,16 +5,13 @@
 // Copyright © 2020-2021 Maxim Yudin
 
 using System;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
-using LocalizationResourceManager = System.Resources.ResourceManager;
 
 namespace VisaDeviceBuilder
 {
@@ -25,78 +22,14 @@ namespace VisaDeviceBuilder
   public class VisaDeviceController : IVisaDeviceController
   {
     /// <summary>
-    ///   The flag indicating if the controller is being disposed of at the moment.
-    /// </summary>
-    private bool _isDisposing;
-
-    /// <summary>
     ///   The flag indicating if the controller has been already disposed of.
     /// </summary>
-    private bool _isDisposed;
+    protected bool IsDisposed;
 
     /// <inheritdoc />
     public IVisaDevice Device { get; }
 
-    /// <inheritdoc />
-    public bool IsMessageDevice => Device is IMessageDevice;
-
-    /// <summary>
-    ///   Gets the mutable collection of asynchronous properties and corresponding metadata defined for the device.
-    /// </summary>
-    protected ObservableCollection<IAsyncProperty> AsyncPropertyEntries { get; } = new();
-
-    /// <summary>
-    ///   Gets the mutable collection of device actions and corresponding metadata defined for the device.
-    /// </summary>
-    protected ObservableCollection<IDeviceAction> DeviceActionEntries { get; } = new();
-
-    /// <inheritdoc />
-    public ReadOnlyObservableCollection<IAsyncProperty> AsyncProperties { get; }
-
-    /// <inheritdoc />
-    public ReadOnlyObservableCollection<IDeviceAction> DeviceActions { get; }
-
-    /// <summary>
-    ///   Gets the mutable collection of the available VISA resources.
-    /// </summary>
-    private ObservableCollection<string> VisaResourceEntries { get; } = new();
-
-    /// <inheritdoc />
-    public ReadOnlyObservableCollection<string> AvailableVisaResources { get; }
-
-    /// <inheritdoc />
-    public bool IsUpdatingVisaResources
-    {
-      get => _isUpdatingVisaResources;
-      private set
-      {
-        _isUpdatingVisaResources = value;
-        OnPropertyChanged();
-      }
-    }
-    private bool _isUpdatingVisaResources = false;
-
-    /// <inheritdoc />
-    public IResourceManager? ResourceManager
-    {
-      get => Device.ResourceManager;
-      set
-      {
-        Device.ResourceManager = value;
-        OnPropertyChanged();
-      }
-    }
-
-    /// <inheritdoc />
-    public string ResourceName
-    {
-      get => Device.ResourceName;
-      set
-      {
-        Device.ResourceName = value;
-        OnPropertyChanged();
-      }
-    }
+    private bool _canConnect = true;
 
     /// <inheritdoc />
     public bool CanConnect
@@ -108,7 +41,8 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
-    private bool _canConnect = true;
+
+    private bool _isDeviceReady;
 
     /// <inheritdoc />
     public bool IsDeviceReady
@@ -120,22 +54,11 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
-    private bool _isDeviceReady = false;
-
-    /// <inheritdoc />
-    public bool IsUpdatingAsyncProperties
-    {
-      get => _isUpdatingAsyncProperties;
-      private set
-      {
-        _isUpdatingAsyncProperties = value;
-        OnPropertyChanged();
-      }
-    }
-    private bool _isUpdatingAsyncProperties = false;
 
     /// <inheritdoc />
     public IAutoUpdater AutoUpdater { get; }
+
+    private bool _isAutoUpdaterEnabled = true;
 
     /// <inheritdoc />
     public bool IsAutoUpdaterEnabled
@@ -155,7 +78,6 @@ namespace VisaDeviceBuilder
           AutoUpdater.StopAsync();
       }
     }
-    private bool _isAutoUpdaterEnabled = true;
 
     /// <inheritdoc />
     public int AutoUpdaterDelay
@@ -168,17 +90,7 @@ namespace VisaDeviceBuilder
       }
     }
 
-    /// <inheritdoc />
-    public bool IsDisconnectionRequested
-    {
-      get => _isDisconnectionRequested;
-      private set
-      {
-        _isDisconnectionRequested = value;
-        OnPropertyChanged();
-      }
-    }
-    private bool _isDisconnectionRequested = false;
+    private string _identifier = string.Empty;
 
     /// <inheritdoc />
     public string Identifier
@@ -190,20 +102,18 @@ namespace VisaDeviceBuilder
         OnPropertyChanged();
       }
     }
-    private string _identifier = string.Empty;
 
-    /// <inheritdoc />
-    public LocalizationResourceManager? LocalizationResourceManager
-    {
-      get => _localizationResourceManager;
-      set
-      {
-        _localizationResourceManager = value;
-        OnPropertyChanged();
-        RebuildCollections();
-      }
-    }
-    private LocalizationResourceManager? _localizationResourceManager;
+    /// <summary>
+    ///   Checks if getters of the device's asynchronous properties are being updated at the moment after calling the
+    ///   <see cref="UpdateAsyncPropertiesAsync" /> method.
+    ///   This property is not influenced by the <see cref="AutoUpdater" />.
+    /// </summary>
+    protected bool IsUpdatingAsyncProperties { get; private set; }
+
+    /// <summary>
+    ///   Checks if the device disconnection has been requested using the <see cref="BeginDisconnect" /> method.
+    /// </summary>
+    protected bool IsDisconnectionRequested { get; private set; }
 
     /// <summary>
     ///   Gets or sets the VISA device connection process <see cref="Task" />.
@@ -247,72 +157,15 @@ namespace VisaDeviceBuilder
     {
       Device = device;
       AutoUpdater = new AutoUpdater(Device);
-      AvailableVisaResources = new(VisaResourceEntries);
-      AsyncProperties = new(AsyncPropertyEntries);
-      DeviceActions = new(DeviceActionEntries);
 
       DeviceActionExecutor.Exception += OnException;
       AutoUpdater.AutoUpdateException += OnException;
-
-      RebuildCollections();
-    }
-
-    /// <summary>
-    ///   Rebuilds the collections of asynchronous properties and device actions and localizes the names using the
-    ///   specified <see cref="LocalizationResourceManager" />.
-    ///   If <see cref="LocalizationResourceManager" /> is not provided, the original names are used.
-    /// </summary>
-    private void RebuildCollections()
-    {
-      AsyncPropertyEntries.Clear();
-      DeviceActionEntries.Clear();
-
-      foreach (var asyncProperty in Device.AsyncProperties)
-      {
-        asyncProperty.Name = LocalizationResourceManager?.GetString(asyncProperty.Name) ?? asyncProperty.Name;
-        AsyncPropertyEntries.Add(asyncProperty);
-      }
-
-      foreach (var deviceAction in Device.DeviceActions)
-      {
-        deviceAction.Name = LocalizationResourceManager?.GetString(deviceAction.Name) ?? deviceAction.Name;
-        DeviceActionEntries.Add(deviceAction);
-      }
-    }
-
-    /// <inheritdoc />
-    public virtual async Task UpdateResourcesListAsync()
-    {
-      if (_isDisposed)
-        throw new ObjectDisposedException(nameof(VisaDeviceController));
-
-      if (IsUpdatingVisaResources)
-        return;
-      IsUpdatingVisaResources = true;
-
-      try
-      {
-        var resources = ResourceManager == null
-          ? await VisaResourceLocator.LocateResourceNamesAsync()
-          : await VisaResourceLocator.LocateResourceNamesAsync(ResourceManager);
-        VisaResourceEntries.Clear();
-        foreach (var resource in resources)
-          VisaResourceEntries.Add(resource);
-      }
-      catch (Exception e)
-      {
-        OnException(e);
-      }
-      finally
-      {
-        IsUpdatingVisaResources = false;
-      }
     }
 
     /// <inheritdoc />
     public void BeginConnect()
     {
-      if (_isDisposed)
+      if (IsDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
 
       if (!CanConnect)
@@ -395,7 +248,7 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public void BeginDisconnect()
     {
-      if (_isDisposed)
+      if (IsDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
 
       if (IsDisconnectionRequested || ConnectionTask == null || DisconnectionTokenSource == null)
@@ -433,10 +286,10 @@ namespace VisaDeviceBuilder
         await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
 
         // Waiting for all asynchronous properties processing to complete.
-        await Task.WhenAll(AsyncProperties.SelectMany(property => new[]
+        await Task.WhenAll(Device.AsyncProperties.SelectMany(property => new[]
         {
           property.GetGetterUpdatingTask(),
-          property.GetGetterUpdatingTask()
+          property.GetSetterProcessingTask()
         }));
 
         // Unsubscribing from exceptions of asynchronous properties.
@@ -479,7 +332,7 @@ namespace VisaDeviceBuilder
     /// </exception>
     public virtual async Task UpdateAsyncPropertiesAsync()
     {
-      if (_isDisposed)
+      if (IsDisposed)
         throw new ObjectDisposedException(nameof(VisaDeviceController));
 
       if (IsUpdatingAsyncProperties)
@@ -530,12 +383,12 @@ namespace VisaDeviceBuilder
     /// <summary>
     ///   Invokes the <see cref="Connected" /> event.
     /// </summary>
-    protected virtual void OnConnected() => Connected?.Invoke(this, new EventArgs());
+    protected virtual void OnConnected() => Connected?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     ///   Invokes the <see cref="Disconnected" /> event.
     /// </summary>
-    protected virtual void OnDisconnected() => Disconnected?.Invoke(this, new EventArgs());
+    protected virtual void OnDisconnected() => Disconnected?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
     ///   Invokes the <see cref="Exception" /> event.
@@ -562,9 +415,8 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
-      if (_isDisposing || _isDisposed)
+      if (IsDisposed)
         return;
-      _isDisposing = true;
 
       try
       {
@@ -580,7 +432,7 @@ namespace VisaDeviceBuilder
       {
         DeviceActionExecutor.Exception -= OnException;
         GC.SuppressFinalize(this);
-        _isDisposed = true;
+        IsDisposed = true;
       }
     }
 

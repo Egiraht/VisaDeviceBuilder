@@ -688,17 +688,10 @@ namespace VisaDeviceBuilder.Tests
       deviceController.IsAutoUpdaterEnabled = false;
 
       // Checking the device controller's properties.
-      Assert.IsType<TestResourceManager>(deviceController.ResourceManager);
-      Assert.Equal(TestResourceManager.CustomTestDeviceResourceName, deviceController.ResourceName);
       Assert.Equal(TestConnectionTimeoutValue, deviceController.Device.ConnectionTimeout);
       Assert.Equal(hardwareInterfaces, deviceController.Device.SupportedInterfaces);
-      Assert.Contains(deviceController.AsyncProperties,
-        asyncProperty => asyncProperty.Name == TestReadOnlyAsyncPropertyName);
-      Assert.Contains(deviceController.DeviceActions, deviceAction => deviceAction.Name == TestDeviceActionName);
-      Assert.Contains(deviceController.DeviceActions, deviceAction => deviceAction.Name == nameof(IVisaDevice.Reset));
       Assert.True(deviceController.CanConnect);
       Assert.False(deviceController.IsDeviceReady);
-      Assert.False(deviceController.IsMessageDevice);
 
       // Establishing a device connection and waiting for the device to get ready.
       // The device controller must call the initialization callback, get the device's identifier, and update getters
@@ -719,13 +712,8 @@ namespace VisaDeviceBuilder.Tests
       await deviceController.UpdateAsyncPropertiesAsync();
       Assert.True(isTestAsyncPropertyUpdated);
 
-      // Executing all device actions (i.e. Reset and TestDeviceActionCallback).
-      foreach (var deviceAction in deviceController.DeviceActions)
-        await deviceAction.ExecuteAsync();
-      Assert.Same(deviceController.Device, TestResetCallbackCallingDevice);
-      Assert.Same(deviceController.Device, TestDeviceActionCallingDevice);
+      // Testing device disconnection.
       Assert.Null(TestDeInitializeCallbackCallingDevice);
-
       deviceController.BeginDisconnect();
       await deviceController.GetDeviceDisconnectionTask();
       Assert.Same(deviceController.Device, TestDeInitializeCallbackCallingDevice);
