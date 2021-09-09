@@ -5,6 +5,7 @@
 // Copyright © 2020-2021 Maxim Yudin
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
@@ -26,20 +27,18 @@ namespace VisaDeviceBuilder
   ///     necessary.
   ///   </para>
   /// </remarks>
-  public class VisaDeviceBuilder : IVisaDeviceBuilder<IVisaDevice>
+  public class VisaDeviceBuilder : IVisaDeviceBuilder<IVisaDevice>, IDisposable
   {
     /// <summary>
     ///   The base buildable VISA device instance that stores the builder configuration and is used for building of new
     ///   VISA device instances by cloning.
     /// </summary>
-    private readonly IBuildableVisaDevice _device = new VisaDevice();
+    private readonly IBuildableVisaDevice _device;
 
     /// <summary>
     ///   Initializes a new VISA device builder instance.
     /// </summary>
-    public VisaDeviceBuilder()
-    {
-    }
+    public VisaDeviceBuilder() => _device = new VisaDevice();
 
     /// <summary>
     ///   Initializes a new VISA device builder instance with building configuration copied from a compatible buildable
@@ -542,5 +541,16 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public IVisaDeviceController BuildDeviceController() => new VisaDeviceController(BuildDevice());
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+      _device.Dispose();
+      GC.SuppressFinalize(this);
+    }
+
+    /// <inheritdoc />
+    [ExcludeFromCodeCoverage]
+    ~VisaDeviceBuilder() => Dispose();
   }
 }
