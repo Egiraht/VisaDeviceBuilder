@@ -232,6 +232,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsDeviceReady);
       await controller.GetDeviceDisconnectionTask();
       Assert.True(controller.CanConnect);
+      Assert.Equal(DeviceConnectionState.DisconnectedWithError, device.ConnectionState);
 
       // Testing possible exceptions thrown when getting the initial values of the device's asynchronous properties.
       // The device must be automatically disconnected at this stage.
@@ -243,6 +244,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(controller.IsDeviceReady);
       await controller.GetDeviceDisconnectionTask();
       Assert.True(controller.CanConnect);
+      Assert.Equal(DeviceConnectionState.DisconnectedWithError, device.ConnectionState);
 
       // Testing possible exceptions during auto-updater cycles after the device is ready.
       // The device must remain connected at this stage.
@@ -255,6 +257,12 @@ namespace VisaDeviceBuilder.Tests
       Assert.True(controller.IsDeviceReady);
       await controller.GetDeviceDisconnectionTask(); // Should do nothing when no disconnection is intended.
       Assert.False(controller.CanConnect);
+      Assert.Equal(DeviceConnectionState.Connected, device.ConnectionState);
+
+      // Testing normal disconnection after the device is ready.
+      controller.BeginDisconnect();
+      await controller.GetDeviceDisconnectionTask();
+      Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
     }
 
     /// <summary>

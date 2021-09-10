@@ -237,7 +237,7 @@ namespace VisaDeviceBuilder
         }
         finally
         {
-          BeginDisconnect();
+          BeginDisconnect(true);
         }
       }
     }
