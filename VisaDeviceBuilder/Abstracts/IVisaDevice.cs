@@ -14,8 +14,11 @@ namespace VisaDeviceBuilder.Abstracts
   /// <summary>
   ///   The interface describing a connectable VISA device.
   /// </summary>
-  public interface IVisaDevice : ICloneable, IDisposable, IAsyncDisposable
+  public interface IVisaDevice : IVisaDeviceAccessor, ICloneable, IDisposable, IAsyncDisposable
   {
+    /// <inheritdoc />
+    IVisaDevice IVisaDeviceAccessor.Device => this;
+
     /// <summary>
     ///   Gets or sets a custom VISA resource manager for VISA session management.
     ///   If set to <c>null</c>, the <see cref="GlobalResourceManager" /> static class will be used.

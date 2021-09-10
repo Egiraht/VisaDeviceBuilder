@@ -144,7 +144,7 @@ namespace VisaDeviceBuilder.Tests
     {
       // Default VisaDevice instances have only the Reset device action.
       await using var visaDevice = new VisaDevice();
-      Assert.Contains(visaDevice.ResetAction, visaDevice.DeviceActions);
+      Assert.Contains(visaDevice.ResetDeviceAction, visaDevice.DeviceActions);
 
       // TestMessageDevice must contain the Reset (as inherited from VisaDevice) and TestDeviceAction device actions.
       using var resourceManager = new TestResourceManager();
@@ -153,7 +153,7 @@ namespace VisaDeviceBuilder.Tests
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.SerialTestDeviceResourceName
       };
-      Assert.Contains(testDevice.ResetAction, testDevice.DeviceActions);
+      Assert.Contains(testDevice.ResetDeviceAction, testDevice.DeviceActions);
       Assert.Contains(testDevice.TestDeviceAction, testDevice.DeviceActions);
 
       // Testing the device actions.
@@ -161,7 +161,7 @@ namespace VisaDeviceBuilder.Tests
       Assert.False(testDevice.IsResetCalled);
       Assert.False(testDevice.IsTestDeviceActionCalled);
 
-      await testDevice.ResetAction.ExecuteAsync();
+      await testDevice.ResetDeviceAction.ExecuteAsync();
       Assert.True(testDevice.IsResetCalled);
 
       await testDevice.TestDeviceAction.ExecuteAsync();

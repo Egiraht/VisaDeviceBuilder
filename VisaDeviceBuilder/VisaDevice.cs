@@ -27,6 +27,11 @@ namespace VisaDeviceBuilder
     public const int DefaultConnectionTimeout = 1000;
 
     /// <summary>
+    ///   Defines the name for the <see cref="ResetDeviceAction" />.
+    /// </summary>
+    public const string ResetDeviceActionName = nameof(Reset);
+
+    /// <summary>
     ///   Defines the array of all supported hardware interface types.
     /// </summary>
     public static readonly HardwareInterfaceType[] HardwareInterfaceTypes =
@@ -111,44 +116,44 @@ namespace VisaDeviceBuilder
     protected virtual HardwareInterfaceType[] DefaultSupportedInterfaces => HardwareInterfaceTypes;
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomSupportedInterfaces" />
-    protected HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
+    private HardwareInterfaceType[]? CustomSupportedInterfaces { get; set; }
 
     /// <inheritdoc />
     public HardwareInterfaceType[] SupportedInterfaces => CustomSupportedInterfaces ?? DefaultSupportedInterfaces;
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomAsyncProperties" />
-    protected ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; } = new();
+    private ObservableCollection<IAsyncProperty> CustomAsyncProperties { get; } = new();
 
     /// <summary>
     ///   Gets the enumeration of asynchronous properties declared for the current VISA device instance.
     /// </summary>
-    protected IEnumerable<IAsyncProperty> DeclaredAsyncProperties { get; }
+    private IEnumerable<IAsyncProperty> DeclaredAsyncProperties { get; }
 
     /// <inheritdoc />
     public virtual IEnumerable<IAsyncProperty> AsyncProperties => DeclaredAsyncProperties.Concat(CustomAsyncProperties);
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomDeviceActions" />
-    protected ObservableCollection<IDeviceAction> CustomDeviceActions { get; } = new();
+    private ObservableCollection<IDeviceAction> CustomDeviceActions { get; } = new();
 
     /// <summary>
     ///   Gets the enumeration of device actions declared for the current VISA device instance.
     /// </summary>
-    protected IEnumerable<IDeviceAction> DeclaredDeviceActions { get; }
+    private IEnumerable<IDeviceAction> DeclaredDeviceActions { get; }
 
     /// <inheritdoc />
     public virtual IEnumerable<IDeviceAction> DeviceActions => DeclaredDeviceActions.Concat(CustomDeviceActions);
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomInitializeCallback" />
-    protected Action<IVisaDevice?>? CustomInitializeCallback { get; set; }
+    private Action<IVisaDevice?>? CustomInitializeCallback { get; set; }
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomDeInitializeCallback" />
-    protected Action<IVisaDevice?>? CustomDeInitializeCallback { get; set; }
+    private Action<IVisaDevice?>? CustomDeInitializeCallback { get; set; }
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomGetIdentifierCallback" />
-    protected Func<IVisaDevice?, string>? CustomGetIdentifierCallback { get; set; }
+    private Func<IVisaDevice?, string>? CustomGetIdentifierCallback { get; set; }
 
     /// <inheritdoc cref="IBuildableVisaDevice.CustomResetCallback" />
-    protected Action<IVisaDevice?>? CustomResetCallback { get; set; }
+    private Action<IVisaDevice?>? CustomResetCallback { get; set; }
 
     /// <inheritdoc />
     ObservableCollection<IAsyncProperty> IBuildableVisaDevice.CustomAsyncProperties =>
@@ -219,11 +224,12 @@ namespace VisaDeviceBuilder
     protected object SessionLock { get; } = new();
 
     /// <summary>
-    ///   Gets the standard "Reset" device action that calls the <see cref="Reset" /> method.
+    ///   Gets the standard reset device action that calls the <see cref="Reset" /> method.
+    ///   Its name is defined by the <see cref="ResetDeviceActionName" /> constant.
     /// </summary>
-    public IDeviceAction ResetAction => _resetAction ??= new DeviceAction(visaDevice => visaDevice?.Reset())
+    public IDeviceAction ResetDeviceAction => _resetAction ??= new DeviceAction(visaDevice => visaDevice?.Reset())
     {
-      Name = nameof(Reset),
+      Name = ResetDeviceActionName,
       TargetDevice = this
     };
     private IDeviceAction? _resetAction;
@@ -287,7 +293,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     private IEnumerable<IAsyncProperty> CollectDeclaredAsyncProperties() => GetType()
       .GetProperties()
-      .Where(property => typeof(IAsyncProperty).IsAssignableFrom(property.PropertyType) && property.CanRead)
+      .Where(property => property.PropertyType.IsAssignableTo(typeof(IAsyncProperty)) && property.CanRead)
       .Select(property =>
       {
         var result = (IAsyncProperty) property.GetValue(this)!;
@@ -305,7 +311,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     private IEnumerable<IDeviceAction> CollectDeclaredDeviceActions() => GetType()
       .GetProperties()
-      .Where(property => typeof(IDeviceAction).IsAssignableFrom(property.PropertyType) && property.CanRead)
+      .Where(property => property.PropertyType.IsAssignableTo(typeof(IDeviceAction)) && property.CanRead)
       .Select(property =>
       {
         var result = (IDeviceAction) property.GetValue(this)!;

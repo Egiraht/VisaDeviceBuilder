@@ -14,13 +14,8 @@ namespace VisaDeviceBuilder.Abstracts
   /// <summary>
   ///   The common interface for VISA device controller classes.
   /// </summary>
-  public interface IVisaDeviceController : INotifyPropertyChanged, IDisposable, IAsyncDisposable
+  public interface IVisaDeviceController : IVisaDeviceAccessor, INotifyPropertyChanged, IDisposable, IAsyncDisposable
   {
-    /// <summary>
-    ///   Gets the VISA device object this controller instance is created for.
-    /// </summary>
-    IVisaDevice Device { get; }
-
     /// <summary>
     ///   Checks if the device can be connected at the moment.
     /// </summary>
