@@ -16,7 +16,7 @@ namespace VisaDeviceBuilder.Abstracts
   public interface IDeviceAction : ICloneable
   {
     /// <summary>
-    ///   Gets or sets the optional user-readable name of the device action.
+    ///   Gets or sets the name of the device action.
     /// </summary>
     string Name { get; set; }
 

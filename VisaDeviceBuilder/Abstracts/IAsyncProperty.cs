@@ -16,7 +16,7 @@ namespace VisaDeviceBuilder.Abstracts
   public interface IAsyncProperty : ICloneable
   {
     /// <summary>
-    ///   Gets or sets the optional user-readable name of the asynchronous property.
+    ///   Gets or sets the name of the asynchronous property.
     /// </summary>
     string Name { get; set; }
 
