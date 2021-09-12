@@ -277,8 +277,8 @@ namespace VisaDeviceBuilder.WPF
       try
       {
         var resources = ResourceManager == null
-          ? await VisaResourceLocator.LocateResourceNamesAsync()
-          : await VisaResourceLocator.LocateResourceNamesAsync(ResourceManager);
+          ? await VisaResourceLocator.FindVisaResourceNamesAsync()
+          : await VisaResourceLocator.FindVisaResourceNamesAsync(ResourceManager);
         AvailableVisaResourceEntries.Clear();
         foreach (var resource in resources)
           AvailableVisaResourceEntries.Add(resource);

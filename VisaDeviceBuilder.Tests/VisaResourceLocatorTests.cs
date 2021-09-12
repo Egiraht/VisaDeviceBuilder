@@ -23,13 +23,33 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task TestResourceManagerDiscoveryTest()
     {
-      var resources = (await VisaResourceLocator.LocateResourceNamesAsync<TestResourceManager>()).ToArray();
-      Assert.Contains(TestResourceManager.CustomTestDeviceResourceName, resources);
-      Assert.Contains(TestResourceManager.CustomTestDeviceAliasName, resources);
-      Assert.Contains(TestResourceManager.SerialTestDeviceResourceName, resources);
-      Assert.Contains(TestResourceManager.SerialTestDeviceAliasName, resources);
-      Assert.Contains(TestResourceManager.VxiTestDeviceResourceName, resources);
-      Assert.Contains(TestResourceManager.VxiTestDeviceAliasName, resources);
+      // All test VISA resource names and their alias names provided by the TestResourceManager class must be found.
+      var resources = (await VisaResourceLocator.FindVisaResourceNamesAsync<TestResourceManager>()).ToArray();
+      Assert.Collection(resources,
+        visaResourceName => Assert.True(visaResourceName is
+          {
+            CanonicalName: TestResourceManager.CustomTestDeviceResourceName,
+            AliasName: TestResourceManager.CustomTestDeviceAliasName
+          } name
+          && name == TestResourceManager.CustomTestDeviceResourceName
+          && name.ToString().Contains(TestResourceManager.CustomTestDeviceAliasName)
+          && name.ToString().Contains(TestResourceManager.CustomTestDeviceResourceName)),
+        visaResourceName => Assert.True(visaResourceName is
+          {
+            CanonicalName: TestResourceManager.SerialTestDeviceResourceName,
+            AliasName: TestResourceManager.SerialTestDeviceAliasName
+          } name
+          && name == TestResourceManager.SerialTestDeviceResourceName
+          && name.ToString().Contains(TestResourceManager.SerialTestDeviceAliasName)
+          && name.ToString().Contains(TestResourceManager.SerialTestDeviceResourceName)),
+        visaResourceName => Assert.True(visaResourceName is
+          {
+            CanonicalName: TestResourceManager.VxiTestDeviceResourceName,
+            AliasName: TestResourceManager.VxiTestDeviceAliasName
+          } name
+          && name == TestResourceManager.VxiTestDeviceResourceName
+          && name.ToString().Contains(TestResourceManager.VxiTestDeviceAliasName)
+          && name.ToString().Contains(TestResourceManager.VxiTestDeviceResourceName)));
     }
 
     /// <summary>
@@ -39,7 +59,7 @@ namespace VisaDeviceBuilder.Tests
     public async Task NoResourcesTest()
     {
       // When no matching resources are found, the method must return an empty enumeration without any exceptions.
-      Assert.Empty(await VisaResourceLocator.LocateResourceNamesAsync<TestResourceManager>(
+      Assert.Empty(await VisaResourceLocator.FindVisaResourceNamesAsync<TestResourceManager>(
         TestResourceManager.NoResourcesPattern));
     }
 
@@ -49,6 +69,6 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task InvalidResourceManagerTypeTest() =>
       await Assert.ThrowsAsync<InvalidOperationException>(() =>
-        VisaResourceLocator.LocateResourceNamesAsync(typeof(TestMessageDevice)));
+        VisaResourceLocator.FindVisaResourceNamesAsync(typeof(TestMessageDevice)));
   }
 }

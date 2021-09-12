@@ -52,6 +52,8 @@ namespace VisaDeviceBuilder
     /// </summary>
     private bool _isClone;
 
+    private IResourceManager? _resourceManager;
+
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
     ///   The resource manager cannot be modified when a session is opened.
@@ -68,7 +70,8 @@ namespace VisaDeviceBuilder
         _resourceManager = value;
       }
     }
-    private IResourceManager? _resourceManager;
+
+    private string _resourceName = string.Empty;
 
     /// <inheritdoc />
     /// <exception cref="VisaDeviceException">
@@ -86,7 +89,8 @@ namespace VisaDeviceBuilder
         _resourceName = value;
       }
     }
-    private string _resourceName = string.Empty;
+
+    private int _connectionTimeout = DefaultConnectionTimeout;
 
     /// <inheritdoc />
     public int ConnectionTimeout
@@ -100,7 +104,6 @@ namespace VisaDeviceBuilder
         _connectionTimeout = value;
       }
     }
-    private int _connectionTimeout = DefaultConnectionTimeout;
 
     /// <inheritdoc />
     public ParseResult? ResourceNameInfo => GetResourceNameInfo();
@@ -198,6 +201,8 @@ namespace VisaDeviceBuilder
       set => CustomResetCallback = value;
     }
 
+    private DeviceConnectionState _connectionState = DeviceConnectionState.Disconnected;
+
     /// <inheritdoc />
     public DeviceConnectionState ConnectionState
     {
@@ -208,7 +213,6 @@ namespace VisaDeviceBuilder
         OnConnectionStateChanged(value);
       }
     }
-    private DeviceConnectionState _connectionState = DeviceConnectionState.Disconnected;
 
     /// <inheritdoc />
     public IVisaSession? Session { get; private set; }
@@ -223,6 +227,8 @@ namespace VisaDeviceBuilder
     /// </summary>
     protected object SessionLock { get; } = new();
 
+    private IDeviceAction? _resetAction;
+
     /// <summary>
     ///   Gets the standard reset device action that calls the <see cref="Reset" /> method.
     ///   Its name is defined by the <see cref="ResetDeviceActionName" /> constant.
@@ -232,7 +238,6 @@ namespace VisaDeviceBuilder
       Name = ResetDeviceActionName,
       TargetDevice = this
     };
-    private IDeviceAction? _resetAction;
 
     /// <inheritdoc />
     public event EventHandler<DeviceConnectionState>? ConnectionStateChanged;
