@@ -29,12 +29,12 @@ namespace VisaDeviceBuilder.Abstracts
     bool IsRunning { get; }
 
     /// <summary>
-    ///   The event fired when every single loop cycle elapses.
+    ///   The event that is called when every single loop cycle elapses.
     /// </summary>
     event EventHandler? AutoUpdateCycle;
 
     /// <summary>
-    ///   The event fired when an exception is thrown from within the auto-update loop.
+    ///   The event that is called when an exception is thrown from within the auto-update loop.
     /// </summary>
     /// <remarks>
     ///   The thrown exception does not stop the loop, so the action will continue get periodically called until it

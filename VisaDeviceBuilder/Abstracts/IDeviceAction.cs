@@ -36,6 +36,23 @@ namespace VisaDeviceBuilder.Abstracts
     Action<IVisaDevice?> DeviceActionDelegate { get; }
 
     /// <summary>
+    ///   Gets the optional delegate that checks if the device action can be executed at the moment.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning. It also must return a boolean value
+    ///   determining if the device action can be executed.
+    /// </summary>
+    /// <remarks>
+    ///   If the device action is already being executed at the moment, it cannot be executed repeatedly until the
+    ///   previous execution finishes, no matter which value this delegate returns.
+    /// </remarks>
+    Func<IVisaDevice?, bool> CanExecuteDelegate { get; }
+
+    /// <summary>
+    ///   Checks if the current device action is being executed at the moment.
+    /// </summary>
+    bool IsExecuting { get; }
+
+    /// <summary>
     ///   Checks if the current device action can be executed at the moment.
     /// </summary>
     bool CanExecute { get; }
@@ -52,9 +69,18 @@ namespace VisaDeviceBuilder.Abstracts
     event EventHandler? ExecutionCompleted;
 
     /// <summary>
-    ///   Asynchronously executes the current device action with its state being tracked by the
-    ///   <see cref="DeviceActionExecutor" /> static class.
+    ///   Asynchronously executes the device action.
     /// </summary>
     Task ExecuteAsync();
+
+    /// <summary>
+    ///   Gets the <see cref="Task" /> object wrapping the asynchronous device action execution process.
+    ///   This object can be awaited until execution is finished.
+    /// </summary>
+    /// <returns>
+    ///   The running device action execution <see cref="Task" /> object or the <see cref="Task.CompletedTask" /> object
+    ///   if the device action is not being executed at the moment.
+    /// </returns>
+    Task GetExecutionTask();
   }
 }

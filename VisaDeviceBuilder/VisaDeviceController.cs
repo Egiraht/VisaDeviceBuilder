@@ -157,8 +157,6 @@ namespace VisaDeviceBuilder
     {
       Device = device;
       AutoUpdater = new AutoUpdater(Device);
-
-      DeviceActionExecutor.Exception += OnException;
       AutoUpdater.AutoUpdateException += OnException;
     }
 
@@ -216,6 +214,10 @@ namespace VisaDeviceBuilder
           asyncProperty.GetterException += OnException;
           asyncProperty.SetterException += OnException;
         }
+
+        // Subscribing on exceptions of device actions using the OnException handler that does not cause disconnection.
+        foreach (var deviceAction in Device.DeviceActions)
+          deviceAction.Exception += OnException;
 
         // Starting the auto-updater.
         cancellationToken.ThrowIfCancellationRequested();
@@ -292,7 +294,11 @@ namespace VisaDeviceBuilder
         await AutoUpdater.StopAsync();
 
         // Waiting for the device actions to complete.
-        await DeviceActionExecutor.WaitForAllActionsToCompleteAsync();
+        await Task.WhenAll(Device.DeviceActions.Select(deviceAction => deviceAction.GetExecutionTask()));
+
+        // Unsubscribing from exceptions of device actions.
+        foreach (var deviceAction in Device.DeviceActions)
+          deviceAction.Exception -= OnException;
 
         // Waiting for all asynchronous properties processing to complete.
         await Task.WhenAll(Device.AsyncProperties.SelectMany(property => new[]
@@ -444,7 +450,6 @@ namespace VisaDeviceBuilder
       }
       finally
       {
-        DeviceActionExecutor.Exception -= OnException;
         GC.SuppressFinalize(this);
         IsDisposed = true;
       }

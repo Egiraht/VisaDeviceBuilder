@@ -54,7 +54,7 @@ namespace VisaDeviceBuilder.WPF.Tests
       DeviceActionCommand.Instance.Execute(deviceAction); // Repeated call should pass OK.
       Assert.False(DeviceActionCommand.Instance.CanExecute(deviceAction));
 
-      await DeviceActionExecutor.GetDeviceActionTask(deviceAction);
+      await deviceAction.GetExecutionTask();
       Assert.True(DeviceActionCommand.Instance.CanExecute(deviceAction));
       Assert.Equal(TestString, value);
     }

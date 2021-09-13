@@ -269,29 +269,29 @@ namespace VisaDeviceBuilder
     public Task GetSetterProcessingTask() => SetterTask ?? Task.CompletedTask;
 
     /// <summary>
-    ///   Calls the <see cref="GetterUpdated" /> event.
+    ///   Invokes the <see cref="GetterUpdated" /> event.
     /// </summary>
     private void OnGetterUpdated() => GetterUpdated?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    ///   Calls the <see cref="SetterCompleted" /> event.
+    ///   Invokes the <see cref="SetterCompleted" /> event.
     /// </summary>
     private void OnSetterCompleted() => SetterCompleted?.Invoke(this, EventArgs.Empty);
 
     /// <summary>
-    ///   Calls the <see cref="GetterException" /> event.
+    ///   Invokes the <see cref="GetterException" /> event.
     /// </summary>
     /// <param name="exception">
-    ///   The exception that caused the getter failure.
+    ///   The exception instance that has caused the getter failure.
     /// </param>
     private void OnGetterException(Exception exception) =>
       GetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));
 
     /// <summary>
-    ///   Calls the <see cref="SetterException" /> event.
+    ///   Invokes the <see cref="SetterException" /> event.
     /// </summary>
     /// <param name="exception">
-    ///   The exception that caused the setter failure.
+    ///   The exception instance that has caused the setter failure.
     /// </param>
     private void OnSetterException(Exception exception) =>
       SetterException?.Invoke(this, new ThreadExceptionEventArgs(exception));

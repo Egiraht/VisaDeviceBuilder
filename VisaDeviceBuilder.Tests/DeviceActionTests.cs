@@ -67,17 +67,49 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestName, deviceAction.Name);
       Assert.Same(TestVisaDevice, deviceAction.TargetDevice);
       Assert.Equal(TestDeviceActionDelegate, deviceAction.DeviceActionDelegate);
+      // The CanExecuteDelegate must always return true by default.
+      Assert.True(deviceAction.CanExecuteDelegate.Invoke(null));
       Assert.True(deviceAction.CanExecute);
+      Assert.False(deviceAction.IsExecuting);
       Assert.Empty(TestValues);
 
       var executionTask = deviceAction.ExecuteAsync();
-      _ = deviceAction.ExecuteAsync(); // Repeated call should pass OK.
+      _ = deviceAction.ExecuteAsync(); // Simultaneous repeated call should pass OK.
       Assert.False(deviceAction.CanExecute);
+      Assert.True(deviceAction.IsExecuting);
       Assert.Empty(TestValues);
 
       await executionTask;
       Assert.True(deviceAction.CanExecute);
+      Assert.False(deviceAction.IsExecuting);
       Assert.Equal(TestString, TestValues[TestVisaDevice]);
+    }
+
+    /// <summary>
+    ///   Testing a custom CanExecute delegate.
+    /// </summary>
+    [Fact]
+    public async Task CustomCanExecuteTest()
+    {
+      // This device action should never be ready for execution.
+      bool CanExecuteDelegate(IVisaDevice? _) => false;
+      var deviceAction = new DeviceAction(TestDeviceActionDelegate, CanExecuteDelegate);
+      Assert.Equal(TestDeviceActionDelegate, deviceAction.DeviceActionDelegate);
+      Assert.Equal(CanExecuteDelegate, deviceAction.CanExecuteDelegate);
+      Assert.False(deviceAction.CanExecuteDelegate.Invoke(null));
+      Assert.False(deviceAction.CanExecute);
+      Assert.False(deviceAction.IsExecuting);
+
+      var executionTask = deviceAction.ExecuteAsync();
+      _ = deviceAction.ExecuteAsync(); // Simultaneous repeated call should pass OK.
+      Assert.False(deviceAction.CanExecute);
+      Assert.False(deviceAction.IsExecuting);
+      Assert.Empty(TestValues);
+
+      await executionTask;
+      Assert.False(deviceAction.CanExecute);
+      Assert.False(deviceAction.IsExecuting);
+      Assert.Empty(TestValues);
     }
 
     /// <summary>

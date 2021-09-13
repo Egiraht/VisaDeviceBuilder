@@ -14,8 +14,6 @@ namespace VisaDeviceBuilder
 {
   /// <summary>
   ///   The class representing an action that can be asynchronously executed by a VISA device.
-  ///   The special <see cref="DeviceActionExecutor" /> static class can help to track execution states of device
-  ///   actions.
   /// </summary>
   public class DeviceAction : IDeviceAction
   {
@@ -29,78 +27,103 @@ namespace VisaDeviceBuilder
     public virtual Action<IVisaDevice?> DeviceActionDelegate { get; }
 
     /// <inheritdoc />
-    public bool CanExecute => DeviceActionExecutor.CanExecute(this);
+    public Func<IVisaDevice?, bool> CanExecuteDelegate { get; } = _ => true;
+
+    /// <inheritdoc />
+    public bool IsExecuting => ExecutionTask != null;
+
+    /// <inheritdoc />
+    public bool CanExecute => !IsExecuting && CanExecuteDelegate.Invoke(TargetDevice);
 
     /// <summary>
-    ///   Creates a new device action instance.
+    ///   Gets or sets the <see cref="Task" /> of the current device action execution process.
+    /// </summary>
+    private Task? ExecutionTask { get; set; }
+
+    /// <summary>
+    ///   Gets the shared synchronization lock object.
+    /// </summary>
+    private object SynchronizationLock { get; } = new();
+
+    /// <summary>
+    ///   Creates a new device action instance using the provided device action delegate.
     /// </summary>
     /// <param name="deviceActionDelegate">
     ///   The action delegate representing a device action.
     ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
     ///   parameter, or just reject it if it is not required for functioning.
     /// </param>
-    public DeviceAction(Action<IVisaDevice?> deviceActionDelegate)
-    {
-      DeviceActionDelegate = deviceActionDelegate;
+    public DeviceAction(Action<IVisaDevice?> deviceActionDelegate) => DeviceActionDelegate = deviceActionDelegate;
 
-      DeviceActionExecutor.Exception += OnException;
-      DeviceActionExecutor.DeviceActionCompleted += OnExecutionCompleted;
-    }
+    /// <summary>
+    ///   Creates a new device action instance using the provided device action delegate and the custom delegate
+    ///   determining if it can be executed at the moment.
+    /// </summary>
+    /// <param name="deviceActionDelegate">
+    ///   The delegate representing a device action.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning.
+    /// </param>
+    /// <param name="canExecuteDelegate">
+    ///   The custom delegate that checks if the device action can be executed at the moment.
+    ///   The delegate may accept a nullable VISA device instance from the <see cref="TargetDevice" /> property as a
+    ///   parameter, or just reject it if it is not required for functioning. It also must return a boolean value
+    ///   determining if the device action can be executed.
+    /// </param>
+    public DeviceAction(Action<IVisaDevice?> deviceActionDelegate, Func<IVisaDevice?, bool> canExecuteDelegate) :
+      this(deviceActionDelegate) => CanExecuteDelegate = canExecuteDelegate;
 
     /// <inheritdoc />
-    /// <remarks>
-    ///   This event handles the
-    ///   <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.Exception"/> global event.
-    /// </remarks>
     public event ThreadExceptionEventHandler? Exception;
 
     /// <inheritdoc />
-    /// <remarks>
-    ///   This event handles the
-    ///   <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted"/> global event.
-    /// </remarks>
     public event EventHandler? ExecutionCompleted;
 
     /// <inheritdoc />
-    public async Task ExecuteAsync()
+    public Task ExecuteAsync()
     {
-      DeviceActionExecutor.BeginExecute(this);
-      await DeviceActionExecutor.GetDeviceActionTask(this);
-    }
+      if (!CanExecute)
+        return Task.CompletedTask;
 
-    /// <summary>
-    ///   Handles the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.Exception"/> event.
-    /// </summary>
-    /// <param name="sender">
-    ///   The event sender object.
-    /// </param>
-    /// <param name="args">
-    ///   The event arguments object.
-    /// </param>
-    private void OnException(object sender, ThreadExceptionEventArgs args)
-    {
-      if (sender == this)
-        Exception?.Invoke(sender, args);
-    }
-
-    /// <summary>
-    ///   Handles the <see cref="DeviceActionExecutor" />.<see cref="DeviceActionExecutor.DeviceActionCompleted"/>
-    ///   event.
-    /// </summary>
-    /// <param name="sender">
-    ///   The event sender object.
-    /// </param>
-    /// <param name="args">
-    ///   The event arguments object.
-    /// </param>
-    private void OnExecutionCompleted(object? sender, EventArgs args)
-    {
-      if (sender == this)
-        ExecutionCompleted?.Invoke(sender, EventArgs.Empty);
+      lock (SynchronizationLock)
+      {
+        return ExecutionTask = Task.Run(() =>
+        {
+          try
+          {
+            DeviceActionDelegate.Invoke(TargetDevice);
+          }
+          catch (Exception e)
+          {
+            OnException(e);
+          }
+          finally
+          {
+            ExecutionTask = null;
+            OnExecutionCompleted();
+          }
+        });
+      }
     }
 
     /// <inheritdoc />
-    public virtual object Clone() => new DeviceAction(DeviceActionDelegate)
+    public Task GetExecutionTask() => ExecutionTask ?? Task.CompletedTask;
+
+    /// <summary>
+    ///   Invokes the <see cref="Exception" /> event.
+    /// </summary>
+    /// <param name="exception">
+    ///   The exception instance.
+    /// </param>
+    private void OnException(Exception exception) => Exception?.Invoke(this, new ThreadExceptionEventArgs(exception));
+
+    /// <summary>
+    ///   Invokes the <see cref="ExecutionCompleted" /> event.
+    /// </summary>
+    private void OnExecutionCompleted() => ExecutionCompleted?.Invoke(this, EventArgs.Empty);
+
+    /// <inheritdoc />
+    public virtual object Clone() => new DeviceAction(DeviceActionDelegate, CanExecuteDelegate)
     {
       Name = Name,
       TargetDevice = TargetDevice

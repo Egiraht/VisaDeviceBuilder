@@ -198,7 +198,7 @@ namespace VisaDeviceBuilder
 
     /// <summary>
     ///   Searches the object with the attached VISA device instance for the last device action matching the provided
-    ///   name, and executes it using the <see cref="DeviceActionExecutor" /> static class.
+    ///   name, and executes it.
     /// </summary>
     /// <param name="visaDeviceAccessor">
     ///   The object to be searched.
@@ -213,8 +213,8 @@ namespace VisaDeviceBuilder
     /// </returns>
     /// <remarks>
     ///   This method does not throw any exceptions. All exceptions caught during the device action execution can be
-    ///   addressed through subscribing to the <see cref="DeviceActionExecutor.Exception" /> event of the
-    ///   <see cref="DeviceActionExecutor" /> static class.
+    ///   addressed through subscribing to the <see cref="IDeviceAction.Exception" /> event of the corresponding device
+    ///   action instance.
     /// </remarks>
     public static async Task<bool> ExecuteDeviceActionAsync(this IVisaDeviceAccessor visaDeviceAccessor, string name)
     {
