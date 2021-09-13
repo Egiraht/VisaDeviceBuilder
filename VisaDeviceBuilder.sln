@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common files", "Common file
 ProjectSection(SolutionItems) = preProject
 	.gitignore = .gitignore
 	LICENSE.txt = LICENSE.txt
+	README.md = README.md
 EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VisaDeviceBuilder.Tests", "VisaDeviceBuilder.Tests\VisaDeviceBuilder.Tests.csproj", "{3009C7DE-34F0-4805-B63B-E7CBF6D32DD9}"
