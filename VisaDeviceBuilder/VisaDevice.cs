@@ -215,6 +215,9 @@ namespace VisaDeviceBuilder
     }
 
     /// <inheritdoc />
+    public ISerialConfiguration SerialConfiguration { get; set; } = new SerialConfiguration();
+
+    /// <inheritdoc />
     public IVisaSession? Session { get; private set; }
 
     /// <inheritdoc />
@@ -377,6 +380,8 @@ namespace VisaDeviceBuilder
 
         lock (SessionLock)
         {
+          ApplySerialConfiguration();
+
           if (CustomInitializeCallback != null)
             CustomInitializeCallback.Invoke(this);
           else
@@ -397,6 +402,25 @@ namespace VisaDeviceBuilder
 
     /// <inheritdoc />
     public Task OpenSessionAsync() => Task.Run(OpenSession);
+
+    private void ApplySerialConfiguration()
+    {
+      if (Session is not ISerialSession serialSession)
+        return;
+
+      serialSession.BaudRate = SerialConfiguration.BaudRate;
+      serialSession.DataBits = Math.Clamp(SerialConfiguration.DataBits, (short) 5, (short) 8);
+      serialSession.Parity = SerialConfiguration.Parity;
+      serialSession.StopBits = SerialConfiguration.StopBits;
+      serialSession.FlowControl = SerialConfiguration.FlowControl;
+      serialSession.DataTerminalReadyState = SerialConfiguration.DataTerminalReadyState;
+      serialSession.RequestToSendState = SerialConfiguration.RequestToSendState;
+      serialSession.ReadTermination = SerialConfiguration.ReadTermination;
+      serialSession.WriteTermination = SerialConfiguration.WriteTermination;
+      serialSession.ReplacementCharacter = SerialConfiguration.ReplacementCharacter;
+      serialSession.XOffCharacter = SerialConfiguration.XOffCharacter;
+      serialSession.XOnCharacter = SerialConfiguration.XOnCharacter;
+    }
 
     /// <summary>
     ///   Defines the default device initialization callback method.
@@ -533,6 +557,7 @@ namespace VisaDeviceBuilder
         : null;
       clone.ResourceName = ResourceName;
       clone.ConnectionTimeout = ConnectionTimeout;
+      clone.SerialConfiguration = (ISerialConfiguration) SerialConfiguration.Clone();
 
       clone.CustomSupportedInterfaces = CustomSupportedInterfaces;
       CustomAsyncProperties

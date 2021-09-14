@@ -7,6 +7,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
 using VisaDeviceBuilder.Tests.Components;
 using Xunit;
@@ -67,6 +68,7 @@ namespace VisaDeviceBuilder.Tests
       var isConnectedStatePassed = false;
       var isDeInitializingStatePassed = false;
       var isDisconnectedStatePassed = false;
+      var isDisconnectedWithErrorStatePassed = false;
       using var resourceManager = new TestResourceManager();
       await using var device = new VisaDevice
       {
@@ -83,6 +85,8 @@ namespace VisaDeviceBuilder.Tests
           isDeInitializingStatePassed = true;
         else if (state == DeviceConnectionState.Disconnected)
           isDisconnectedStatePassed = true;
+        else if (state == DeviceConnectionState.DisconnectedWithError)
+          isDisconnectedWithErrorStatePassed = true;
       };
       Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
       Assert.False(device.IsSessionOpened);
@@ -94,7 +98,7 @@ namespace VisaDeviceBuilder.Tests
       await Assert.ThrowsAsync<VisaDeviceException>(device.ResetAsync);
       await Assert.ThrowsAsync<VisaDeviceException>(device.GetIdentifierAsync);
 
-      // Session opening.
+      // Testing session opening.
       await device.OpenSessionAsync();
       Assert.True(isInitializingStatePassed);
       Assert.True(isConnectedStatePassed);
@@ -111,14 +115,53 @@ namespace VisaDeviceBuilder.Tests
       Assert.Equal(TestConnectionTimeout, device.ConnectionTimeout);
       Assert.Equal(TestConnectionTimeout, device.Session!.TimeoutMilliseconds);
 
-      // Session closing.
+      // Testing session closing.
       await device.CloseSessionAsync();
       Assert.True(isDeInitializingStatePassed);
       Assert.True(isDisconnectedStatePassed);
+      Assert.False(isDisconnectedWithErrorStatePassed);
       Assert.Equal(DeviceConnectionState.Disconnected, device.ConnectionState);
       Assert.Null(device.Session);
       Assert.False(device.IsSessionOpened);
       await device.CloseSessionAsync(); // Repeated session closing call should pass OK.
+
+      // Testing session closing with an error.
+      await device.OpenSessionAsync();
+      await device.CloseSessionWithErrorAsync();
+      Assert.True(isDisconnectedWithErrorStatePassed);
+      Assert.Equal(DeviceConnectionState.DisconnectedWithError, device.ConnectionState);
+    }
+
+    /// <summary>
+    ///   Testing the serial VISA device's configuration.
+    /// </summary>
+    [Fact]
+    public async Task SerialConfigurationTest()
+    {
+      using var resourceManager = new TestResourceManager();
+      var testSerialConfiguration = TestMessageDevice.TestSerialConfiguration;
+      await using var device = new VisaDevice
+      {
+        ResourceManager = resourceManager,
+        ResourceName = TestResourceManager.SerialTestDeviceResourceName,
+        SerialConfiguration = testSerialConfiguration
+      };
+      Assert.Equal(testSerialConfiguration, device.SerialConfiguration);
+
+      await device.OpenSessionAsync();
+      var serialSession = (ISerialSession) device.Session!;
+      Assert.Equal(testSerialConfiguration.BaudRate, serialSession.BaudRate);
+      Assert.Equal(testSerialConfiguration.DataBits, serialSession.DataBits);
+      Assert.Equal(testSerialConfiguration.Parity, serialSession.Parity);
+      Assert.Equal(testSerialConfiguration.StopBits, serialSession.StopBits);
+      Assert.Equal(testSerialConfiguration.FlowControl, serialSession.FlowControl);
+      Assert.Equal(testSerialConfiguration.DataTerminalReadyState, serialSession.DataTerminalReadyState);
+      Assert.Equal(testSerialConfiguration.RequestToSendState, serialSession.RequestToSendState);
+      Assert.Equal(testSerialConfiguration.ReadTermination, serialSession.ReadTermination);
+      Assert.Equal(testSerialConfiguration.WriteTermination, serialSession.WriteTermination);
+      Assert.Equal(testSerialConfiguration.ReplacementCharacter, serialSession.ReplacementCharacter);
+      Assert.Equal(testSerialConfiguration.XOffCharacter, serialSession.XOffCharacter);
+      Assert.Equal(testSerialConfiguration.XOnCharacter, serialSession.XOnCharacter);
     }
 
     /// <summary>
@@ -247,7 +290,8 @@ namespace VisaDeviceBuilder.Tests
       {
         ResourceManager = resourceManager,
         ResourceName = TestResourceManager.CustomTestDeviceResourceName,
-        ConnectionTimeout = TestConnectionTimeout
+        ConnectionTimeout = TestConnectionTimeout,
+        SerialConfiguration = TestMessageDevice.TestSerialConfiguration
       };
 
       // The cloned device should contain the same data but must not reference objects from the original device.
@@ -263,6 +307,22 @@ namespace VisaDeviceBuilder.Tests
         Assert.Equal(device.SupportedInterfaces.AsEnumerable(), clone.SupportedInterfaces.AsEnumerable());
         Assert.Equal(device.AsyncProperties.Count(), clone.AsyncProperties.Count());
         Assert.Equal(device.DeviceActions.Count(), clone.DeviceActions.Count());
+
+        // Checking the cloned serial configuration.
+        Assert.NotSame(device.SerialConfiguration, clone.SerialConfiguration);
+        Assert.Equal(device.SerialConfiguration.BaudRate, clone.SerialConfiguration.BaudRate);
+        Assert.Equal(device.SerialConfiguration.DataBits, clone.SerialConfiguration.DataBits);
+        Assert.Equal(device.SerialConfiguration.Parity, clone.SerialConfiguration.Parity);
+        Assert.Equal(device.SerialConfiguration.StopBits, clone.SerialConfiguration.StopBits);
+        Assert.Equal(device.SerialConfiguration.FlowControl, clone.SerialConfiguration.FlowControl);
+        Assert.Equal(device.SerialConfiguration.DataTerminalReadyState,
+          clone.SerialConfiguration.DataTerminalReadyState);
+        Assert.Equal(device.SerialConfiguration.RequestToSendState, clone.SerialConfiguration.RequestToSendState);
+        Assert.Equal(device.SerialConfiguration.ReadTermination, clone.SerialConfiguration.ReadTermination);
+        Assert.Equal(device.SerialConfiguration.WriteTermination, clone.SerialConfiguration.WriteTermination);
+        Assert.Equal(device.SerialConfiguration.ReplacementCharacter, clone.SerialConfiguration.ReplacementCharacter);
+        Assert.Equal(device.SerialConfiguration.XOffCharacter, clone.SerialConfiguration.XOffCharacter);
+        Assert.Equal(device.SerialConfiguration.XOnCharacter, clone.SerialConfiguration.XOnCharacter);
 
         // The cloned resource manager instance should be intact here.
         Assert.False(((TestResourceManager) clone.ResourceManager!).IsDisposed);

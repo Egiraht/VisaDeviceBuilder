@@ -187,12 +187,29 @@ namespace VisaDeviceBuilder.Tests.Components
       var parseResult = Parse(resourceName);
       switch (parseResult)
       {
-        case {InterfaceType: SerialTestDeviceInterfaceType}:
+        case { InterfaceType: SerialTestDeviceInterfaceType }:
         {
-          var mock = new Mock<IMessageBasedSession> {Name = nameof(IMessageBasedSession)};
+          var mock = new Mock<ISerialSession> { Name = nameof(ISerialSession) };
           mock.SetupGet(session => session.ResourceName)
             .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
+          mock.SetupProperty(session => session.BaudRate, TestMessageDevice.TestSerialConfiguration.BaudRate);
+          mock.SetupProperty(session => session.DataBits, TestMessageDevice.TestSerialConfiguration.DataBits);
+          mock.SetupProperty(session => session.Parity, TestMessageDevice.TestSerialConfiguration.Parity);
+          mock.SetupProperty(session => session.StopBits, TestMessageDevice.TestSerialConfiguration.StopBits);
+          mock.SetupProperty(session => session.FlowControl, TestMessageDevice.TestSerialConfiguration.FlowControl);
+          mock.SetupProperty(session => session.DataTerminalReadyState,
+            TestMessageDevice.TestSerialConfiguration.DataTerminalReadyState);
+          mock.SetupProperty(session => session.RequestToSendState,
+            TestMessageDevice.TestSerialConfiguration.RequestToSendState);
+          mock.SetupProperty(session => session.ReadTermination,
+            TestMessageDevice.TestSerialConfiguration.ReadTermination);
+          mock.SetupProperty(session => session.WriteTermination,
+            TestMessageDevice.TestSerialConfiguration.WriteTermination);
+          mock.SetupProperty(session => session.ReplacementCharacter,
+            TestMessageDevice.TestSerialConfiguration.ReplacementCharacter);
+          mock.SetupProperty(session => session.XOffCharacter, TestMessageDevice.TestSerialConfiguration.XOffCharacter);
+          mock.SetupProperty(session => session.XOnCharacter, TestMessageDevice.TestSerialConfiguration.XOnCharacter);
           mock.Setup(session => session.FormattedIO.WriteLine(It.IsAny<string>()))
             .Callback((string message) => Message.Enqueue(message));
           mock.Setup(session => session.FormattedIO.ReadLine())
@@ -203,9 +220,9 @@ namespace VisaDeviceBuilder.Tests.Components
           return mock.Object;
         }
 
-        case {InterfaceType: VxiTestDeviceInterfaceType}:
+        case { InterfaceType: VxiTestDeviceInterfaceType }:
         {
-          var mock = new Mock<IRegisterBasedSession> {Name = nameof(IRegisterBasedSession)};
+          var mock = new Mock<IRegisterBasedSession> { Name = nameof(IRegisterBasedSession) };
           mock.SetupGet(session => session.ResourceName)
             .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);
@@ -217,7 +234,7 @@ namespace VisaDeviceBuilder.Tests.Components
 
         default:
         {
-          var mock = new Mock<IVisaSession> {Name = nameof(IVisaSession)};
+          var mock = new Mock<IVisaSession> { Name = nameof(IVisaSession) };
           mock.SetupGet(session => session.ResourceName)
             .Returns(resourceName);
           mock.SetupProperty(session => session.TimeoutMilliseconds, timeoutMilliseconds);

@@ -5,6 +5,7 @@
 // Copyright © 2020-2021 Maxim Yudin
 
 using System.Threading.Tasks;
+using Ivi.Visa;
 using VisaDeviceBuilder.Abstracts;
 
 namespace VisaDeviceBuilder.Tests.Components
@@ -18,6 +19,25 @@ namespace VisaDeviceBuilder.Tests.Components
     ///   Defines the communication delay in milliseconds imitated by this test device.
     /// </summary>
     public const int CommunicationDelay = 1;
+
+    /// <summary>
+    ///   Gets the test serial configuration object.
+    /// </summary>
+    public static readonly SerialConfiguration TestSerialConfiguration = new()
+    {
+      BaudRate = 115200,
+      DataBits = 7,
+      Parity = SerialParity.Even,
+      StopBits = SerialStopBitsMode.Two,
+      FlowControl = SerialFlowControlModes.DtrDsr,
+      DataTerminalReadyState = LineState.Unasserted,
+      RequestToSendState = LineState.Unknown,
+      ReadTermination = SerialTerminationMethod.Break,
+      WriteTermination = SerialTerminationMethod.HighestBit,
+      ReplacementCharacter = 0x0A,
+      XOffCharacter = 0x01,
+      XOnCharacter = 0x02
+    };
 
     /// <summary>
     ///   The synchronization locking object.

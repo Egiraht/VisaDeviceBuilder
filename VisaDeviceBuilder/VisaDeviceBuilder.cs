@@ -176,6 +176,41 @@ namespace VisaDeviceBuilder
     }
 
     /// <summary>
+    ///   Instructs the builder to use the specified serial configuration for the device.
+    ///   This configuration is necessary only when using the serial hardware interface for communication.
+    /// </summary>
+    /// <param name="serialConfiguration">
+    ///   The object containing the serial configuration.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder UseSerialConfiguration(ISerialConfiguration serialConfiguration)
+    {
+      Device.SerialConfiguration = serialConfiguration;
+      return this;
+    }
+
+    /// <summary>
+    ///   Instructs the builder to use the specified serial configuration for the device.
+    ///   This configuration is necessary only when using the serial hardware interface for communication.
+    /// </summary>
+    /// <param name="serialConfigurationFactory">
+    ///   A factory delegate that allows to configure a new serial configuration object in place. The delegate is
+    ///   provided with a new instance of the <see cref="SerialConfiguration" /> class that can be modified as needed.
+    ///   See the class definition for the default values of its properties.
+    /// </param>
+    /// <returns>
+    ///   This builder instance.
+    /// </returns>
+    public VisaDeviceBuilder UseSerialConfiguration(Action<SerialConfiguration> serialConfigurationFactory)
+    {
+      var serialConfiguration = new SerialConfiguration();
+      serialConfigurationFactory.Invoke(serialConfiguration);
+      return UseSerialConfiguration(serialConfiguration);
+    }
+
+    /// <summary>
     ///   Adds a read-only asynchronous property to the VISA device.
     /// </summary>
     /// <typeparam name="TValue">

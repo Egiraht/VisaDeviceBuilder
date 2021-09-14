@@ -209,6 +209,66 @@ namespace VisaDeviceBuilder.Tests
     }
 
     /// <summary>
+    ///   Testing assignment of serial configuration.
+    /// </summary>
+    [Fact]
+    public async Task SerialConfigurationTest()
+    {
+      // Testing a device configured using a serial configuration object.
+      var testSerialConfiguration = TestMessageDevice.TestSerialConfiguration;
+      await using var device1 = new VisaDeviceBuilder()
+        .UseSerialConfiguration(testSerialConfiguration)
+        .BuildDevice();
+      Assert.NotSame(testSerialConfiguration, device1.SerialConfiguration);
+      Assert.Equal(testSerialConfiguration.BaudRate, device1.SerialConfiguration.BaudRate);
+      Assert.Equal(testSerialConfiguration.DataBits, device1.SerialConfiguration.DataBits);
+      Assert.Equal(testSerialConfiguration.Parity, device1.SerialConfiguration.Parity);
+      Assert.Equal(testSerialConfiguration.StopBits, device1.SerialConfiguration.StopBits);
+      Assert.Equal(testSerialConfiguration.FlowControl, device1.SerialConfiguration.FlowControl);
+      Assert.Equal(testSerialConfiguration.DataTerminalReadyState, device1.SerialConfiguration.DataTerminalReadyState);
+      Assert.Equal(testSerialConfiguration.RequestToSendState, device1.SerialConfiguration.RequestToSendState);
+      Assert.Equal(testSerialConfiguration.ReadTermination, device1.SerialConfiguration.ReadTermination);
+      Assert.Equal(testSerialConfiguration.WriteTermination, device1.SerialConfiguration.WriteTermination);
+      Assert.Equal(testSerialConfiguration.ReplacementCharacter, device1.SerialConfiguration.ReplacementCharacter);
+      Assert.Equal(testSerialConfiguration.XOffCharacter, device1.SerialConfiguration.XOffCharacter);
+      Assert.Equal(testSerialConfiguration.XOnCharacter, device1.SerialConfiguration.XOnCharacter);
+
+      // Testing a device configured using a factory delegate.
+      ISerialConfiguration? serialConfigurationReference = null;
+      await using var device2 = new VisaDeviceBuilder()
+        .UseSerialConfiguration(serialConfiguration =>
+        {
+          serialConfiguration.BaudRate = testSerialConfiguration.BaudRate;
+          serialConfiguration.DataBits = testSerialConfiguration.DataBits;
+          serialConfiguration.Parity = testSerialConfiguration.Parity;
+          serialConfiguration.StopBits = testSerialConfiguration.StopBits;
+          serialConfiguration.FlowControl = testSerialConfiguration.FlowControl;
+          serialConfiguration.DataTerminalReadyState = testSerialConfiguration.DataTerminalReadyState;
+          serialConfiguration.RequestToSendState = testSerialConfiguration.RequestToSendState;
+          serialConfiguration.ReadTermination = testSerialConfiguration.ReadTermination;
+          serialConfiguration.WriteTermination = testSerialConfiguration.WriteTermination;
+          serialConfiguration.ReplacementCharacter = testSerialConfiguration.ReplacementCharacter;
+          serialConfiguration.XOffCharacter = testSerialConfiguration.XOffCharacter;
+          serialConfiguration.XOnCharacter = testSerialConfiguration.XOnCharacter;
+          serialConfigurationReference = serialConfiguration;
+        })
+        .BuildDevice();
+      Assert.NotSame(serialConfigurationReference, device2.SerialConfiguration);
+      Assert.Equal(testSerialConfiguration.BaudRate, device2.SerialConfiguration.BaudRate);
+      Assert.Equal(testSerialConfiguration.DataBits, device2.SerialConfiguration.DataBits);
+      Assert.Equal(testSerialConfiguration.Parity, device2.SerialConfiguration.Parity);
+      Assert.Equal(testSerialConfiguration.StopBits, device2.SerialConfiguration.StopBits);
+      Assert.Equal(testSerialConfiguration.FlowControl, device2.SerialConfiguration.FlowControl);
+      Assert.Equal(testSerialConfiguration.DataTerminalReadyState, device2.SerialConfiguration.DataTerminalReadyState);
+      Assert.Equal(testSerialConfiguration.RequestToSendState, device2.SerialConfiguration.RequestToSendState);
+      Assert.Equal(testSerialConfiguration.ReadTermination, device2.SerialConfiguration.ReadTermination);
+      Assert.Equal(testSerialConfiguration.WriteTermination, device2.SerialConfiguration.WriteTermination);
+      Assert.Equal(testSerialConfiguration.ReplacementCharacter, device2.SerialConfiguration.ReplacementCharacter);
+      Assert.Equal(testSerialConfiguration.XOffCharacter, device2.SerialConfiguration.XOffCharacter);
+      Assert.Equal(testSerialConfiguration.XOnCharacter, device2.SerialConfiguration.XOnCharacter);
+    }
+
+    /// <summary>
     ///   Testing addition of a read-only asynchronous property.
     /// </summary>
     [Fact]

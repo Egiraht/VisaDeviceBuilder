@@ -68,6 +68,12 @@ namespace VisaDeviceBuilder.Abstracts
     DeviceConnectionState ConnectionState { get; }
 
     /// <summary>
+    ///   Gets or sets the serial configuration object to be used when establishing serial interface connections.
+    ///   It is ignored when working with other hardware interface type.
+    /// </summary>
+    ISerialConfiguration SerialConfiguration { get; set; }
+
+    /// <summary>
     ///   Gets the current VISA session object.
     /// </summary>
     /// <returns>
