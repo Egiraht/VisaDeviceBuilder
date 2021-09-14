@@ -87,20 +87,40 @@ namespace VisaDeviceBuilder.Tests
     [Fact]
     public async Task AutoUpdaterLoopExceptionTest()
     {
-      Exception? exception = null;
-      var testAsyncProperty = new AsyncProperty<string>(_ => throw new Exception(TestExceptionMessage));
-      await using var autoUpdater = new AutoUpdater(new[] { testAsyncProperty }) { Delay = AutoUpdateDelay };
-      autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
-      Assert.Contains(testAsyncProperty, autoUpdater.AsyncProperties);
-      Assert.Null(exception);
+      // Testing exceptions caused by asynchronous properties.
+      await using (var autoUpdater = new AutoUpdater(
+          new[] { new AsyncProperty<string>(_ => throw new Exception(TestExceptionMessage)) })
+        { Delay = AutoUpdateDelay })
+      {
+        Exception? exception = null;
+        autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
+        autoUpdater.Start();
+        Assert.True(autoUpdater.IsRunning);
+        Assert.Null(exception);
 
-      autoUpdater.Start();
-      Assert.True(autoUpdater.IsRunning);
+        var timer = Task.Delay(Timeout);
+        while (exception == null && !timer.IsCompleted) // The operation should complete before the timer.
+          await Task.Delay(AutoUpdateDelay);
+        Assert.Equal(TestExceptionMessage, exception?.Message);
+      }
 
-      var timer = Task.Delay(Timeout);
-      while (exception == null && !timer.IsCompleted) // The operation should complete before the timer.
-        await Task.Delay(AutoUpdateDelay);
-      Assert.Equal(TestExceptionMessage, exception?.Message);
+      // Testing exceptions caused by an AutoUpdateCycle event handler.
+      await using (var autoUpdater = new AutoUpdater(
+          new[] { new AsyncProperty<object?>(_ => null) })
+        { Delay = AutoUpdateDelay })
+      {
+        Exception? exception = null;
+        autoUpdater.AutoUpdateException += (_, args) => exception = args.Exception;
+        autoUpdater.AutoUpdateCycle += (_, _) => throw new Exception(TestExceptionMessage);
+        autoUpdater.Start();
+        Assert.True(autoUpdater.IsRunning);
+        Assert.Null(exception);
+
+        var timer = Task.Delay(Timeout);
+        while (exception == null && !timer.IsCompleted) // The operation should complete before the timer.
+          await Task.Delay(AutoUpdateDelay);
+        Assert.Equal(TestExceptionMessage, exception?.Message);
+      }
     }
 
     /// <summary>
