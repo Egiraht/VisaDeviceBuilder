@@ -718,5 +718,21 @@ namespace VisaDeviceBuilder.Tests
       await deviceController.GetDeviceDisconnectionTask();
       Assert.Same(deviceController.Device, TestDeInitializeCallbackCallingDevice);
     }
+
+    /// <summary>
+    ///   Testing the builder's disposal.
+    /// </summary>
+    [Fact]
+    public void VisaDeviceBuilderDisposalTest()
+    {
+      VisaDeviceBuilder? visaDeviceBuilderReference;
+      using (var visaDeviceBuilder = new VisaDeviceBuilder())
+        visaDeviceBuilderReference = visaDeviceBuilder;
+
+      // The visaDeviceBuilder object must be disposed of here.
+      visaDeviceBuilderReference.Dispose(); // Repeated disposal should pass OK.
+      Assert.Throws<ObjectDisposedException>(() => visaDeviceBuilderReference.BuildDevice());
+      Assert.Throws<ObjectDisposedException>(() => visaDeviceBuilderReference.BuildDeviceController());
+    }
   }
 }

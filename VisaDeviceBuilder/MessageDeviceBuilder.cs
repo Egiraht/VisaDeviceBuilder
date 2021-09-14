@@ -18,10 +18,18 @@ namespace VisaDeviceBuilder
   public class MessageDeviceBuilder : IVisaDeviceBuilder<IMessageDevice>, IDisposable
   {
     /// <summary>
-    ///   The base buildable message-based VISA device instance that stores the builder configuration and is used for
-    ///   building of new VISA device instances by cloning.
+    ///   The flag indicating if this builder instance has been already disposed of.
     /// </summary>
+    private bool _isDisposed;
+
     private readonly IBuildableMessageDevice _device;
+
+    /// <summary>
+    ///   Gets the base buildable message-based VISA device instance that stores the builder configuration and is used
+    ///   for building of new VISA device instances by cloning.
+    /// </summary>
+    protected IBuildableMessageDevice Device =>
+      !_isDisposed ? _device : throw new ObjectDisposedException(GetType().Name);
 
     /// <summary>
     ///   Initializes a new message-based VISA device builder instance.
@@ -59,8 +67,8 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder UseGlobalVisaResourceManager()
     {
-      _device.ResourceManager?.Dispose();
-      _device.ResourceManager = null;
+      Device.ResourceManager?.Dispose();
+      Device.ResourceManager = null;
       return this;
     }
 
@@ -79,8 +87,8 @@ namespace VisaDeviceBuilder
         throw new InvalidOperationException(
           $"\"{resourceManagerType.Name}\" is not a valid VISA resource manager type.");
 
-      _device.ResourceManager?.Dispose();
-      _device.ResourceManager = (IResourceManager) Activator.CreateInstance(resourceManagerType)!;
+      Device.ResourceManager?.Dispose();
+      Device.ResourceManager = (IResourceManager) Activator.CreateInstance(resourceManagerType)!;
       return this;
     }
 
@@ -108,7 +116,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder UseDefaultResourceName(string resourceName)
     {
-      _device.ResourceName = resourceName;
+      Device.ResourceName = resourceName;
       return this;
     }
 
@@ -123,7 +131,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder UseConnectionTimeout(int timeout)
     {
-      _device.ConnectionTimeout = timeout;
+      Device.ConnectionTimeout = timeout;
       return this;
     }
 
@@ -136,7 +144,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder UseDefaultSupportedHardwareInterfaces()
     {
-      _device.CustomSupportedInterfaces = null;
+      Device.CustomSupportedInterfaces = null;
       return this;
     }
 
@@ -152,7 +160,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder UseSupportedHardwareInterfaces(params HardwareInterfaceType[] interfaces)
     {
-      _device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
+      Device.CustomSupportedInterfaces = interfaces.Distinct().ToArray();
       return this;
     }
 
@@ -181,10 +189,10 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder AddReadOnlyAsyncProperty<TValue>(string name, Func<IMessageDevice?, TValue> getter)
     {
-      _device.CustomAsyncProperties
+      Device.CustomAsyncProperties
         .Add(new AsyncProperty<TValue>(visaDevice => getter.Invoke(visaDevice as IMessageDevice))
         {
-          TargetDevice = _device,
+          TargetDevice = Device,
           Name = name,
           AutoUpdateGetterAfterSetterCompletes = false
         });
@@ -217,10 +225,10 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder AddWriteOnlyAsyncProperty<TValue>(string name, Action<IMessageDevice?, TValue> setter)
     {
-      _device.CustomAsyncProperties
+      Device.CustomAsyncProperties
         .Add(new AsyncProperty<TValue>((visaDevice, value) => setter.Invoke(visaDevice as IMessageDevice, value))
         {
-          TargetDevice = _device,
+          TargetDevice = Device,
           Name = name,
           AutoUpdateGetterAfterSetterCompletes = false
         });
@@ -264,11 +272,11 @@ namespace VisaDeviceBuilder
     public MessageDeviceBuilder AddReadWriteAsyncProperty<TValue>(string name, Func<IMessageDevice?, TValue> getter,
       Action<IMessageDevice?, TValue> setter, bool autoUpdateGetter = true)
     {
-      _device.CustomAsyncProperties
+      Device.CustomAsyncProperties
         .Add(new AsyncProperty<TValue>(visaDevice => getter.Invoke(visaDevice as IMessageDevice),
           (visaDevice, value) => setter.Invoke(visaDevice as IMessageDevice, value))
         {
-          TargetDevice = _device,
+          TargetDevice = Device,
           Name = name,
           AutoUpdateGetterAfterSetterCompletes = autoUpdateGetter
         });
@@ -287,8 +295,8 @@ namespace VisaDeviceBuilder
     public MessageDeviceBuilder CopyAsyncProperty(IAsyncProperty asyncProperty)
     {
       var asyncPropertyClone = (IAsyncProperty) asyncProperty.Clone();
-      asyncPropertyClone.TargetDevice = _device;
-      _device.CustomAsyncProperties.Add(asyncPropertyClone);
+      asyncPropertyClone.TargetDevice = Device;
+      Device.CustomAsyncProperties.Add(asyncPropertyClone);
       return this;
     }
 
@@ -308,8 +316,8 @@ namespace VisaDeviceBuilder
         .ToList()
         .ForEach(asyncPropertyClone =>
         {
-          asyncPropertyClone.TargetDevice = _device;
-          _device.CustomAsyncProperties.Add(asyncPropertyClone);
+          asyncPropertyClone.TargetDevice = Device;
+          Device.CustomAsyncProperties.Add(asyncPropertyClone);
         });
       return this;
     }
@@ -326,10 +334,10 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder RemoveAsyncProperty(string asyncPropertyName)
     {
-      _device.CustomAsyncProperties
+      Device.CustomAsyncProperties
         .Where(asyncProperty => asyncProperty.Name == asyncPropertyName)
         .ToList()
-        .ForEach(asyncProperty => _device.CustomAsyncProperties.Remove(asyncProperty));
+        .ForEach(asyncProperty => Device.CustomAsyncProperties.Remove(asyncProperty));
       return this;
     }
 
@@ -341,7 +349,7 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder ClearAsyncProperties()
     {
-      _device.CustomAsyncProperties.Clear();
+      Device.CustomAsyncProperties.Clear();
       return this;
     }
 
@@ -366,9 +374,9 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder AddDeviceAction(string name, Action<IMessageDevice?> deviceAction)
     {
-      _device.CustomDeviceActions.Add(new DeviceAction(visaDevice => deviceAction.Invoke(visaDevice as IMessageDevice))
+      Device.CustomDeviceActions.Add(new DeviceAction(visaDevice => deviceAction.Invoke(visaDevice as IMessageDevice))
       {
-        TargetDevice = _device,
+        TargetDevice = Device,
         Name = name
       });
       return this;
@@ -386,8 +394,8 @@ namespace VisaDeviceBuilder
     public MessageDeviceBuilder CopyDeviceAction(IDeviceAction deviceAction)
     {
       var deviceActionClone = (IDeviceAction) deviceAction.Clone();
-      deviceActionClone.TargetDevice = _device;
-      _device.CustomDeviceActions.Add(deviceActionClone);
+      deviceActionClone.TargetDevice = Device;
+      Device.CustomDeviceActions.Add(deviceActionClone);
       return this;
     }
 
@@ -407,8 +415,8 @@ namespace VisaDeviceBuilder
         .ToList()
         .ForEach(deviceActionClone =>
         {
-          deviceActionClone.TargetDevice = _device;
-          _device.CustomDeviceActions.Add(deviceActionClone);
+          deviceActionClone.TargetDevice = Device;
+          Device.CustomDeviceActions.Add(deviceActionClone);
         });
       return this;
     }
@@ -425,10 +433,10 @@ namespace VisaDeviceBuilder
     /// </returns>
     public MessageDeviceBuilder RemoveDeviceAction(string deviceActionName)
     {
-      _device.CustomDeviceActions
+      Device.CustomDeviceActions
         .Where(deviceAction => deviceAction.Name == deviceActionName)
         .ToList()
-        .ForEach(deviceAction => _device.CustomDeviceActions.Remove(deviceAction));
+        .ForEach(deviceAction => Device.CustomDeviceActions.Remove(deviceAction));
       return this;
     }
 
@@ -443,7 +451,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder ClearDeviceActions()
     {
-      _device.CustomDeviceActions.Clear();
+      Device.CustomDeviceActions.Clear();
       return this;
     }
 
@@ -463,7 +471,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseInitializeCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
+      Device.CustomInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -483,7 +491,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseDeInitializeCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomDeInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
+      Device.CustomDeInitializeCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -504,7 +512,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseGetIdentifierCallback(Func<IMessageDevice?, string> callback)
     {
-      _device.CustomGetIdentifierCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
+      Device.CustomGetIdentifierCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -524,7 +532,7 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseResetCallback(Action<IMessageDevice?> callback)
     {
-      _device.CustomResetCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
+      Device.CustomResetCallback = visaDevice => callback.Invoke(visaDevice as IMessageDevice);
       return this;
     }
 
@@ -548,12 +556,12 @@ namespace VisaDeviceBuilder
     /// </remarks>
     public MessageDeviceBuilder UseMessageProcessor(Func<IMessageDevice?, string, string> messageProcessor)
     {
-      _device.CustomMessageProcessor = messageProcessor;
+      Device.CustomMessageProcessor = messageProcessor;
       return this;
     }
 
     /// <inheritdoc />
-    public IMessageDevice BuildDevice() => (IMessageDevice) _device.Clone();
+    public IMessageDevice BuildDevice() => (IMessageDevice) Device.Clone();
 
     /// <inheritdoc />
     public IVisaDeviceController BuildDeviceController() => new VisaDeviceController(BuildDevice());
@@ -561,6 +569,10 @@ namespace VisaDeviceBuilder
     /// <inheritdoc />
     public void Dispose()
     {
+      if (_isDisposed)
+        return;
+      _isDisposed = true;
+
       _device.Dispose();
       GC.SuppressFinalize(this);
     }
